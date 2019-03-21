@@ -1,0 +1,9 @@
+main:                 # declaration du point dentree
+  let: i 0            # attribution de la valeur 0 a i
+  let: continue true  # attribution de la valeur true a continue
+  loop: continue      # boucle tant aue continue vraie
+    add: i 1          # ajout de la valeur i et 1
+    set: i $$         # attribution de la valeur $$ a i
+    print: i          # impression de i sur la sortie standart
+    inf: i 10         # test si i est inferieur a 10
+    set: continue $$  # attribution de la valeur $$ a continue
