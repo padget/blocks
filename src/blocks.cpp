@@ -5,6 +5,7 @@
 #include <fstream>
 
 #include <block.hpp>
+#include <bml.hpp>
 
 constexpr int add(int l, int r)
 {
@@ -48,4 +49,5 @@ int main()
 
 	std::cout << data_manager.read<int>(iterres) << std::endl;
 	std::cout << sizeof(std::fstream) << std::endl;
+
 }

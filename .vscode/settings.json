@@ -31,5 +31,6 @@
     "memory": "cpp",
     "tuple": "cpp",
     "fstream": "cpp"
-  }
+  },
+  "C_Cpp.configurationWarnings": "Disabled"
 }
