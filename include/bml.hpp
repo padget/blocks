@@ -4,7 +4,8 @@
 
 #include <string>
 #include <type_traits>
-
+#include <variant>
+#include <optional>
 
 template<typename char_t>
 class char_wrapper
@@ -39,95 +40,181 @@ public:
 };
 
 
-template<
-    typename enum_t,
-    typename str_t = std::string>
-class token
+template<typename str_t = std::string>
+struct token_error
 {
-    static_assert(std::is_enum_v<enum_t>);
-
-private:
-    enum_t __type;
-    str_t __value;
-
-public:
-    explicit token (typename str_t::iterator begin,
-                    typename str_t::iterator end,
-                    enum_t type)
-        : __type(type),
-          __value(begin, end)
-    {}
-
-
-    explicit token (enum_t type)
-        : __type(type)
-    {}
-
-
-    token (token &&other)
-        : __type(std::move(other.__type)),
-          __value(std::move(other.__value))
-    {}
-
-
-    bool operator== (const token &other) const
-    {
-        return this==&other or
-               this->__type==other.__type;
-    }
-
-
-    bool operator!= (const token &other) const
-    {
-        return !this->operator==(other);
-    }
-
-
-public:
-    const str_t &value () const
-    {
-        return __value;
-    }
-
-
-    str_t &value ()
-    {
-        return __value;
-    }
-
-
-public:
-    const enum_t &type () const
-    {
-        return __type;
-    }
-
-
-    enum_t &type ()
-    {
-        return __type;
-    }
+    str_t value;
 };
+
+
+template<typename str_t = std::string>
+struct token_number
+{
+    str_t value;
+};
+
+
+template<typename str_t = std::string>
+struct token_label
+{
+    str_t value;
+};
+
+
+template<typename str_t = std::string>
+struct token_string
+{
+    str_t value;
+};
+
+
+template<typename str_t = std::string>
+struct token_eol
+{
+    str_t value;
+};
+
+
+template<typename str_t = std::string>
+struct token_eof
+{
+    str_t value;
+};
+
+
+template<typename str_t = std::string>
+struct token_indent
+{
+    str_t value;
+};
+
+
+template<typename str_t = std::string>
+struct token_colon
+{
+    str_t value;
+};
+
+
+template<typename ... type_t>
+struct pack
+{
+};
+
+
+template<typename pack_t>
+struct __variant_of
+{
+};
+
+
+template<
+    template<typename ...> typename pack_t,
+                           typename ... type_t>
+struct __variant_of<pack_t<type_t...>>
+{
+    using type = std::variant<type_t...>;
+};
+
+
+template<typename pack_t>
+using variant_of = typename __variant_of<pack_t>::type;
+
+
+template<typename str_t>
+using tokens = pack<token_error<str_t>,
+    token_label<str_t>,
+    token_number<str_t>,
+    token_colon<str_t>,
+    token_eof<str_t>,
+    token_eol<str_t>,
+    token_indent<str_t>,
+    token_string<str_t>>;
+
+
+template<typename str_t>
+using bml_token = variant_of<tokens<str_t>>;
+
+
+template<
+    template<typename ...> typename pack_t,
+                           typename ... type_t>
+constexpr size_t pack_size (pack_t<type_t...> const &)
+{
+    return sizeof...(type_t);
+}
+
+
+template<typename pack_t>
+struct first
+{
+};
+
+template<
+    template<
+    typename,
+    typename ...>
+    typename pack_t,
+    typename first_t,
+    typename ... next_t>
+struct first<pack_t<first_t, next_t...>>
+{
+    using type = first_t;
+};
+
+
+template<typename pack_t>
+struct tail
+{
+};
+
+
+template<
+    template<
+    typename,
+    typename ...>
+    typename pack_t,
+    typename first_t,
+    typename ... next_t>
+struct tail<pack_t<first_t, next_t...>>
+{
+    using type = pack_t<next_t...>;
+};
+
+
+template<
+    typename str_t,
+    typename pack_t,
+    typename iterator>
+std::optional<bml_token<str_t>> for_each_token_type (iterator begin, iterator end)
+{
+    constexpr auto size = pack_size(std::declval<pack_t>());
+    if constexpr (size>1)
+    {
+        using first_t = typename first<pack_t>::type;
+        constexpr auto detector = first_t();
+        std::optional<bml_token<str_t>> detected = detector.try_detect(begin, end);
+
+        if (detected.has_value())
+        {
+            return detected;
+        }
+        else
+        {
+            return for_each_token_type<tail<pack_t>>(begin, end);
+        }
+    }
+    else if constexpr (size==1)
+    {
+        constexpr auto token_type = typename first<pack_t>::type();
+        return token_type.try_detect(begin, end);
+    }
+}
 
 
 template<typename str_t = std::string>
 class lexer
 {
-public:
-    enum class token_type : int
-    {
-        colon,
-        label,
-        number,
-        string,
-        indent,
-        eof,
-        eol,
-        error
-    };
-
-    using tk = ::token<token_type, str_t>;
-
 private:
     using iterator = typename str_t::iterator;
 
@@ -142,43 +229,43 @@ public:
 
 
 public:
-    tk token ()
+    bml_token<str_t> token ()
     {
 
         iterator cursor = __cursor;
 
         if (__cursor==__end)
         {
-            return tk(cursor, __cursor, token_type::eof);
+            return token_eof<str_t>{{__cursor, __end}};
         }
         else if (is_colon())
         {
-            return tk(cursor, __cursor, token_type::colon);
+            return token_colon<str_t>{{cursor, __cursor}};
         }
         else if (is_label())
         {
-            return tk(cursor, __cursor, token_type::label);
+            return token_label<str_t>{{cursor, __cursor}};
         }
         else if (is_number())
         {
-            return tk(cursor, __cursor, token_type::number);
+            return token_number<str_t>{{cursor, __cursor}};
         }
         else if (is_string())
         {
-            return tk(cursor, __cursor, token_type::string);
+            return token_string<str_t>{{cursor, __cursor}};
         }
         else if (is_indent())
         {
-            return tk(cursor, __cursor, token_type::indent);
+            return token_indent<str_t>{{cursor, __cursor}};
         }
         else if (is_eol())
         {
-            return tk(cursor, __cursor, token_type::eol);
+            return token_eol<str_t>{{cursor, __cursor}};
         }
         else
         {
             __cursor++;
-            return tk(token_type::error);
+            return token_error<str_t>{{cursor, __cursor}};
         }
     }
 

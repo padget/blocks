@@ -62,14 +62,8 @@ int main ()
     {
         auto &&tk = lex.token();
 
-        if (tk.type()==lexer<std::string>::token_type::error)
-        {
-            std::cout<<"unknown ";
-        }
-        else
-        {
-            std::cout<<(int)tk.type()<<' ';
-        }
+        std::visit([] (auto &&token)
+                   { std::cout<<token.value<<std::endl; }, tk);
     }
 
 
