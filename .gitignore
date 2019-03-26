@@ -1,5 +1,6 @@
 # Prerequisites
 *.d
+*.stackdump
 
 # Compiled Object files
 *.slo
@@ -33,6 +34,12 @@
 
 # Cmake files
 build/
+cmake-build-debug/
+cmake-build-release/
+
+# Clion
+.idea/
 
 # Intellisense cache files
 ipch/
+
