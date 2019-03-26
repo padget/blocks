@@ -6,410 +6,312 @@
 #include <type_traits>
 #include <variant>
 #include <optional>
+#include <algorithm>
+#include <vector>
+#include <list>
 
-template<typename char_t>
-class char_wrapper
+namespace mystd
 {
-private:
-    char_t c;
-
-public:
-    explicit char_wrapper (char_t c)
-        : c(c)
-    {}
-
-
-public:
-    bool in (char_t first, char_t end) const
+    template<class InputIt,
+             class UnaryPredicate>
+    constexpr InputIt find_if (InputIt first, InputIt last, UnaryPredicate p)
     {
-        return first<=c and c<=end;
+        for (; first!=last; ++first)
+        {
+            if (p(*first))
+            {
+                return first;
+            }
+        }
+        return last;
     }
-
-
-    bool is (char_t o) const
-    {
-        return c==o;
-    }
-
-
-    char_wrapper &reset (char_t c)
-    {
-        this->c = c;
-        return *this;
-    }
-};
-
-
-template<typename str_t = std::string>
-struct token_error
-{
-    str_t value;
-};
-
-
-template<typename str_t = std::string>
-struct token_number
-{
-    str_t value;
-};
-
-
-template<typename str_t = std::string>
-struct token_label
-{
-    str_t value;
-};
-
-
-template<typename str_t = std::string>
-struct token_string
-{
-    str_t value;
-};
-
-
-template<typename str_t = std::string>
-struct token_eol
-{
-    str_t value;
-};
-
-
-template<typename str_t = std::string>
-struct token_eof
-{
-    str_t value;
-};
-
-
-template<typename str_t = std::string>
-struct token_indent
-{
-    str_t value;
-};
-
-
-template<typename str_t = std::string>
-struct token_colon
-{
-    str_t value;
-};
-
-
-template<typename ... type_t>
-struct pack
-{
-};
-
-
-template<typename pack_t>
-struct __variant_of
-{
-};
-
-
-template<
-    template<typename ...> typename pack_t,
-                           typename ... type_t>
-struct __variant_of<pack_t<type_t...>>
-{
-    using type = std::variant<type_t...>;
-};
-
-
-template<typename pack_t>
-using variant_of = typename __variant_of<pack_t>::type;
-
-
-template<typename str_t>
-using tokens = pack<token_error<str_t>,
-    token_label<str_t>,
-    token_number<str_t>,
-    token_colon<str_t>,
-    token_eof<str_t>,
-    token_eol<str_t>,
-    token_indent<str_t>,
-    token_string<str_t>>;
-
-
-template<typename str_t>
-using bml_token = variant_of<tokens<str_t>>;
-
-
-template<
-    template<typename ...> typename pack_t,
-                           typename ... type_t>
-constexpr size_t pack_size (pack_t<type_t...> const &)
-{
-    return sizeof...(type_t);
 }
 
 
-template<typename pack_t>
-struct first
+template<typename iterator, auto type>
+std::optional<std::pair<iterator, decltype(type)>>
+detect_colon (iterator begin,
+              iterator end)
 {
-};
-
-template<
-    template<
-    typename,
-    typename ...>
-    typename pack_t,
-    typename first_t,
-    typename ... next_t>
-struct first<pack_t<first_t, next_t...>>
-{
-    using type = first_t;
-};
-
-
-template<typename pack_t>
-struct tail
-{
-};
-
-
-template<
-    template<
-    typename,
-    typename ...>
-    typename pack_t,
-    typename first_t,
-    typename ... next_t>
-struct tail<pack_t<first_t, next_t...>>
-{
-    using type = pack_t<next_t...>;
-};
-
-
-template<
-    typename str_t,
-    typename pack_t,
-    typename iterator>
-std::optional<bml_token<str_t>> for_each_token_type (iterator begin, iterator end)
-{
-    constexpr auto size = pack_size(std::declval<pack_t>());
-    if constexpr (size>1)
-    {
-        using first_t = typename first<pack_t>::type;
-        constexpr auto detector = first_t();
-        std::optional<bml_token<str_t>> detected = detector.try_detect(begin, end);
-
-        if (detected.has_value())
-        {
-            return detected;
-        }
-        else
-        {
-            return for_each_token_type<tail<pack_t>>(begin, end);
-        }
-    }
-    else if constexpr (size==1)
-    {
-        constexpr auto token_type = typename first<pack_t>::type();
-        return token_type.try_detect(begin, end);
-    }
+    return (begin!=end&&*begin==':') ?
+           std::optional(std::pair(std::next(begin), type)) :
+           std::nullopt;
 }
+
+
+template<typename iterator, auto type>
+std::optional<std::pair<iterator, decltype(type)>>
+detect_indent (iterator begin,
+               iterator end)
+{
+    return (begin!=end&&*begin=='\t') ?
+           std::optional(std::pair(std::next(begin), type)) :
+           std::nullopt;
+}
+
+
+template<typename iterator, auto type>
+std::optional<std::pair<iterator, decltype(type)>>
+detect_space (iterator begin,
+              iterator end)
+{
+    return (begin!=end&&*begin==' ') ?
+           std::optional(std::pair(std::next(begin), type)) :
+           std::nullopt;
+}
+
+
+template<typename iterator, auto type>
+std::optional<std::pair<iterator, decltype(type)>>
+detect_eol (iterator begin,
+            iterator end)
+{
+    return (begin!=end&&*begin=='\n') ?
+           std::optional(std::pair(std::next(begin), type)) :
+           std::nullopt;
+}
+
+
+template<typename iterator, auto type>
+std::optional<std::pair<iterator, decltype(type)>>
+detect_eof (iterator begin,
+            iterator end)
+{
+    return (begin==end) ?
+           std::optional(std::pair(std::next(begin), type)) :
+           std::nullopt;
+}
+
+
+template<typename iterator, auto type>
+std::optional<std::pair<iterator, decltype(type)>>
+detect_label (iterator begin,
+              iterator end)
+{
+    auto cursor = begin;
+
+    while (cursor!=end&&
+           'a'<=*cursor&&
+           *cursor<='z')
+    {
+        ++cursor;
+    }
+
+    return (cursor!=begin) ?
+           std::optional(std::pair(cursor, type)) :
+           std::nullopt;
+}
+
+
+template<typename iterator, auto type>
+std::optional<std::pair<iterator, decltype(type)>>
+detect_number (iterator begin,
+               iterator end)
+{
+    auto cursor = begin;
+
+    while (cursor!=end&&
+           '0'<=*cursor&&
+           *cursor<='9')
+    {
+        ++cursor;
+    }
+
+    return (cursor!=begin) ?
+           std::optional(std::pair(cursor, type)) :
+           std::nullopt;
+}
+
+
+template<typename iterator,
+         typename detector,
+         typename ... detectors>
+auto detect (iterator begin, iterator end,
+             detector d, detectors ... ds)
+-> decltype(d(begin, end))
+{
+    auto results = std::array{d(begin, end), ds(begin, end)...};
+    auto has_value = [] (auto const &opt)
+    { return opt.has_value(); };
+    auto found = mystd::find_if(std::begin(results),
+                                std::end(results),
+                                has_value);
+
+    if (found!=std::end(results))
+        return *found;
+    else
+        return std::nullopt;
+}
+
+
+enum class bml : int
+{
+    unknown, label, indent, space, number, colon, eol, eof, string /* TODO faire la fonction pour string */
+};
 
 
 template<typename str_t = std::string>
 class lexer
 {
 private:
-    using iterator = typename str_t::iterator;
+    using iterator = typename str_t::const_iterator;
 
     iterator __cursor;
     iterator __end;
 
 public:
-    explicit lexer (iterator cursor, iterator end)
-        : __cursor{cursor},
-          __end{end}
+    explicit lexer (const str_t &input)
+        : __cursor(std::begin(input)),
+          __end(std::end(input))
     {}
 
 
-public:
-    bml_token<str_t> token ()
+    struct token
     {
+        bml type;
+        str_t value;
+    };
 
-        iterator cursor = __cursor;
 
-        if (__cursor==__end)
-        {
-            return token_eof<str_t>{{__cursor, __end}};
-        }
-        else if (is_colon())
-        {
-            return token_colon<str_t>{{cursor, __cursor}};
-        }
-        else if (is_label())
-        {
-            return token_label<str_t>{{cursor, __cursor}};
-        }
-        else if (is_number())
-        {
-            return token_number<str_t>{{cursor, __cursor}};
-        }
-        else if (is_string())
-        {
-            return token_string<str_t>{{cursor, __cursor}};
-        }
-        else if (is_indent())
-        {
-            return token_indent<str_t>{{cursor, __cursor}};
-        }
-        else if (is_eol())
-        {
-            return token_eol<str_t>{{cursor, __cursor}};
-        }
-        else
-        {
-            __cursor++;
-            return token_error<str_t>{{cursor, __cursor}};
-        }
+public:
+    token next ()
+    {
+        auto res = detect(
+            __cursor, __end,
+            &detect_colon<iterator, bml::colon>,
+            &detect_eof<iterator, bml::eof>,
+            &detect_eol<iterator, bml::eol>,
+            &detect_number<iterator, bml::number>,
+            &detect_label<iterator, bml::label>,
+            &detect_indent<iterator, bml::indent>,
+            &detect_space<iterator, bml::space>);
+
+        bool valued = res.has_value();
+
+        auto &&type = valued ? std::get<1>(res.value()) : bml::unknown;
+        auto &&iter = valued ? std::get<0>(res.value()) : std::next(__cursor);
+        auto &&value = str_t(__cursor, iter);
+
+        auto tk = token{type, value};
+        __cursor = valued ? std::get<0>(res.value()) : std::next(__cursor);
+        return tk;
     }
 
 
-public:
     bool has_next () const
     {
         return __cursor not_eq __end;
     }
 
 
-private:
-    bool is_label ()
+    std::vector<token> tokens ()
     {
+        std::list<token> tks;
 
-        auto cursor = __cursor;
-        char_wrapper<char> c(*cursor);
+        while (has_next())
+            tks.push_back(next());
 
-        while (cursor not_eq __end and
-               c.reset(*cursor).in('a', 'z'))
-        {
-            cursor++;
-        }
+        auto begin = std::begin(tks);
+        auto end = std::end(tks);
 
-        if (cursor not_eq __cursor)
-        {
-            __cursor = cursor;
-            return true;
-        }
-        else
-        {
-            return false;
-        }
-    }
+        std::list<token> tks2;
+        auto end2 = std::remove_if(
+            std::begin(tks), std::end(tks),
+            [] (const auto &tk)
+            { return tk.type==bml::space; });
 
-
-    bool is_colon ()
-    {
-        auto res = char_wrapper<char>(*__cursor).is(':');
-
-        if (res)
-        {
-            __cursor++;
-            return true;
-        }
-        else
-        {
-            return false;
-        }
-    }
-
-
-    bool is_number ()
-    {
-
-        auto cursor = __cursor;
-        char_wrapper<char> c(*cursor);
-
-        while (cursor not_eq __end and
-               c.reset(*cursor).in('0', '9'))
-        {
-            cursor++;
-        }
-
-        if (cursor not_eq __cursor)
-        {
-            __cursor = cursor;
-            return true;
-        }
-        else
-        {
-            return false;
-        }
-    }
-
-
-    bool is_string ()
-    {
-        iterator cursor = __cursor;
-        auto c = char_wrapper<char>(*cursor);
-
-        if (c.is('"'))
-        {
-            cursor++;
-
-            while (not c.reset(*cursor).is('"'))
-            {
-                cursor++;
-            }
-
-            if (c.reset(*cursor).is('"'))
-            {
-                cursor++;
-                __cursor = cursor;
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-        }
-        else
-        {
-            return false;
-        }
-    }
-
-
-    bool is_indent ()
-    {
-        auto res = char_wrapper<char>(*__cursor).is(' ');
-
-        if (res)
-        {
-            __cursor++;
-            return true;
-        }
-        else
-        {
-            return false;
-        }
-    }
-
-
-    bool is_eol ()
-    {
-        auto res = char_wrapper<char>(*__cursor).is('\n');
-
-        if (res)
-        {
-            __cursor++;
-            return true;
-        }
-        else
-        {
-            return false;
-        }
+        std::vector<token> res(
+            std::make_move_iterator(std::begin(tks)),
+            std::make_move_iterator(end2));
+        return res;
     }
 };
 
 
-class parser
+template<typename iterator,
+         typename starter>
+auto start_with (iterator begin,
+                 iterator end,
+                 starter &&to_contains)
+-> decltype(std::optional(begin))
 {
+    auto begin2 = std::begin(to_contains);
+    auto end2 = std::end(to_contains);
 
-};
+    while (begin!=end&&
+           begin2!=end2&&
+           (*begin).type==*begin2)
+    {
+        begin++;
+        begin2++;
+
+        if (begin==end&&begin2!=end)
+            return std::nullopt;
+    }
+
+    if (begin2==end2)
+        return std::optional(begin);
+    else
+        return std::nullopt;
+}
+
+
+template<typename iterator>
+auto parse_args (iterator begin,
+                 iterator end)
+{
+    bool has_arg = true;
+
+    while (has_arg)
+    {
+        auto arg = parse_arg(begin, end);
+    }
+
+    return 0; // return optional(begin);
+}
+
+
+template<typename iterator>
+auto parse_eol (iterator begin,
+                iterator end)
+{
+    return start_with(begin, end, {bml::eol});
+}
+
+
+template<typename iterator>
+auto parse_label (iterator begin,
+                  iterator end)
+{
+    return start_with(begin, end, {bml::label, bml::colon});
+}
+
+
+template<typename iterator>
+auto parse_block (iterator begin,
+                  iterator end)
+{
+    auto block_name = parse_label(begin, end);
+    auto eol = parse_eol(block_name.value(), end);
+
+    if (!eol.has_value())
+    {
+        auto cmd_arg = parse_args(block_name.value(), end);
+        auto cmd_eol = parse_eol(cmd_arg.value(), end);
+    }
+    else
+    {
+
+    }
+}
+
+
+template<typename str_t=std::string>
+auto parse (const lexer<str_t> &lex)
+{
+    auto &&tokens = lex.tokens();
+    return parse_block(std::begin(tokens), std::end(tokens));
+}
+
 
 #endif

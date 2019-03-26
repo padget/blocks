@@ -55,16 +55,14 @@ int main ()
     std::cout<<data_manager.read<int>(iterres)<<std::endl;
     std::cout<<sizeof(std::fstream)<<std::endl;
 
-    std::string coco = "coco: 12 \n toto:kdk \"coucou\"  ";
-    auto lex = lexer<std::string>(coco.begin(), coco.end());
+    std::string bin = "printi: i\n"
+                      "  let: continue true";
 
-    while (lex.has_next())
+    auto lex = lexer<std::string>(bin);
+    auto tokens = lex.tokens();
+
+    for (auto const &t : tokens)
     {
-        auto &&tk = lex.token();
-
-        std::visit([] (auto &&token)
-                   { std::cout<<token.value<<std::endl; }, tk);
+        std::cout<<static_cast<int>(t.type)<<' '<<t.value<<std::endl;
     }
-
-
 }
