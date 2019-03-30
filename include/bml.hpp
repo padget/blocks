@@ -304,7 +304,26 @@ auto parse_block (iterator begin,
 
     }
 }
+template <typename iterator>
+void split_on_eol(iterator begin, iterator end) {
+    constexpr auto is_eol = [] (const auto& tk) {return tk.type==bml::eol;};
+    const size_t nbeol = std::count_if(begin, end, is_eol);
+    std::vector<std::vector<std::decay_t<decltype(*begin)>>> lines(nbeol);
 
+    while (begin != end) {
+        begin = std::find_if(begin, end, is_eol);
+    }
+
+    std::find_if(begin, end, is_eol);
+}
+
+template <typename iterator>
+void foreach_line(iterator begin, iterator end) {
+    constexpr auto is_eol = [] (const auto& tk) {return tk.type==bml::eol;};
+    const size_t nbeol = std::count_if(begin, end, is_eol);
+    // pour chaque ligne on veut etablir si celui ci est conforme a une commande
+    // ou bien si la ligne est malformée
+}
 
 template<typename str_t=std::string>
 auto parse (const lexer<str_t> &lex)
