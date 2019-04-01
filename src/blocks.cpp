@@ -56,13 +56,13 @@ int main ()
     std::cout<<sizeof(std::fstream)<<std::endl;
 
     std::string bin = "printi: i\n"
-                      "  let: continue true";
+                      "\tlet: continue true";
 
     auto lex = lexer<std::string>(bin);
-    auto tokens = lex.tokens();
 
-    for (auto const &t : tokens)
+    auto commands = parse(lex);
+    for (const auto &com : commands)
     {
-        std::cout<<static_cast<int>(t.type)<<' '<<t.value<<std::endl;
+        std::cout<<com.name<<std::endl;
     }
 }

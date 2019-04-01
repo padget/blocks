@@ -105,6 +105,17 @@ detect_label (iterator begin,
 
 template<typename iterator, auto type>
 std::optional<std::pair<iterator, decltype(type)>>
+detect_tabitem (iterator begin,
+                iterator end)
+{
+    return (begin!=end&&*begin=='[') ?
+           std::optional(std::pair(std::next(begin), type)) :
+           std::nullopt;
+}
+
+
+template<typename iterator, auto type>
+std::optional<std::pair<iterator, decltype(type)>>
 detect_number (iterator begin,
                iterator end)
 {
@@ -146,7 +157,7 @@ auto detect (iterator begin, iterator end,
 
 enum class bml : int
 {
-    unknown, label, indent, space, number, colon, eol, eof, string /* TODO faire la fonction pour string */
+    unknown, label, indent, space, number, colon, eol, eof, tabitem, string /* TODO faire la fonction pour string */
 };
 
 
@@ -178,6 +189,7 @@ public:
     {
         auto res = detect(
             __cursor, __end,
+            &detect_tabitem<iterator, bml::tabitem>,
             &detect_colon<iterator, bml::colon>,
             &detect_eof<iterator, bml::eof>,
             &detect_eol<iterator, bml::eol>,
@@ -228,108 +240,137 @@ public:
 };
 
 
-template<typename iterator,
-         typename starter>
-auto start_with (iterator begin,
-                 iterator end,
-                 starter &&to_contains)
--> decltype(std::optional(begin))
+template<typename iterator>
+bool is_not_end (const iterator &begin,
+                 const iterator &end)
 {
-    auto begin2 = std::begin(to_contains);
-    auto end2 = std::end(to_contains);
+    return begin!=end;
+}
 
-    while (begin!=end&&
-           begin2!=end2&&
-           (*begin).type==*begin2)
+
+template<typename iterator>
+bool is_not_eol (const iterator &begin)
+{
+    return (*begin).type!=bml::eol;
+}
+
+
+template<typename iterator>
+bool is_indent (const iterator &begin)
+{
+    return (*begin).type==bml::indent;
+}
+
+
+template<typename iterator>
+bool is_arg (const iterator &begin)
+{
+    const auto &type = (*begin).type;
+    return type==bml::label||
+           type==bml::number||
+           type==bml::tabitem||
+           type==bml::string;
+}
+
+
+template<typename iterator>
+bool is_command_name (const iterator &begin)
+{
+    return (*begin).type==bml::label;
+}
+
+
+struct command
+{
+    unsigned context;
+    std::string name;
+    std::vector<std::string> args;
+};
+
+
+template<typename iterator>
+std::optional<command>
+parse_line (iterator begin, iterator end)
+{
+    if (is_not_end(begin, end)&&
+        is_not_eol(begin))
     {
-        begin++;
-        begin2++;
+        unsigned context = 0;
+        while (is_not_end(begin, end)&&
+               is_indent(begin))
+        {
+            begin++;
+            context++;
+        }
 
-        if (begin==end&&begin2!=end)
-            return std::nullopt;
+        std::string name;
+
+        if (is_not_end(begin, end)&&
+            is_command_name(begin))
+        {
+            name = (*begin).value;
+            begin++;
+            begin++;
+        }
+
+        std::vector<std::string> args;
+
+        while (is_not_end(begin, end)&&
+               is_arg(begin))
+        {
+            args.push_back((*begin).value);
+            begin++;
+        }
+
+        return {command{
+            .context=context,
+            .name=name,
+            .args=args
+        }};
     }
-
-    if (begin2==end2)
-        return std::optional(begin);
     else
+    {
         return std::nullopt;
-}
-
-
-template<typename iterator>
-auto parse_args (iterator begin,
-                 iterator end)
-{
-    bool has_arg = true;
-
-    while (has_arg)
-    {
-        auto arg = parse_arg(begin, end);
-    }
-
-    return 0; // return optional(begin);
-}
-
-
-template<typename iterator>
-auto parse_eol (iterator begin,
-                iterator end)
-{
-    return start_with(begin, end, {bml::eol});
-}
-
-
-template<typename iterator>
-auto parse_label (iterator begin,
-                  iterator end)
-{
-    return start_with(begin, end, {bml::label, bml::colon});
-}
-
-
-template<typename iterator>
-auto parse_block (iterator begin,
-                  iterator end)
-{
-    auto block_name = parse_label(begin, end);
-    auto eol = parse_eol(block_name.value(), end);
-
-    if (!eol.has_value())
-    {
-        auto cmd_arg = parse_args(block_name.value(), end);
-        auto cmd_eol = parse_eol(cmd_arg.value(), end);
-    }
-    else
-    {
-
     }
 }
-template <typename iterator>
-void split_on_eol(iterator begin, iterator end) {
-    constexpr auto is_eol = [] (const auto& tk) {return tk.type==bml::eol;};
-    const size_t nbeol = std::count_if(begin, end, is_eol);
-    std::vector<std::vector<std::decay_t<decltype(*begin)>>> lines(nbeol);
 
-    while (begin != end) {
-        begin = std::find_if(begin, end, is_eol);
-    }
 
-    std::find_if(begin, end, is_eol);
+command command_in_error ()
+{
+    return command{ // todo faire une meilleure gestion des erreurs de syntaxe...
+        .name="command in error"
+    };
 }
 
-template <typename iterator>
-void foreach_line(iterator begin, iterator end) {
-    constexpr auto is_eol = [] (const auto& tk) {return tk.type==bml::eol;};
-    const size_t nbeol = std::count_if(begin, end, is_eol);
-    // pour chaque ligne on veut etablir si celui ci est conforme a une commande
-    // ou bien si la ligne est malformée
-}
 
 template<typename str_t=std::string>
-auto parse (const lexer<str_t> &lex)
+std::vector<command>
+parse (lexer<str_t> &lex)
 {
     auto &&tokens = lex.tokens();
-    return parse_block(std::begin(tokens), std::end(tokens));
+    auto begin = std::begin(tokens), eol = begin;
+    auto end = std::end(tokens);
+    std::vector<command> commands;
+    const command error = command_in_error();
+
+    while (is_not_end(begin, end))
+    {
+        while (is_not_end(eol, end)&&
+               is_not_eol(eol))
+        {
+            eol++;
+        }
+
+        // between begin and eol we have a line
+        auto &&cmd = parse_line(begin, eol);
+
+        commands.push_back(cmd.value_or(error));
+        if (is_not_end(eol, end))
+            eol++;
+        begin = eol;
+    }
+
+    return commands;
 }
 
 
