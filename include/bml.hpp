@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <vector>
 #include <list>
+#include <sstream>
 
 namespace mystd
 {
@@ -307,25 +308,33 @@ bool has_lexical_error (const iterator &begin,
 
 
 template<typename iterator>
-void print_lexical_error (iterator begin)
+std::string lexical_error (iterator begin)
 {
   const auto &tk = *begin;
+  std::stringstream ss;
+
   if (tk.type==bml::unknown)
   {
-    std::cerr<<"unexpected character "<<tk.value<<" at l."<<tk.line<<'\n';
+    ss <<"unexpected character "<<tk.value<<" at l."<<tk.line<<'\n';
   }
+
+  return ss.str();
 }
 
 
 template<typename iterator>
-void print_lexical_errors (iterator begin,
+void lexical_errors (iterator begin,
                            iterator end)
 {
-  while (is_not_end(begin, end))
+    std::stringstream ss;
+
+    while (is_not_end(begin, end))
   {
-    print_lexical_error(begin);
+    ss << lexical_error(begin);
     begin++;
   }
+
+    return ss.str();
 }
 
 template <typename char_t>
@@ -336,8 +345,11 @@ command command_in_error (const std::basic_string<char_t>& why)
   };
 }
 
+template <typename some, typename error>
+using result = std::variant<some, error>;
+
 template<typename iterator>
-std::optional<command>
+result<command, std::string>
 parse_line (iterator begin,
             iterator end)
 {
@@ -346,8 +358,7 @@ parse_line (iterator begin,
   {
     if (has_lexical_error(begin, end))
     {
-      print_lexical_errors(begin, end);
-      return std::nullopt;
+      return lexical_errors(begin, end);
     }
     else
     {
@@ -374,7 +385,7 @@ parse_line (iterator begin,
       }
       else
       {
-        return std::nullopt;
+        return "a label is expected a the beginning of the command";
       }
 
       std::vector<std::string> args;
@@ -386,6 +397,10 @@ parse_line (iterator begin,
         begin++;
       }
 
+      if (is_not_eol(begin)) {
+          return "there are unexcepted element a the end of the command line";
+      }
+
       return command{
         .context=context,
         .name=name,
@@ -394,7 +409,7 @@ parse_line (iterator begin,
   }
   else
   {
-    return std::nullopt;
+    return "there is lexical errors in the command line";
   }
 }
 
