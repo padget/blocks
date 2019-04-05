@@ -32,6 +32,27 @@ constexpr int mult (int l, int r)
 }
 
 
+struct on_each_command
+{
+  template<typename type_t>
+  void operator() (type_t &&com)
+  {
+    using real_t = std::decay_t<decltype(com)>;
+    if constexpr (std::is_same_v<command_error, real_t>)
+    {
+      const command_error &error = com;
+      std::cout<<"error at l."<<error.line<<':'<<error.error<<std::endl;
+    }
+    else if constexpr (std::is_same_v<command, real_t>)
+    {
+      const command &cmd = com;
+      std::cout<<cmd.name<<std::endl;
+    }
+  }
+
+};
+
+
 int main ()
 {
   block<50> memory;
@@ -62,7 +83,7 @@ int main ()
     "\tloop: continue\n"
     "\t\tadd: i 1\n"
     "\t\tset: i $$\n"
-    "\t\tinf: i 10\n"
+    "\t\tinf: i 10 ,,,,,,\n"
     "\t\tset: continue $$";
 
   auto lex = lexer<std::string>(bin);
@@ -70,27 +91,6 @@ int main ()
   auto commands = parse(lex);
   for (const auto &com : commands)
   {
-    std::cout<<com.name<<std::endl;
+    std::visit(on_each_command(), com);
   }
-
-  std::string binerror =
-    "main++:\n"
-    "\tlet: i 0\n"
-    "\tlet: continue true\n"
-    "\tloop: continue\n"
-    "\t\tadd: i 1\n"
-    "\t\tset: i $$\n"
-    "\t\tinf: i 10\n"
-    "\t\tset: continue $$";
-
-  auto &&tks = lexer(binerror).tokens();
-  auto iterror = std::count_if(std::begin(tks), std::end(tks),
-                               [] (const auto &tk)
-                               { return tk.type==bml::unknown; });
-  for (auto &&tk:tks)
-  {
-    std::cout<<(int) tk.type<<' '<<tk.line<<'\n';
-  }
-
-  std::cout<<iterror;
 }

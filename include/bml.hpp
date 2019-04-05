@@ -11,19 +11,22 @@
 #include <list>
 #include <sstream>
 
+#include <result.hpp>
+
 namespace mystd
 {
   template<class InputIt,
            class UnaryPredicate>
   constexpr InputIt find_if (InputIt first, InputIt last, UnaryPredicate p)
   {
-    for (; first!=last; ++first)
+    while (first!=last)
     {
       if (p(*first))
-      {
         return first;
-      }
+
+      ++first;
     }
+
     return last;
   }
 }
@@ -173,7 +176,6 @@ public:
   {
     bml type;
     str_t value;
-    unsigned line;
   };
 
 
@@ -196,10 +198,7 @@ public:
     auto &&iter = valued ? std::get<0>(res.value()) : std::next(__cursor);
     auto &&value = str_t(__cursor, iter);
 
-    auto tk = token{type, value, __line};
-
-    if (type==bml::eol)
-      __line++;
+    auto tk = token{type, value};
 
     __cursor = valued ? std::get<0>(res.value()) : std::next(__cursor);
     return tk;
@@ -290,14 +289,6 @@ bool is_colon (const iterator &begin)
 }
 
 
-struct command
-{
-  unsigned context;
-  std::string name;
-  std::vector<std::string> args;
-};
-
-
 template<typename iterator>
 bool has_lexical_error (const iterator &begin,
                         const iterator &end)
@@ -308,14 +299,14 @@ bool has_lexical_error (const iterator &begin,
 
 
 template<typename iterator>
-std::string lexical_error (iterator begin)
+std::string lexical_error (iterator begin, unsigned line)
 {
   const auto &tk = *begin;
   std::stringstream ss;
 
   if (tk.type==bml::unknown)
   {
-    ss <<"unexpected character "<<tk.value<<" at l."<<tk.line<<'\n';
+    ss<<"unexpected character "<<tk.value<<" at l."<<line<<'\n';
   }
 
   return ss.str();
@@ -323,42 +314,53 @@ std::string lexical_error (iterator begin)
 
 
 template<typename iterator>
-void lexical_errors (iterator begin,
-                           iterator end)
+std::string lexical_errors (iterator begin,
+                            iterator end,
+                            unsigned line)
 {
-    std::stringstream ss;
+  std::stringstream ss;
 
-    while (is_not_end(begin, end))
+  while (is_not_end(begin, end))
   {
-    ss << lexical_error(begin);
+    ss<<lexical_error(begin, line);
     begin++;
   }
 
-    return ss.str();
+  return ss.str();
 }
 
-template <typename char_t>
-command command_in_error (const std::basic_string<char_t>& why)
+
+struct command
 {
-  return command{ // todo faire une meilleure gestion des erreurs de syntaxe...
-    .name=why
-  };
-}
+  unsigned context;
+  std::string name;
+  std::vector<std::string> args;
+};
 
-template <typename some, typename error>
-using result = std::variant<some, error>;
+
+struct command_error
+{
+  unsigned line;
+  std::string error;
+};
+
 
 template<typename iterator>
-result<command, std::string>
+result<command, command_error>
 parse_line (iterator begin,
-            iterator end)
+            iterator end,
+            unsigned line)
 {
   if (is_not_end(begin, end)&&
       is_not_eol(begin))
   {
     if (has_lexical_error(begin, end))
     {
-      return lexical_errors(begin, end);
+      const auto &tk = *begin;
+
+      return command_error{
+        .line = line,
+        .error = lexical_errors(begin, end, line)};
     }
     else
     {
@@ -385,7 +387,11 @@ parse_line (iterator begin,
       }
       else
       {
-        return "a label is expected a the beginning of the command";
+        const auto &tk = *begin;
+
+        return command_error{
+          .line = line,
+          .error = "a label is expected a the beginning of the command"};
       }
 
       std::vector<std::string> args;
@@ -397,8 +403,12 @@ parse_line (iterator begin,
         begin++;
       }
 
-      if (is_not_eol(begin)) {
-          return "there are unexcepted element a the end of the command line";
+      if (is_not_eol(begin))
+      {
+        const auto &tk = *begin;
+        return command_error{
+          .line = line,
+          .error = "there are unexcepted element a the end of the command line"};
       }
 
       return command{
@@ -409,43 +419,40 @@ parse_line (iterator begin,
   }
   else
   {
-    return "there is lexical errors in the command line";
+    const auto &tk = *begin;
+    return command_error{
+      .line = line,
+      .error = "there is lexical errors in the command line"};
   }
 }
 
 
-
-
-
 template<typename str_t=std::string>
-std::vector<command>
+std::vector<result<command, command_error>>
 parse (lexer<str_t> &lex)
 {
   auto &&tokens = lex.tokens();
   auto begin = std::begin(tokens), eol = begin;
   auto end = std::end(tokens);
-  std::vector<command> commands;
-  const command error = command_in_error();
+  unsigned line = 1;
+  std::vector<result<command, command_error>> commands;
 
   while (is_not_end(begin, end))
   {
     while (is_not_end(eol, end)&&
            is_not_eol(eol))
-    {
       ++eol;
-    }
 
     // between begin and eol we have a line
-    auto &&cmd = parse_line(begin, eol);
+    auto &&cmd = parse_line(begin, eol, line);
 
-    commands.push_back(cmd.value_or(error));
+    commands.push_back(cmd);
 
     if (is_not_end(eol, end))
-    {
       ++eol;
-    }
 
     begin = eol;
+    ++line;
   }
 
   return commands;
