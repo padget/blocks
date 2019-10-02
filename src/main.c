@@ -2,91 +2,173 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include <assert.h>
+#include <stdint.h>
+
+#define precond(cond) assert((cond))
 
 /**
- * BEGIN TOKEN SECTION  
+ * *** blocks character detection api ***
  */
+bool blocks_is_letter(char);
+bool blocks_is_digit(char);
+bool blocks_is_colon(char);
+bool blocks_is_eol(char);
 
-enum token_type
-{
-    IDENT,
-    NUMBER,
-    STRING,
-    LPAR,
-    RPAR,
-    COLON
-};
-
-typedef struct
-{
-    char *value;
-    int type;
-} token;
-
-typedef struct tokens
-{
-    token *t;
-    struct tokens *ts;
-} tokens;
-
-void blocks_foreach_token(tokens *ts, void(f)(token *))
-{
-    tokens *temp = ts;
-
-    while (temp != NULL)
-    {
-        f(temp->t);
-        temp = temp->ts;
-    }
-}
-
-token *blocks_create_token(const char *src, int size, int type)
-{
-    token *t = malloc(sizeof(token));
-
-    char *value = malloc(size * sizeof(char) + 1);
-    strncpy(value, src, size);
-    value[size] = '\0';
-
-    t->value = value;
-    t->type = type;
-
-    return t;
-}
-
-void blocks_free_token_value(token *t)
-{
-    if (t != NULL)
-        free(t->value);
-}
-
-void blocks_free_token(token *t)
-{
-    if (t != NULL)
-    {
-        blocks_free_token_value(t);
-        free(t);
-    }
-}
-
-bool blocks_is_ident(char c)
+bool blocks_is_letter(char c)
 {
     return 'a' <= c && c <= 'z';
 }
 
-token *blocks_match_ident(const char *src)
+bool blocks_is_digit(char c)
 {
-    const char *cursor = src;
+    return '0' <= c && c <= '9';
+}
 
-    while (blocks_is_ident(*cursor))
+bool blocks_is_colon(char c)
+{
+    return c == ':';
+}
+
+bool blocks_is_eol(char c)
+{
+    return c == '\n';
+}
+
+bool blocks_is_space(char c)
+{
+    return c == ' ' || c == '\t';
+}
+
+/**
+ * *** Blocks token api ***
+ */
+
+typedef struct
+{
+    char *begin;
+    char *end;
+} char_range;
+
+bool matched(char_range *range)
+{
+    precond(range != NULL);
+    return range->begin != range->end;
+}
+
+char_range blocks_match_number(char *);
+char_range blocks_match_name(char *);
+char_range blocks_match_eol(char *);
+char_range blocks_match_colon(char *);
+
+char_range build_char_range(char *begin, char *end)
+{
+    return (char_range){
+        .begin = begin,
+        .end = end};
+}
+
+char_range blocks_match_number(char *source)
+{
+    char *cursor = source;
+    while (blocks_is_digit(*cursor))
         ++cursor;
+    return build_char_range(source, cursor);
+}
 
-    return blocks_create_token(src, cursor - src, IDENT);
+char_range blocks_match_name(char *source)
+{
+    char *cursor = source;
+    while (blocks_is_letter(*cursor))
+        ++cursor;
+    return build_char_range(source, cursor);
+}
+
+char_range blocks_match_eol(char *source)
+{
+    char *cursor = blocks_is_eol(*source) ? source + 1 : source;
+    return build_char_range(source, cursor);
+}
+
+char_range blocks_match_colon(char *source)
+{
+    char *cursor = blocks_is_colon(*source) ? source + 1 : source;
+    return build_char_range(source, cursor);
+}
+
+#define COMMAND_MAX_NUMBER_OF_ARGUMENTS 10
+
+typedef struct
+{
+    size_t length;
+    char_range args[COMMAND_MAX_NUMBER_OF_ARGUMENTS];
+} arguments;
+
+typedef struct
+{
+    uint8_t depth;
+    char_range name;
+    arguments args;
+} command;
+
+typedef enum
+{
+    COMMAND_NO_ERROR = 0,
+    COMMAND_NAME_ERROR,
+    COMMAND_ARGS_ERROR,
+    COMMAND_TOO_MANY_ARGS_ERROR,
+    COMMAND_COLON_ERROR,
+} command_error;
+
+command_error blocks_detect_command(char *source, command *c)
+{
+    precond(c != NULL);
+    precond(source != NULL);
+
+    char_range range;
+
+    range = blocks_match_name(source);
+    if (!matched(&range))
+        return COMMAND_NAME_ERROR;
+    (*c).name = range;
+
+    range = blocks_match_colon(range.end);
+    if (!matched(&range))
+        return COMMAND_COLON_ERROR;
+
+    unsigned int nargs = 0u;
+
+    do
+    {
+        range = blocks_match_number(range.end);
+
+        if (matched(&range))
+        {
+            nargs++;
+            if (nargs > COMMAND_MAX_NUMBER_OF_ARGUMENTS)
+                return COMMAND_TOO_MANY_ARGS_ERROR;
+            (*c).args.args[nargs - 1] = range;
+            (*c).args.length += 1;
+        }
+    } while (matched(&range));
+
+    return COMMAND_NO_ERROR;
 }
 
 /**
  *   BEGIN FILE SECTION
  */
+
+uint64_t blocks_fsize(FILE *f)
+{
+    if (f == NULL)
+        return 0;
+
+    fseek(f, 0, SEEK_END);
+    uint64_t len = (uint64_t)ftell(f);
+    fseek(f, 0, 0);
+    return len;
+}
 
 int blocks_fclose(FILE *file)
 {
@@ -95,42 +177,41 @@ int blocks_fclose(FILE *file)
 
 FILE *blocks_openf(const char *filename)
 {
-    FILE *file = fopen(filename, "r");
+    return fopen(filename, "r");
+}
 
-    if (!file)
+char *block_freadall(FILE *f)
+{
+    uint64_t size = blocks_fsize(f);
+    char *buffer = malloc(size + 1);
+    for (uint64_t i = 0u; i < size; ++i)
     {
-        puts("le fichier n'a pas pu etre ouvert");
-        return NULL;
+        buffer[i] = (char)fgetc(f);
     }
-    else
-        return file;
+    buffer[size] = '\0';
+    return buffer;
 }
 
 /**
  * END FILE SECTION
  */
 
-void printtoken(token *t)
-{
-    if (t != NULL)
-        puts(t->value);
-}
-
 int main(int argc, char const *argv[])
 {
     printf("Hello world\n");
-    FILE *file = blocks_openf("src/main.c");
-    int c;
-
-    tokens ts;
-    token *t = blocks_create_token("coucou", 2, IDENT);
-    ts.t = t;
-    blocks_foreach_token(&ts, &printtoken);
-    blocks_free_token(ts.t);
-    while ((c = getc(file)) != EOF)
-        putc(c, stdout);
-
+    FILE *file = blocks_openf("examples/main.blocks");
+    if (!file)
+    {
+        printf("une erreur est suérvenu lors de l'ouverture du fichier");
+        return EXIT_FAILURE;
+    }
+    char *text = block_freadall(file);
+    command c;
+    command_error error = blocks_detect_command(text, &c);
+    printf("%d", error);
+    printf("%s", text);
+    printf("%c - %c", *c.name.begin, *(c.name.end-1));
     blocks_fclose(file);
 
-    return 0;
+    return EXIT_SUCCESS;
 }

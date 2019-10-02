@@ -33,6 +33,7 @@
         "string.h": "c",
         "optional": "c",
         "functional": "c",
-        "variant": "c"
+        "variant": "c",
+        "stdbool.h": "c"
     }
 }
