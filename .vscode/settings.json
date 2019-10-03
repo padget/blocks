@@ -34,6 +34,8 @@
         "optional": "c",
         "functional": "c",
         "variant": "c",
-        "stdbool.h": "c"
+        "stdbool.h": "c",
+        "stdio.h": "c",
+        "stdint.h": "c"
     }
 }
