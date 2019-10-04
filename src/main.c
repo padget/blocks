@@ -119,17 +119,12 @@ command_error blocks_detect_command(char *source, command *c) {
   precond(source != NULL);
 
   char_range range;
-
   if (!blocks_match_name(&source, &range))
     return COMMAND_NAME_ERROR;
   (*c).name = range;
-
-  bypass_blank(&source);
   if (!blocks_match_colon(&source, &range))
     return COMMAND_COLON_ERROR;
-
   unsigned int nargs = 0u;
-
   while (blocks_match_number(&source, &range)) {
     nargs++;
     if (nargs > COMMAND_MAX_NUMBER_OF_ARGUMENTS)
