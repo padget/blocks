@@ -10,10 +10,6 @@
 /**
  * *** blocks character detection api ***
  */
-bool blocks_is_letter(char);
-bool blocks_is_digit(char);
-bool blocks_is_colon(char);
-bool blocks_is_eol(char);
 
 bool blocks_is_letter(char c) { return 'a' <= c && c <= 'z'; }
 bool blocks_is_digit(char c) { return '0' <= c && c <= '9'; }
@@ -35,37 +31,66 @@ bool matched(char_range *range) {
   return range->begin != range->end;
 }
 
-char_range blocks_match_number(char *);
-char_range blocks_match_name(char *);
-char_range blocks_match_eol(char *);
-char_range blocks_match_colon(char *);
-
 char_range build_char_range(char *begin, char *end) {
   return (char_range){.begin = begin, .end = end};
 }
 
-char_range blocks_match_number(char *source) {
-  char *cursor = source;
+void bypass_blank(char **source) {
+  precond(source != NULL);
+  while (blocks_is_space(**source))
+    ++(*source);
+}
+
+bool blocks_match_number(char **source, char_range *range) {
+  precond(source != NULL);
+  precond(*source != NULL);
+  precond(range != NULL);
+
+  bypass_blank(source);
+  char *cursor = *source;
   while (blocks_is_digit(*cursor))
     ++cursor;
-  return build_char_range(source, cursor);
+  *range = build_char_range(*source, cursor);
+  *source = cursor;
+  return matched(range);
 }
 
-char_range blocks_match_name(char *source) {
-  char *cursor = source;
+bool blocks_match_name(char **source, char_range *range) {
+  precond(source != NULL);
+  precond(*source != NULL);
+  precond(range != NULL);
+
+  bypass_blank(source);
+  char *cursor = *source;
   while (blocks_is_letter(*cursor))
     ++cursor;
-  return build_char_range(source, cursor);
+  *range = build_char_range(*source, cursor);
+  *source = cursor;
+  return matched(range);
 }
 
-char_range blocks_match_eol(char *source) {
-  char *cursor = blocks_is_eol(*source) ? source + 1 : source;
-  return build_char_range(source, cursor);
+bool blocks_match_eol(char **source, char_range *range) {
+  precond(source != NULL);
+  precond(*source != NULL);
+  precond(range != NULL);
+
+  bypass_blank(source);
+  char *cursor = blocks_is_eol(**source) ? *source + 1 : *source;
+  *range = build_char_range(*source, cursor);
+  *source = cursor;
+  return matched(range);
 }
 
-char_range blocks_match_colon(char *source) {
-  char *cursor = blocks_is_colon(*source) ? source + 1 : source;
-  return build_char_range(source, cursor);
+bool blocks_match_colon(char **source, char_range *range) {
+  precond(source != NULL);
+  precond(*source != NULL);
+  precond(range != NULL);
+
+  bypass_blank(source);
+  char *cursor = blocks_is_colon(**source) ? *source + 1 : *source;
+  *range = build_char_range(*source, cursor);
+  *source = cursor;
+  return matched(range);
 }
 
 #define COMMAND_MAX_NUMBER_OF_ARGUMENTS 10
@@ -95,28 +120,23 @@ command_error blocks_detect_command(char *source, command *c) {
 
   char_range range;
 
-  range = blocks_match_name(source);
-  if (!matched(&range))
+  if (!blocks_match_name(&source, &range))
     return COMMAND_NAME_ERROR;
   (*c).name = range;
 
-  range = blocks_match_colon(range.end);
-  if (!matched(&range))
+  bypass_blank(&source);
+  if (!blocks_match_colon(&source, &range))
     return COMMAND_COLON_ERROR;
 
   unsigned int nargs = 0u;
 
-  do {
-    range = blocks_match_number(range.end);
-
-    if (matched(&range)) {
-      nargs++;
-      if (nargs > COMMAND_MAX_NUMBER_OF_ARGUMENTS)
-        return COMMAND_TOO_MANY_ARGS_ERROR;
-      (*c).args.args[nargs - 1] = range;
-      (*c).args.length += 1;
-    }
-  } while (matched(&range));
+  while (blocks_match_number(&source, &range)) {
+    nargs++;
+    if (nargs > COMMAND_MAX_NUMBER_OF_ARGUMENTS)
+      return COMMAND_TOO_MANY_ARGS_ERROR;
+    (*c).args.args[nargs - 1] = range;
+    (*c).args.length += 1;
+  }
 
   return COMMAND_NO_ERROR;
 }
