@@ -6,6 +6,7 @@
 #include <string.h>
 
 #define precond(cond) assert((cond))
+#define notnull(ptr) precond((ptr != NULL))
 
 /**
  * *** blocks character detection api ***
@@ -27,7 +28,7 @@ typedef struct {
 } char_range;
 
 bool matched(char_range *range) {
-  precond(range != NULL);
+  notnull(range);
   return range->begin != range->end;
 }
 
@@ -36,15 +37,15 @@ char_range build_char_range(char *begin, char *end) {
 }
 
 void bypass_blank(char **source) {
-  precond(source != NULL);
+  notnull(source);
   while (blocks_is_space(**source))
     ++(*source);
 }
 
 bool blocks_match_number(char **source, char_range *range) {
-  precond(source != NULL);
-  precond(*source != NULL);
-  precond(range != NULL);
+  notnull(source);
+  notnull(*source);
+  notnull(range);
 
   bypass_blank(source);
   char *cursor = *source;
@@ -56,9 +57,9 @@ bool blocks_match_number(char **source, char_range *range) {
 }
 
 bool blocks_match_name(char **source, char_range *range) {
-  precond(source != NULL);
-  precond(*source != NULL);
-  precond(range != NULL);
+  notnull(source);
+  notnull(*source);
+  notnull(range);
 
   bypass_blank(source);
   char *cursor = *source;
@@ -70,9 +71,9 @@ bool blocks_match_name(char **source, char_range *range) {
 }
 
 bool blocks_match_eol(char **source, char_range *range) {
-  precond(source != NULL);
-  precond(*source != NULL);
-  precond(range != NULL);
+  notnull(source);
+  notnull(*source);
+  notnull(range);
 
   bypass_blank(source);
   char *cursor = blocks_is_eol(**source) ? *source + 1 : *source;
@@ -82,9 +83,9 @@ bool blocks_match_eol(char **source, char_range *range) {
 }
 
 bool blocks_match_colon(char **source, char_range *range) {
-  precond(source != NULL);
-  precond(*source != NULL);
-  precond(range != NULL);
+  notnull(source);
+  notnull(*source);
+  notnull(range);
 
   bypass_blank(source);
   char *cursor = blocks_is_colon(**source) ? *source + 1 : *source;
@@ -115,8 +116,8 @@ typedef enum {
 } command_error;
 
 command_error blocks_detect_command(char *source, command *c) {
-  precond(c != NULL);
-  precond(source != NULL);
+  notnull(c);
+  notnull(source);
 
   char_range range;
   if (!blocks_match_name(&source, &range))
@@ -149,62 +150,64 @@ enum file_error {
   FILE_BUFFER_ALLOCATION_ERROR
 };
 
-enum file_error blocks_fsize(FILE *f, size_t *size) {
-  precond(size != NULL);
+enum file_error blocks_fsize(FILE *file, size_t *size) {
+  notnull(size);
+
   *size = 0;
-  if (f == NULL)
+  if (file == NULL)
     return FILE_NO_ERROR;
-  if (fseek(f, 0, SEEK_END) != FILE_NO_ERROR)
+  if (fseek(file, 0, SEEK_END) != FILE_NO_ERROR)
     return FILE_SEEK_ERROR;
-  uint64_t len = (uint64_t)ftell(f);
-  if (fseek(f, 0, SEEK_SET) != FILE_NO_ERROR)
+  uint64_t len = (uint64_t)ftell(file);
+  if (fseek(file, 0, SEEK_SET) != FILE_NO_ERROR)
     return FILE_SEEK_ERROR;
   *size = len;
   return FILE_NO_ERROR;
 }
 
-enum file_error blocks_freadall(FILE *file, char **buffer) {
-  size_t fsize = 0;
-  enum file_error err = FILE_NO_ERROR;
-
-  if ((err = blocks_fsize(file, &fsize)) != FILE_NO_ERROR)
-    return err;
-
-  if (buffer == NULL)
-    return FILE_BUFFER_ALLOCATION_ERROR;
-
-  *buffer = malloc(fsize + 1);
-
-  if (*buffer == NULL)
-    return FILE_BUFFER_ALLOCATION_ERROR;
-
-  for (uint64_t i = 0u; i < fsize; ++i)
-    (*buffer)[i] = (char)fgetc(file);
-
-  (*buffer)[fsize] = '\0';
-  return FILE_NO_ERROR;
-}
-
 enum file_error blocks_fclose(FILE *file) {
+  notnull(file);
+
   return fclose(file) ? FILE_CLOSE_ERROR : FILE_NO_ERROR;
 }
 
 enum file_error blocks_fopen(const char *filename, FILE **file) {
-  precond(file != NULL);
+  notnull(file);
 
   *file = fopen(filename, "r");
   return *file == NULL ? FILE_OPEN_ERROR : FILE_NO_ERROR;
 }
 
+enum file_error blocks_freadall(FILE *file, char *buffer) {
+  notnull(file);
+  notnull(buffer);
+
+  int c;
+  while ((c = (char)fgetc(file)) != EOF) {
+    *buffer = c;
+    buffer++;
+  }
+  *buffer = '\0';
+  return FILE_NO_ERROR;
+}
+
+enum file_error blocks_build_buffer(FILE *file, char **buffer) {
+  notnull(file); 
+  notnull(buffer);
+
+  size_t fsize = 0;
+  enum file_error err = FILE_NO_ERROR;
+  if ((err = blocks_fsize(file, &fsize)) != FILE_NO_ERROR)
+    return err;
+  *buffer = malloc(fsize + 1);
+  if (*buffer == NULL)
+    return FILE_BUFFER_ALLOCATION_ERROR;
+  return FILE_NO_ERROR;
+}
+
 /**
  * END FILE SECTION
  */
-
-void print_all(enum file_error err, const char *text) {
-  if (err == FILE_NO_ERROR)
-    if (text != NULL)
-      printf("%s", text);
-}
 
 int main(int argc, char const *argv[]) {
   printf("Hello world\n");
@@ -218,7 +221,8 @@ int main(int argc, char const *argv[]) {
   }
 
   char *text = NULL;
-  if (blocks_freadall(f, &text) != FILE_NO_ERROR) {
+  blocks_build_buffer(f, &text);
+  if (blocks_freadall(f, text) != FILE_NO_ERROR) {
     printf("un soucis dans la lecture du fichier\n");
     free(text);
     blocks_fclose(f);
