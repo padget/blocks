@@ -36,6 +36,8 @@
         "variant": "c",
         "stdbool.h": "c",
         "stdio.h": "c",
-        "stdint.h": "c"
+        "stdint.h": "c",
+        "srange.h": "c",
+        "macro.h": "c"
     }
 }
