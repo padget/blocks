@@ -30,6 +30,8 @@ typedef enum {
   COMMAND_COLON_ERROR,
 } command_error;
 
+void blocks_bypass_blank(blocks_srange* range);
+
 bool blocks_is_letter(char c);
 bool blocks_is_digit(char c);
 bool blocks_is_colon(char c);

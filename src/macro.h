@@ -4,6 +4,6 @@
 #include <assert.h>
 
 #define precond(cond) assert((cond))
-#define notnull(ptr) precond((ptr != NULL))
+#define contract_notnull(ptr) precond((ptr != NULL))
 
 #endif

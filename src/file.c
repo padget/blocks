@@ -3,7 +3,7 @@
 #include <stdint.h>
 
 enum file_error blocks_fsize(FILE *file, size_t *size) {
-  notnull(size);
+  contract_notnull(size);
 
   *size = 0;
   if (file == NULL)
@@ -18,21 +18,21 @@ enum file_error blocks_fsize(FILE *file, size_t *size) {
 }
 
 enum file_error blocks_fclose(FILE *file) {
-  notnull(file);
+  contract_notnull(file);
 
   return fclose(file) ? FILE_CLOSE_ERROR : FILE_NO_ERROR;
 }
 
 enum file_error blocks_fopen(const char *filename, FILE **file) {
-  notnull(file);
+  contract_notnull(file);
 
   *file = fopen(filename, "r");
   return *file == NULL ? FILE_OPEN_ERROR : FILE_NO_ERROR;
 }
 
 enum file_error blocks_freadall(FILE *file, blocks_srange *range) {
-  notnull(file);
-  notnull(range);
+  contract_notnull(file);
+  contract_notnull(range);
 
   char *buffer = range->begin;
   int c;
@@ -46,8 +46,8 @@ enum file_error blocks_freadall(FILE *file, blocks_srange *range) {
 }
 
 enum file_error blocks_build_buffer(FILE *file, blocks_srange *range) {
-  notnull(file);
-  notnull(range);
+  contract_notnull(file);
+  contract_notnull(range);
 
   char *buffer = NULL;
   size_t fsize = 0;
