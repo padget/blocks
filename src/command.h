@@ -8,7 +8,7 @@
 
 typedef struct {
   blocks_srange *begin;
-  blocks_srange* end;
+  blocks_srange *end;
 } arguments;
 
 typedef struct {
@@ -30,7 +30,7 @@ typedef enum {
   COMMAND_COLON_ERROR,
 } command_error;
 
-void blocks_bypass_blank(blocks_srange* range);
+void blocks_bypass_blank(blocks_srange *range);
 
 bool blocks_is_letter(char c);
 bool blocks_is_digit(char c);

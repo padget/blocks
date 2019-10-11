@@ -5,19 +5,29 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "srange.h"
 #include "command.h"
 #include "file.h"
 #include "macro.h"
+#include "srange.h"
 
 void blocks_free(void *ptr) { free(ptr); }
 void blocks_println(const char *text) { printf("%s\n", text); }
+void blocks_printsr(const blocks_srange *range) {
+  char *begin = range->begin;
+  char *end = range->end;
+  while (begin < end) {
+    putchar(*begin);
+    ++begin;
+  }
+}
 
 int main(int argc, char const *argv[]) {
   blocks_println("Hello world");
   FILE *f = NULL;
   blocks_srange range;
-  command c;
+  blocks_srange name;
+  blocks_srange args[10];
+  command c = {.name = name, .args = {.begin = args, .end = args + 9}};
 
   if (blocks_fopen("examples/main.blocks", &f) != FILE_NO_ERROR) {
     blocks_println("une erreur est suérvenu lors de l'ouverture du fichier");
@@ -39,31 +49,11 @@ int main(int argc, char const *argv[]) {
   blocks_println(range.begin);
   if (blocks_detect_command(&range, &c) != COMMAND_NO_ERROR)
     blocks_println("un soucis de detection de commande");
-  else {
-    {
-      char *begin = c.name.begin;
-      while (begin != c.name.end) {
-        putc(*begin, stdout);
-        begin++;
-      }
-    }
-    printf("nb args %d \n", c.args.length);
-    {
-      int index = 0;
-      blocks_srange *r = NULL;
-      while (index < c.args.length) {
-        r = &(c.args.args[index]);
-        {
-          char *begin = r->begin;
-          while (begin != r->end) {
-            putc(*begin, stdout);
-            begin++;
-          }
-        }
-        index++;
-      }
-    }
-  }
+
+  printf("nom de la commande");
+  blocks_printsr(&c.name);
+  printf("\n");
+
   blocks_free(range.begin);
   blocks_fclose(f);
 

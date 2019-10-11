@@ -8,8 +8,6 @@ bool blocks_match_number(blocks_srange *source, blocks_srange *range) {
   contract_notnull(source->begin);
   contract_notnull(source->end);
   contract_notnull(range);
-  contract_notnull(range->begin);
-  contract_notnull(range->end);
 
   blocks_bypass_blank(source);
   

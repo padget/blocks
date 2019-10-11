@@ -1,5 +1,4 @@
 
-main: argc:int
-  let: a 12
-  print: 'hello world'
-  return: 0
+main: 
+  add: 2 2
+  print: $$ '\n'
