@@ -38,6 +38,10 @@
         "stdio.h": "c",
         "stdint.h": "c",
         "srange.h": "c",
-        "macro.h": "c"
+        "macro.h": "c",
+        "file.h": "c",
+        "command.h": "c",
+        "algorithm.h": "c",
+        "blocks_algorithm.h": "c"
     }
 }

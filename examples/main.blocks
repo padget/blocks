@@ -1,4 +1,3 @@
-
-main: 
-  add: 2 2
-  print: $$ '\n'
+main 
+  add 2 2
+  print $$ '\n'

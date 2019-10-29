@@ -1,63 +1,73 @@
 #include "file.h"
 #include "macro.h"
-#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
 
-enum file_error blocks_fsize(FILE *file, size_t *size) {
-  contract_notnull(size);
+#define FILE_OPEN_ERROR "couldn't open the file"
+#define BUFFER_ALLOCATION_ERROR "couldn't attribute memory space for buffer"
+#define FILE_SEEK_ERROR "couldn't change file seek cursor"
 
-  *size = 0;
-  if (file == NULL)
-    return FILE_NO_ERROR;
-  if (fseek(file, 0, SEEK_END) != FILE_NO_ERROR)
-    return FILE_SEEK_ERROR;
-  uint64_t len = (uint64_t)ftell(file);
-  if (fseek(file, 0, SEEK_SET) != FILE_NO_ERROR)
-    return FILE_SEEK_ERROR;
-  *size = len;
-  return FILE_NO_ERROR;
-}
+void io_process_error(FILE *file, char *tmp, const char *message) {
+  contract_notnull(message);
 
-enum file_error blocks_fclose(FILE *file) {
-  contract_notnull(file);
-
-  return fclose(file) ? FILE_CLOSE_ERROR : FILE_NO_ERROR;
-}
-
-enum file_error blocks_fopen(const char *filename, FILE **file) {
-  contract_notnull(file);
-
-  *file = fopen(filename, "r");
-  return *file == NULL ? FILE_OPEN_ERROR : FILE_NO_ERROR;
-}
-
-enum file_error blocks_freadall(FILE *file, blocks_srange *range) {
-  contract_notnull(file);
-  contract_notnull(range);
-
-  char *buffer = range->begin;
-  int c;
-  while ((c = (char)fgetc(file)) != EOF) {
-    *buffer = c;
-    buffer++;
+  if (errno != 0) {
+    puts("an error occured");
+    if (file != NULL)
+      fclose(file);
+    if (tmp != NULL)
+      free(tmp);
+    perror(message);
+    exit(EXIT_FAILURE);
   }
-  *buffer = '\0';
-  range->end = buffer;
-  return FILE_NO_ERROR;
 }
 
-enum file_error blocks_build_buffer(FILE *file, blocks_srange *range) {
-  contract_notnull(file);
-  contract_notnull(range);
+void blocks_io_file_to_buffer(const char *filename, char **buffer) {
+  contract_notnull(filename);
+  contract_notnull(buffer);
+  contract_null(*buffer);
 
-  char *buffer = NULL;
-  size_t fsize = 0;
-  enum file_error err = FILE_NO_ERROR;
-  if ((err = blocks_fsize(file, &fsize)) != FILE_NO_ERROR)
-    return err;
-  buffer = malloc(fsize + 1);
-  if (buffer == NULL)
-    return FILE_BUFFER_ALLOCATION_ERROR;
-  range->begin = buffer;
-  range->end = buffer + fsize + 1;
-  return FILE_NO_ERROR;
+  FILE *file = NULL;
+  char *temp = NULL;
+
+  // Open the file
+  file = fopen(filename, "r");
+
+  if (file == NULL)
+    io_process_error(file, temp, FILE_OPEN_ERROR);
+
+  // Process the buffer_size
+  size_t buffer_size = 0;
+
+  if (fseek(file, 0, SEEK_END) != 0)
+    io_process_error(file, temp, FILE_SEEK_ERROR);
+
+  buffer_size = ftell(file);
+
+  if (fseek(file, 0, SEEK_SET) != 0)
+    io_process_error(file, temp, FILE_SEEK_ERROR);
+
+  // Create the buffer with buffer_size length
+  temp = malloc(sizeof(char) * buffer_size + 1);
+
+  if (temp == NULL)
+    io_process_error(file, temp, BUFFER_ALLOCATION_ERROR);
+
+  // Read all file into buffer
+  int c;
+  char *cursor = temp;
+
+  while ((c = fgetc(file)) != EOF) {
+    *cursor = (char)c;
+    cursor += 1;
+  }
+
+  *cursor = '\0';
+
+  // Return result;
+  *buffer = temp;
 }
+
+#undef FILE_OPEN_ERROR 
+#undef BUFFER_ALLOCATION_ERROR
+#undef FILE_SEEK_ERROR
+
