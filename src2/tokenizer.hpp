@@ -5,9 +5,28 @@
 #include <optional>
 
 namespace blocks {
-class tokenizer {
-  public: 
-    const std::optional<const blocks::token> try_tokenize(const std::string&) const;
+class tokenizer
+{
+public:
+  virtual const std::optional<const blocks::token> try_tokenize(
+    const std::string::const_iterator& begin,
+    const std::string::const_iterator& end) const = 0;
+};
+
+class name_tokenizer : public tokenizer
+{
+public:
+  virtual const std::optional<const blocks::token> try_tokenize(
+    const std::string::const_iterator& begin,
+    const std::string::const_iterator& end) const;
+};
+
+class integer_tokenizer : public tokenizer
+{
+public:
+  virtual const std::optional<const blocks::token> try_tokenize(
+    const std::string::const_iterator& begin,
+    const std::string::const_iterator& end) const;
 };
 } // namespace blocks
 #endif
