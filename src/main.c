@@ -9,6 +9,9 @@
 #include "file.h"
 #include "macro.h"
 
+/* un srange represente le debut et la fin d'une sous chaine de 
+   caractères qui ne possède pas le controle sur la durée de vie 
+   de la sous chaine en question */
 struct srange_t {
   char *begin;
   char *end;
@@ -20,8 +23,7 @@ typedef struct srange_t arg_t;
 /* Cette structure est une commande.
    Une commande comporte un nom et au maximum 4 arguments.
    si sur une ligne on detecte plus de 4 arguments, il s'agit d'une erreur de
-   compilation.
-  */
+   compilation. */
 struct command_t {
   name_t n;
   arg_t a1;
@@ -33,7 +35,7 @@ struct command_t {
 char *integer(char *begin, char *end) {
   contract_notnull(begin);
   contract_notnull(end);
-
+  /* Un integer est une simple suite de digit compris entre 0 et 9 */
   while ('0' <= *begin && *begin <= '9')
     begin++;
   return begin;
@@ -42,7 +44,9 @@ char *integer(char *begin, char *end) {
 char *number(char *begin, char *end) {
   contract_notnull(begin);
   contract_notnull(end);
-
+  /* pour l'instant un number est un integer 
+     nous verrons plus tard pour intégrer les décimales 
+     et les notations scientifiques */
   return integer(begin, end);
 }
 
@@ -62,11 +66,18 @@ char *name(char *begin, char *end) {
   return begin;
 }
 
+/* On veut ici bypasser les blanc dans une chaine de caracteres */
+char* bypass_blank(char* begin, char* end) {
+  contract_notnull(begin);
+  contract_notnull(end);
+  /* TODO bypasser blank */
+  return begin;
+}
+
 /* dans cette fonction je vais faire la construction d'une
    commande à partir d'une ligne de chaine de caractere
    pour cette première version je vais partir de l'hypothèse que
-   ma ligne commence sans espace et qu'elle termine par un '\n'
-*/
+   ma ligne commence sans espace et qu'elle termine par un '\n' */
 struct command_t build_command(char *begin, char *end) {
   contract_notnull(begin);
   contract_notnull(end);
@@ -83,7 +94,6 @@ struct command_t build_command(char *begin, char *end) {
   /* nom que si le pointeur de début est différent du pointeur de la fin */
 
   /* TODO Entre deux token il faut bien penser à bypasser les espaces*/
-  
   cursor = name(begin, end);
   /* Nous vérifions maintenant qu'un nom a été detecté,
      sinon la ligne est malformée

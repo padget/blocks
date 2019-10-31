@@ -1,7 +1,5 @@
-gcc -c src/file.c
-gcc -c src/blocks_algorithm.c
+g++ -c src2/main.cpp
+g++ -c src2/command.cpp
 
-gcc -o main.exe \
-  file.o \
-  src/main.c \
-  blocks_algorithm.o \
+g++ -o main.exe main.o \
+                command.o

@@ -42,6 +42,18 @@
         "file.h": "c",
         "command.h": "c",
         "algorithm.h": "c",
-        "blocks_algorithm.h": "c"
+        "blocks_algorithm.h": "c",
+        "vector": "cpp",
+        "atomic": "cpp",
+        "cstdarg": "cpp",
+        "deque": "cpp",
+        "unordered_map": "cpp",
+        "algorithm": "cpp",
+        "iterator": "cpp",
+        "memory_resource": "cpp",
+        "numeric": "cpp",
+        "random": "cpp",
+        "string": "cpp",
+        "sstream": "cpp"
     }
 }
