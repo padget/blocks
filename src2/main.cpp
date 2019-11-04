@@ -12,7 +12,8 @@ main(int argc, char const* argv[])
   blocks::commands cs = { c };
   blocks::name_tokenizer ntkzer;
   blocks::integer_tokenizer inttkzer;
-  blocks::source src{ "coucou12", { &ntkzer, &inttkzer } };
+  blocks::command_tokenizer cmdtkzer;
+  blocks::source src{ "coucou12\n\nlqdj", { &cmdtkzer } };
 
   std::cout << cs[0].name() << "\n";
   
