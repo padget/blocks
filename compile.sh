@@ -5,7 +5,7 @@ g++ -c src2/token.cpp -std=c++17
 g++ -c src2/tokenizer.cpp -std=c++17
 
 
-g++ -o main.exe main.o \
+g++ -o blocks.exe main.o \
                 command.o \
                 source.o \
                 token.o \
