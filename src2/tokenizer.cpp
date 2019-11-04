@@ -1,17 +1,38 @@
 #include "tokenizer.hpp"
 
-const std::optional<const blocks::token>
-blocks::command_tokenizer::try_tokenize(
-  const std::string::const_iterator& begin,
-  const std::string::const_iterator& end) const
+blocks::copttoken
+blocks::eos_tokenizer::try_tokenize(blocks::csiterator& begin,
+                                    blocks::csiterator& end) const
+{
+  if (begin == end)
+    return token("", "eos");
+  else
+    return std::nullopt;
+}
+
+blocks::copttoken
+blocks::eol_tokenizer::try_tokenize(blocks::csiterator& begin,
+                                    blocks::csiterator& end) const
+{
+  if (begin != end && *begin == '\n')
+    return token("\n", "eol");
+  else
+    return std::nullopt;
+}
+
+blocks::copttoken
+blocks::command_tokenizer::try_tokenize(blocks::csiterator& begin,
+                                        blocks::csiterator& end) const
 {
   std::string::const_iterator cursor = begin;
 
   while (cursor != end) {
     cursor++;
 
-    if (*cursor == '\n')
+    if (*cursor == '\n') {
+      cursor++;
       break;
+    }
   }
 
   if (cursor != begin)
@@ -23,10 +44,9 @@ blocks::command_tokenizer::try_tokenize(
     return std::nullopt;
 }
 
-const std::optional<const blocks::token>
-blocks::name_tokenizer::try_tokenize(
-  const std::string::const_iterator& begin,
-  const std::string::const_iterator& end) const
+blocks::copttoken
+blocks::name_tokenizer::try_tokenize(blocks::csiterator& begin,
+                                     blocks::csiterator& end) const
 {
   std::string::const_iterator cursor = begin;
 
@@ -39,10 +59,9 @@ blocks::name_tokenizer::try_tokenize(
     return std::nullopt;
 }
 
-const std::optional<const blocks::token>
-blocks::integer_tokenizer::try_tokenize(
-  const std::string::const_iterator& begin,
-  const std::string::const_iterator& end) const
+blocks::copttoken
+blocks::integer_tokenizer::try_tokenize(blocks::csiterator& begin,
+                                        blocks::csiterator& end) const
 {
   std::string::const_iterator cursor = begin;
 
@@ -51,6 +70,26 @@ blocks::integer_tokenizer::try_tokenize(
 
   if (cursor != begin)
     return token(std::string(begin, cursor), "integer");
+  else
+    return std::nullopt;
+}
+
+blocks::copttoken
+blocks::colon_tokenizer::try_tokenize(blocks::csiterator& begin,
+                                      blocks::csiterator& end) const
+{
+  if (begin != end && *begin == ':')
+    return token(std::string(begin, begin + 1), "colon");
+  else
+    return std::nullopt;
+}
+
+blocks::copttoken
+blocks::blank_tokenizer::try_tokenize(blocks::csiterator& begin,
+                                      blocks::csiterator& end) const
+{
+  if (begin != end && *begin == ' ')
+    return token(std::string(begin, begin + 1), "blank");
   else
     return std::nullopt;
 }

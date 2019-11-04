@@ -5,36 +5,57 @@
 #include <optional>
 
 namespace blocks {
+
+using csiterator = const std::string::const_iterator;
+using copttoken = const std::optional<const blocks::token>;
+
 class tokenizer
 {
 public:
-  virtual const std::optional<const blocks::token> try_tokenize(
-    const std::string::const_iterator& begin,
-    const std::string::const_iterator& end) const = 0;
+  virtual copttoken try_tokenize(csiterator& begin, csiterator& end) const = 0;
 };
+
+class eos_tokenizer : public tokenizer
+{
+public:
+  virtual copttoken try_tokenize(csiterator& begin, csiterator& end) const;
+};
+
+class eol_tokenizer : public tokenizer
+{
+public:
+  virtual copttoken try_tokenize(csiterator& begin, csiterator& end) const;
+};
+
 
 class command_tokenizer : public tokenizer
 {
 public:
-  virtual const std::optional<const blocks::token> try_tokenize(
-    const std::string::const_iterator& begin,
-    const std::string::const_iterator& end) const;
+  virtual copttoken try_tokenize(csiterator& begin, csiterator& end) const;
 };
 
 class name_tokenizer : public tokenizer
 {
 public:
-  virtual const std::optional<const blocks::token> try_tokenize(
-    const std::string::const_iterator& begin,
-    const std::string::const_iterator& end) const;
+  virtual copttoken try_tokenize(csiterator& begin, csiterator& end) const;
 };
 
 class integer_tokenizer : public tokenizer
 {
 public:
-  virtual const std::optional<const blocks::token> try_tokenize(
-    const std::string::const_iterator& begin,
-    const std::string::const_iterator& end) const;
+  virtual copttoken try_tokenize(csiterator& begin, csiterator& end) const;
+};
+
+class colon_tokenizer : public tokenizer
+{
+public:
+  virtual copttoken try_tokenize(csiterator& begin, csiterator& end) const;
+};
+
+class blank_tokenizer : public tokenizer
+{
+public:
+  virtual copttoken try_tokenize(csiterator& begin, csiterator& end) const;
 };
 } // namespace blocks
 #endif

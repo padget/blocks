@@ -1,9 +1,7 @@
-#include "source.hpp"
+#include "scanner.hpp"
 #include <optional>
 
-blocks::source::source() {}
-
-blocks::source::source(const std::string& content,
+blocks::scanner::scanner(const std::string& content,
                        const std::vector<blocks::tokenizer*>& tokenizers)
   : __content{ content }
   , __tokenizers{ tokenizers }
@@ -11,7 +9,7 @@ blocks::source::source(const std::string& content,
   , __end{ __content.end() }
 {}
 
-blocks::source::source(
+blocks::scanner::scanner(
   const std::string& content,
   const std::initializer_list<blocks::tokenizer*>& tokenizers)
   : __content{ content }
@@ -21,7 +19,7 @@ blocks::source::source(
 {}
 
 const blocks::token
-blocks::source::next() const
+blocks::scanner::next() const
 {
   for (auto* tkzer : __tokenizers) {
     auto&& tk = tkzer->try_tokenize(__current, __end);

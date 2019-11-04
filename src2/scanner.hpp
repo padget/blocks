@@ -1,5 +1,5 @@
-#ifndef __blocks_source_hpp__
-#define __blocks_source_hpp__
+#ifndef __blocks_scanner_hpp__
+#define __blocks_scanner_hpp__
 
 #include "token.hpp"
 #include "tokenizer.hpp"
@@ -7,7 +7,7 @@
 #include <vector>
 
 namespace blocks {
-class source
+class scanner
 {
 private:
   std::string __content;
@@ -16,10 +16,10 @@ private:
   std::string::const_iterator __end;
 
 public:
-  source();
-  source(const std::string& content,
+  scanner();
+  scanner(const std::string& content,
          const std::vector<blocks::tokenizer*>& tokenizers);
-  source(const std::string& content,
+  scanner(const std::string& content,
          const std::initializer_list<blocks::tokenizer*>& tokenizers);
 
 public:
