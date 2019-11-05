@@ -1,120 +1,129 @@
+#include "std.hpp"
 #include <iostream>
-#include <string>
-#include <vector>
-
-#include "command.hpp"
-#include "scanner.hpp"
 
 namespace blocks {
-class command_builder
+struct command_token
 {
-private:
-  blocks::scanner __cmd_scan;
-
-public:
-  command_builder(const blocks::token& cmd_tko);
-
-public:
-  const std::optional<const blocks::command> build() const;
-
-private:
-  const std::vector<blocks::token> tokens() const;
-  const int depth(const std::vector<blocks::token>& cmd_tks) const;
+  blocks::string line;
 };
-}
 
-blocks::command_builder::command_builder(const blocks::token& cmd_tko)
+struct basic_token
 {
-  blocks::name_tokenizer ntkzer;
-  blocks::integer_tokenizer inttkzer;
-  blocks::colon_tokenizer coltkzer;
-  blocks::blank_tokenizer blktkzer;
-  blocks::eos_tokenizer eostkzer;
-  blocks::eol_tokenizer eoltkzer;
-  blocks::scanner scan{
-    cmd_tko.value(),
-    { &eostkzer, &eoltkzer, &ntkzer, &inttkzer, &coltkzer, &blktkzer }
-  };
-  __cmd_scan = std::move(scan);
-}
+  blocks::string value;
+};
 
-const std::vector<blocks::token>
-blocks::command_builder::tokens() const
-{
-  std::vector<blocks::token> cmd_tokens;
-  bool has_token = true;
+blocks::vector<command_token>
+tokenizes_source_to_commands(const blocks::string& source);
 
-  while (has_token) {
-    cmd_tokens.push_back(__cmd_scan.next());
+blocks::vector<basic_token>
+tokenizes_command_to_tokens(const blocks::command_token& cmd);
 
-    if (cmd_tokens.back().type() == "eos")
-      has_token = false;
-  }
-
-  return cmd_tokens;
-}
-
-const int
-blocks::command_builder::depth(const std::vector<blocks::token>& cmd_tks) const
-{
-  int cmd_depth = 0;
-  while (cmd_tks[cmd_depth].type() == "blank")
-    cmd_depth++;
-
-  return cmd_depth;
-}
-
-const std::optional<const blocks::command>
-blocks::command_builder::build() const
-{
-
-  auto&& tks = tokens();
-  auto&& cmd_depth = depth(tks);
-  std::cout << "depth " << cmd_depth << "\n";
-
-  return std::nullopt;
+blocks::vector2d<basic_token>
+tokenizes_commands_to_tokens(const blocks::vector<blocks::command_token>& cmds);
 }
 
 int
 main(int argc, char const* argv[])
 {
-  blocks::eos_tokenizer eostkzer;
-  blocks::eol_tokenizer eoltkzer;
-  blocks::command_tokenizer cmdtkzer;
-  blocks::scanner src{ "main: \n add: 1 2\n print: res",
-                       { &eostkzer, &cmdtkzer } };
+  auto&& cmds = blocks::tokenizes_source_to_commands("");
+  auto&& tks2d = blocks::tokenizes_commands_to_tokens(cmds);
 
-  bool has_token = true;
+  return 0;
+}
 
-  while (has_token) {
-    auto&& tko = src.next();
+blocks::vector<blocks::command_token>
+blocks::tokenizes_source_to_commands(const blocks::string& source)
+{
+  blocks::vector<command_token> cmds;
 
-    if (tko.type() == "command") {
-      blocks::name_tokenizer ntkzer;
-      blocks::integer_tokenizer inttkzer;
-      blocks::colon_tokenizer coltkzer;
-      blocks::blank_tokenizer blktkzer;
-      blocks::scanner line{
-        tko.value(),
-        { &eostkzer, &ntkzer, &inttkzer, &coltkzer, &blktkzer, &eoltkzer }
-      };
+  blocks::string::const_iterator begin = source.begin();
+  blocks::string::const_iterator end = source.begin();
+  blocks::string::const_iterator cursor = begin;
 
-      bool command_has_token = true;
-      std::cout << " -- command --\n";
-      while (command_has_token) {
-        auto&& cmd_tko = line.next();
-        std::cout << " -> token {value : '" << cmd_tko.value() << "', type: '"
-                  << cmd_tko.type() << "'}\n";
-
-        if (cmd_tko.type() == "eos")
-          command_has_token = false;
-      }
+  while (cursor != end) {
+    if (*cursor == '\n') {
+      cmds.push_back(command_token{ blocks::string{ begin, cursor } });
+      begin = cursor + 1;
     }
 
-    if (tko.type() == "eos") {
-      has_token = false;
+    cursor++;
+  }
+
+  return cmds;
+}
+
+namespace blocks {
+blocks::optional<basic_token>
+try_tokenize_name(blocks::string::const_iterator begin,
+                  blocks::string::const_iterator end);
+
+blocks::optional<basic_token>
+try_tokenize_colon(blocks::string::const_iterator begin,
+                   blocks::string::const_iterator end);
+
+blocks::optional<basic_token>
+try_tokenize_space(blocks::string::const_iterator begin,
+                   blocks::string::const_iterator end);
+
+blocks::optional<basic_token>
+try_tokenize_eol(blocks::string::const_iterator begin,
+                 blocks::string::const_iterator end);
+
+blocks::optional<basic_token>
+try_tokenize_eos(blocks::string::const_iterator begin,
+                 blocks::string::const_iterator end);
+} // namespace blocks
+
+blocks::vector<blocks::basic_token>
+blocks::tokenizes_command_to_tokens(const blocks::command_token& cmd)
+{
+  blocks::vector<blocks::basic_token> tokens;
+  blocks::string::const_iterator begin = cmd.line.begin();
+  blocks::string::const_iterator end = cmd.line.end();
+  blocks::string::const_iterator cursor = begin;
+
+  while (cursor != end) {
+    {
+      auto&& eos = try_tokenize_space(cursor, end);
+      if (eos.has_value()) {
+        tokens.push_back(eos.value());
+        cursor = std::next(cursor, eos.value().value.size());
+        continue;
+      }
+    }
+    {
+      auto&& space = try_tokenize_space(cursor, end);
+      if (space.has_value()) {
+        tokens.push_back(space.value());
+        cursor = std::next(cursor, space.value().value.size());
+        continue;
+      }
+    }
+    {
+      auto&& name = try_tokenize_name(cursor, end);
+      if (name.has_value()) {
+        tokens.push_back(name.value());
+        cursor = std::next(cursor, name.value().value.size());
+        continue;
+      }
+    }
+    {
+      auto&& colon = try_tokenize_colon(cursor, end);
+      if (colon.has_value()) {
+        tokens.push_back(colon.value());
+        cursor = std::next(cursor, colon.value().value.size());
+        continue;
+      }
+    }
+    {
+      auto&& eol = try_tokenize_eol(cursor, end);
+      if (eol.has_value()) {
+        tokens.push_back(eol.value());
+        cursor = std::next(cursor, eol.value().value.size());
+        continue;
+      }
     }
   }
 
-  return 0;
+  return tokens;
 }

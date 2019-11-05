@@ -16,7 +16,6 @@ private:
   std::string::const_iterator __end;
 
 public:
-  scanner();
   scanner(const std::string& content,
          const std::vector<blocks::tokenizer*>& tokenizers);
   scanner(const std::string& content,
