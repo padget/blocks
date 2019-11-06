@@ -15,6 +15,7 @@ struct basic_token
 
 struct command
 {
+  blocks::integer depth;
   blocks::string name;
   blocks::vector<blocks::string> args;
 };
@@ -31,16 +32,24 @@ tokenizes_commands_to_tokens(const blocks::vector<blocks::command_token>& cmds);
 blocks::vector<blocks::command>
 build_commands_from_tokens(const blocks::vector2d<basic_token>& cmdstok);
 
-blocks::command
-build_command_from_tokens(const blocks::vector<basic_token>& cmdtok);
+blocks::optional<blocks::command>
+try_build_command_from_tokens(const blocks::vector<basic_token>& cmdtok);
 }
 
 int
 main(int argc, char const* argv[])
 {
-  auto&& cmds = blocks::tokenizes_source_to_commands("main:\n add: 1 2");
-  auto&& cmds2d = blocks::tokenizes_commands_to_tokens(cmds);
+  auto&& cmdstok = blocks::tokenizes_source_to_commands("main: \nadd: 1 2");
+  auto&& cmds2d = blocks::tokenizes_commands_to_tokens(cmdstok);
   auto&& cmds = blocks::build_commands_from_tokens(cmds2d);
+
+  std::cout << cmds.size() << "\n";
+  for (auto&& cmd : cmds) {
+    std::cout << cmd.name << ":";
+    for (auto&& arg : cmd.args)
+      std::cout << " " << arg;
+    std::cout << "\n";
+  }
   return 0;
 }
 
@@ -53,12 +62,17 @@ blocks::tokenizes_source_to_commands(const blocks::string& source)
   blocks::string::const_iterator cursor = begin;
 
   while (cursor != end) {
-    if (*cursor == '\n') {
+    bool is_endline = *cursor == '\n';
+    if (is_endline) {
+      /* On ignore le passage à la ligne et
+         on saute au caractère suivant */
       cmds.push_back(command_token{ blocks::string{ begin, cursor } });
       begin = cursor + 1;
     }
     cursor++;
   }
+
+  /* Au cas où le fichier ne termine pas sur un saut de ligne alors on */
   cmds.push_back(command_token{ blocks::string{ begin, cursor } });
 
   return cmds;
@@ -238,4 +252,69 @@ blocks::try_tokenize_eos(blocks::string::const_iterator begin,
     return blocks::basic_token{ "eos", "" };
   else
     return std::nullopt;
+}
+
+blocks::vector<blocks::command>
+blocks::build_commands_from_tokens(
+  const blocks::vector2d<blocks::basic_token>& cmdstok)
+{
+  blocks::vector<blocks::command> cmds;
+
+  for (auto&& cmdtok : cmdstok) {
+    auto&& cmd = try_build_command_from_tokens(cmdtok);
+
+    if (cmd.has_value())
+      cmds.push_back(cmd.value());
+  }
+
+  return cmds;
+}
+
+blocks::optional<blocks::command>
+blocks::try_build_command_from_tokens(
+  const blocks::vector<blocks::basic_token>& cmdtok)
+{
+  blocks::command cmd;
+  blocks::vector<blocks::basic_token>::const_iterator begin = cmdtok.begin();
+  blocks::vector<blocks::basic_token>::const_iterator end = cmdtok.end();
+  blocks::vector<blocks::basic_token>::const_iterator cursor = begin;
+  /* profondeur de la commande */
+  blocks::integer depth = 0;
+  while (cursor != end && (*cursor).type == "space") {
+    cursor++;
+    depth++;
+  }
+
+  /* nom de la commande */
+  if (cursor != end && (*cursor).type == "name") {
+    cmd.name = (*cursor).value;
+    cursor++;
+
+    if (cursor != end && (*cursor).type == "colon")
+      cursor++;
+    else
+      return std::nullopt;
+  } else
+    return std::nullopt;
+
+  /* arguments de la commande */
+  while (cursor != end) {
+    while (cursor != end && (*cursor).type == "space")
+      cursor++;
+
+    bool not_end = cursor != end;
+    bool is_name = not_end && (*cursor).type == "name";
+    bool is_integer = not_end && (*cursor).type == "integer";
+
+    if (is_name or is_integer)
+      cmd.args.push_back((*cursor).value);
+    else if (not_end) {
+      return std::nullopt;
+    } else
+      return cmd;
+
+    cursor++;
+  }
+
+  return cmd;
 }
