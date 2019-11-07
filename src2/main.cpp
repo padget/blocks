@@ -2,7 +2,7 @@
 #include <iostream>
 
 namespace blocks {
-struct command_token
+struct line_token
 {
   blocks::string line;
 };
@@ -20,14 +20,14 @@ struct command
   blocks::vector<blocks::string> args;
 };
 
-blocks::vector<command_token>
-tokenizes_source_to_commands(const blocks::string& source);
+blocks::vector<line_token>
+tokenizes_source_to_lines(const blocks::string& source);
 
 blocks::vector<basic_token>
-tokenizes_command_to_tokens(const blocks::command_token& cmd);
+tokenizes_line_to_tokens(const blocks::line_token& line);
 
 blocks::vector2d<basic_token>
-tokenizes_commands_to_tokens(const blocks::vector<blocks::command_token>& cmds);
+tokenizes_lines_to_tokens(const blocks::vector<blocks::line_token>& lines);
 
 blocks::vector<blocks::command>
 build_commands_from_tokens(const blocks::vector2d<basic_token>& cmdstok);
@@ -39,8 +39,8 @@ try_build_command_from_tokens(const blocks::vector<basic_token>& cmdtok);
 int
 main(int argc, char const* argv[])
 {
-  auto&& cmdstok = blocks::tokenizes_source_to_commands("main: \nadd: 1 2");
-  auto&& cmds2d = blocks::tokenizes_commands_to_tokens(cmdstok);
+  auto&& cmdstok = blocks::tokenizes_source_to_lines("main: \nadd: 1 2");
+  auto&& cmds2d = blocks::tokenizes_lines_to_tokens(cmdstok);
   auto&& cmds = blocks::build_commands_from_tokens(cmds2d);
 
   std::cout << cmds.size() << "\n";
@@ -52,11 +52,13 @@ main(int argc, char const* argv[])
   }
   return 0;
 }
+//22117655425152 vendredi
+//22150940518678 lundi
 
-blocks::vector<blocks::command_token>
-blocks::tokenizes_source_to_commands(const blocks::string& source)
+blocks::vector<blocks::line_token>
+blocks::tokenizes_source_to_lines(const blocks::string& source)
 {
-  blocks::vector<command_token> cmds;
+  blocks::vector<line_token> cmds;
   blocks::string::const_iterator begin = source.begin();
   blocks::string::const_iterator end = source.end();
   blocks::string::const_iterator cursor = begin;
@@ -66,14 +68,14 @@ blocks::tokenizes_source_to_commands(const blocks::string& source)
     if (is_endline) {
       /* On ignore le passage à la ligne et
          on saute au caractère suivant */
-      cmds.push_back(command_token{ blocks::string{ begin, cursor } });
+      cmds.push_back(line_token{ blocks::string{ begin, cursor } });
       begin = cursor + 1;
     }
     cursor++;
   }
 
   /* Au cas où le fichier ne termine pas sur un saut de ligne alors on */
-  cmds.push_back(command_token{ blocks::string{ begin, cursor } });
+  cmds.push_back(line_token{ blocks::string{ begin, cursor } });
 
   return cmds;
 }
@@ -105,19 +107,19 @@ try_tokenize_eos(blocks::string::const_iterator begin,
 } // namespace blocks
 
 blocks::vector2d<blocks::basic_token>
-blocks::tokenizes_commands_to_tokens(
-  const blocks::vector<blocks::command_token>& cmdstok)
+blocks::tokenizes_lines_to_tokens(
+  const blocks::vector<blocks::line_token>& cmdstok)
 {
   blocks::vector2d<blocks::basic_token> cmds;
 
   for (auto&& cmdtok : cmdstok)
-    cmds.push_back(blocks::tokenizes_command_to_tokens(cmdtok));
+    cmds.push_back(blocks::tokenizes_line_to_tokens(cmdtok));
 
   return cmds;
 }
 
 blocks::vector<blocks::basic_token>
-blocks::tokenizes_command_to_tokens(const blocks::command_token& cmd)
+blocks::tokenizes_line_to_tokens(const blocks::line_token& cmd)
 {
   blocks::vector<blocks::basic_token> tokens;
   blocks::string::const_iterator begin = cmd.line.begin();
