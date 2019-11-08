@@ -5,11 +5,15 @@
 #include <initializer_list>
 #include <string>
 #include <optional>
+#include <map>
 
 namespace blocks 
 {
   template<typename type_t>
   using vector = std::vector<type_t>;
+
+  template<typename key_t, typename values_t>
+  using multimap = std::multimap<key_t, values_t>;
 
   template<typename type_t>
   using vector2d = std::vector<std::vector<type_t>>;

@@ -54,6 +54,7 @@
         "numeric": "cpp",
         "random": "cpp",
         "string": "cpp",
-        "sstream": "cpp"
+        "sstream": "cpp",
+        "map": "cpp"
     }
 }

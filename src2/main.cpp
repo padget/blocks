@@ -34,26 +34,42 @@ build_commands_from_tokens(const blocks::vector2d<basic_token>& cmdstok);
 
 blocks::optional<blocks::command>
 try_build_command_from_tokens(const blocks::vector<basic_token>& cmdtok);
+
+blocks::vector<const blocks::command*>
+find_duplicated_command_names(const blocks::vector<blocks::command>& cmds);
+
+blocks::vector<const blocks::command*>
+find_undefined_commands(const blocks::vector<blocks::command>& cmds);
 }
 
 int
 main(int argc, char const* argv[])
 {
-  auto&& cmdstok = blocks::tokenizes_source_to_lines("main: \nadd: 1 2");
+  auto&& cmdstok =
+    blocks::tokenizes_source_to_lines("main: \n  add: 1 2\nmaine:\n");
   auto&& cmds2d = blocks::tokenizes_lines_to_tokens(cmdstok);
   auto&& cmds = blocks::build_commands_from_tokens(cmds2d);
+  auto&& duplicateds = blocks::find_duplicated_command_names(cmds);
 
-  std::cout << cmds.size() << "\n";
-  for (auto&& cmd : cmds) {
-    std::cout << cmd.name << ":";
-    for (auto&& arg : cmd.args)
-      std::cout << " " << arg;
-    std::cout << "\n";
+  if (duplicateds.size() != 0) {
+    std::cout << "des commandes sont définie plusieurs fois\n";
+    for (auto&& cmd : duplicateds)
+      std::cout << "duplicated command : " << cmd->name << "\n";
+    exit(EXIT_FAILURE);
   }
+
+  auto&& undefined = blocks::find_undefined_commands(cmds);
+
+  if (undefined.size() != 0) {
+    std::cout << "des commands ne sont pas définies\n";
+    for (auto&& cmd : undefined)
+      std::cout << "undefined command : " << cmd->name << "\n";
+
+    exit(EXIT_FAILURE);
+  }
+
   return 0;
 }
-//22117655425152 vendredi
-//22150940518678 lundi
 
 blocks::vector<blocks::line_token>
 blocks::tokenizes_source_to_lines(const blocks::string& source)
@@ -108,22 +124,22 @@ try_tokenize_eos(blocks::string::const_iterator begin,
 
 blocks::vector2d<blocks::basic_token>
 blocks::tokenizes_lines_to_tokens(
-  const blocks::vector<blocks::line_token>& cmdstok)
+  const blocks::vector<blocks::line_token>& linestok)
 {
-  blocks::vector2d<blocks::basic_token> cmds;
+  blocks::vector2d<blocks::basic_token> lines;
 
-  for (auto&& cmdtok : cmdstok)
-    cmds.push_back(blocks::tokenizes_line_to_tokens(cmdtok));
+  for (auto&& linetok : linestok)
+    lines.push_back(blocks::tokenizes_line_to_tokens(linetok));
 
-  return cmds;
+  return lines;
 }
 
 blocks::vector<blocks::basic_token>
-blocks::tokenizes_line_to_tokens(const blocks::line_token& cmd)
+blocks::tokenizes_line_to_tokens(const blocks::line_token& line)
 {
   blocks::vector<blocks::basic_token> tokens;
-  blocks::string::const_iterator begin = cmd.line.begin();
-  blocks::string::const_iterator end = cmd.line.end();
+  blocks::string::const_iterator begin = line.line.begin();
+  blocks::string::const_iterator end = line.line.end();
   blocks::string::const_iterator cursor = begin;
 
   while (cursor != end) {
@@ -280,6 +296,7 @@ blocks::try_build_command_from_tokens(
   blocks::vector<blocks::basic_token>::const_iterator begin = cmdtok.begin();
   blocks::vector<blocks::basic_token>::const_iterator end = cmdtok.end();
   blocks::vector<blocks::basic_token>::const_iterator cursor = begin;
+
   /* profondeur de la commande */
   blocks::integer depth = 0;
   while (cursor != end && (*cursor).type == "space") {
@@ -287,7 +304,9 @@ blocks::try_build_command_from_tokens(
     depth++;
   }
 
-  /* nom de la commande */
+  cmd.depth = depth;
+
+  /* nom de la commande suivi d'un colon */
   if (cursor != end && (*cursor).type == "name") {
     cmd.name = (*cursor).value;
     cursor++;
@@ -319,4 +338,48 @@ blocks::try_build_command_from_tokens(
   }
 
   return cmd;
+}
+
+blocks::vector<const blocks::command*>
+blocks::find_duplicated_command_names(
+  const blocks::vector<blocks::command>& cmds)
+{
+  blocks::vector<const blocks::command*> duplications;
+
+  for (auto&& cmd : cmds)
+    for (auto&& cmd2 : cmds)
+      if (cmd.depth == 0 and cmd2.depth == 0 and &cmd != &cmd2 and
+          cmd.name == cmd2.name)
+        duplications.push_back(&cmd);
+
+  return duplications;
+}
+
+blocks::vector<const blocks::command*>
+blocks::find_undefined_commands(const blocks::vector<blocks::command>& cmds)
+{
+  blocks::vector<const blocks::command*> undefined;
+  blocks::vector<const blocks::command*> defined;
+
+  for (auto&& cmd : cmds) {
+    std::cout << "defined depth" << cmd.depth << " name " << cmd.name << "\n";
+    if (cmd.depth == 0)
+      defined.push_back(&cmd);
+  }
+
+  std::cout << "defined size" << defined.size() << "\n";
+
+  for (auto&& cmd : cmds)
+    if (cmd.depth > 0) {
+      bool found = false;
+
+      for (auto&& definition : defined)
+        if (definition->name == cmd.name)
+          found = true;
+
+      if (!found)
+        undefined.push_back(&cmd);
+    }
+
+  return undefined;
 }
