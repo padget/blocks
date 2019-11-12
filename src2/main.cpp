@@ -18,6 +18,19 @@ struct command
   blocks::integer depth;
   blocks::string name;
   blocks::vector<blocks::string> args;
+  blocks::vector<blocks::command> subcmds;
+};
+
+struct command_argument
+{
+  blocks::string name;
+  blocks::string type;
+};
+
+struct command_definition
+{
+  blocks::string name;
+  blocks::vector<blocks::command_argument> args;
   blocks::vector<blocks::command> cmds;
 };
 
@@ -58,6 +71,11 @@ namespace blocks::context {
 struct global_context
 {
   blocks::vector<blocks::command> commands;
+};
+
+struct main_context
+{
+  blocks::vector<command_definition> cdefs;
 };
 
 blocks::context::global_context
