@@ -6,6 +6,7 @@
 #include <string>
 #include <optional>
 #include <map>
+#include <memory>
 
 namespace blocks 
 {
@@ -25,6 +26,9 @@ namespace blocks
 
   template<typename type_t>
   using optional = std::optional<type_t>;
+
+  template<typename type_t>
+  using ptr = std::shared_ptr<type_t>;
 
   using integer = int;
 }

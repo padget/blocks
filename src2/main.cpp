@@ -18,6 +18,7 @@ struct command
   blocks::integer depth;
   blocks::string name;
   blocks::vector<blocks::string> args;
+  blocks::vector<blocks::command> cmds;
 };
 
 blocks::vector<line_token>
@@ -35,38 +36,65 @@ build_commands_from_tokens(const blocks::vector2d<basic_token>& cmdstok);
 blocks::optional<blocks::command>
 try_build_command_from_tokens(const blocks::vector<basic_token>& cmdtok);
 
+blocks::vector<blocks::command>
+build_hierarchical_commands(const blocks::vector<blocks::command>& cmds);
+
+int
+execute(const blocks::vector<command>& commands);
+}
+
+namespace blocks::check {
 blocks::vector<const blocks::command*>
 find_duplicated_command_names(const blocks::vector<blocks::command>& cmds);
 
 blocks::vector<const blocks::command*>
 find_undefined_commands(const blocks::vector<blocks::command>& cmds);
+
+bool
+check_all(const blocks::vector<command>& cmds);
+}
+
+namespace blocks::context {
+struct global_context
+{
+  blocks::vector<blocks::command> commands;
+};
+
+blocks::context::global_context
+build_global_context();
+
+int
+add(int a, int b);
+
+int
+minus(int a, int b);
+
+int
+multiply(int a, int b);
+
+int
+divide(int a, int b);
+
+bool
+print(const std::string& str);
 }
 
 int
 main(int argc, char const* argv[])
 {
   auto&& cmdstok =
-    blocks::tokenizes_source_to_lines("main: \n  add: 1 2\nmaine:\n");
+    blocks::tokenizes_source_to_lines("main: 1 a b\n  add: 1 2\n");
   auto&& cmds2d = blocks::tokenizes_lines_to_tokens(cmdstok);
   auto&& cmds = blocks::build_commands_from_tokens(cmds2d);
-  auto&& duplicateds = blocks::find_duplicated_command_names(cmds);
 
-  if (duplicateds.size() != 0) {
-    std::cout << "des commandes sont définie plusieurs fois\n";
-    for (auto&& cmd : duplicateds)
-      std::cout << "duplicated command : " << cmd->name << "\n";
-    exit(EXIT_FAILURE);
+  bool checked = blocks::check::check_all(cmds);
+
+  if (!checked) {
+    std::cout << "there is/are some error(s)\n";
+    return EXIT_FAILURE;
   }
 
-  auto&& undefined = blocks::find_undefined_commands(cmds);
-
-  if (undefined.size() != 0) {
-    std::cout << "des commands ne sont pas définies\n";
-    for (auto&& cmd : undefined)
-      std::cout << "undefined command : " << cmd->name << "\n";
-
-    exit(EXIT_FAILURE);
-  }
+  blocks::execute(cmds);
 
   return 0;
 }
@@ -340,8 +368,44 @@ blocks::try_build_command_from_tokens(
   return cmd;
 }
 
+blocks::vector<blocks::command>
+build_hierarchical_commands(const blocks::vector<blocks::command>& cmds)
+{
+  blocks::vector<blocks::command> hcmds;
+  auto begin = cmds.begin();
+  auto end = cmds.end();
+  size_t depth = 0;
+  const blocks::command* current = nullptr;
+
+  while (begin != end) {
+    current = &*begin;
+    if (current->depth == 0) {
+      hcmds.push_back(*current);
+    } else {
+      hcmds.back().cmds.push_back(*current);
+    }
+  }
+}
+
+namespace blocks::check {
+constexpr bool no_problem = true;
+constexpr bool with_error = false;
+}
+
+bool
+blocks::check::check_all(const blocks::vector<blocks::command>& cmds)
+{
+  auto&& duplicated = blocks::check::find_duplicated_command_names(cmds);
+  auto&& undefined = blocks::check::find_undefined_commands(cmds);
+
+  if (duplicated.size() == 0 && undefined.size() == 0)
+    return blocks::check::no_problem;
+  else
+    return blocks::check::with_error;
+}
+
 blocks::vector<const blocks::command*>
-blocks::find_duplicated_command_names(
+blocks::check::find_duplicated_command_names(
   const blocks::vector<blocks::command>& cmds)
 {
   blocks::vector<const blocks::command*> duplications;
@@ -356,18 +420,20 @@ blocks::find_duplicated_command_names(
 }
 
 blocks::vector<const blocks::command*>
-blocks::find_undefined_commands(const blocks::vector<blocks::command>& cmds)
+blocks::check::find_undefined_commands(
+  const blocks::vector<blocks::command>& cmds)
 {
   blocks::vector<const blocks::command*> undefined;
   blocks::vector<const blocks::command*> defined;
 
-  for (auto&& cmd : cmds) {
-    std::cout << "defined depth" << cmd.depth << " name " << cmd.name << "\n";
+  auto&& gctx = blocks::context::build_global_context();
+
+  for (auto&& cmd : cmds)
     if (cmd.depth == 0)
       defined.push_back(&cmd);
-  }
 
-  std::cout << "defined size" << defined.size() << "\n";
+  for (auto&& cmd : gctx.commands)
+    defined.push_back(&cmd);
 
   for (auto&& cmd : cmds)
     if (cmd.depth > 0) {
@@ -382,4 +448,82 @@ blocks::find_undefined_commands(const blocks::vector<blocks::command>& cmds)
     }
 
   return undefined;
+}
+
+blocks::context::global_context
+blocks::context::build_global_context()
+{
+  blocks::context::global_context gctx;
+  gctx.commands.push_back(command{ 0, "add", { "a", "b" } });
+  gctx.commands.push_back(command{ 0, "minus", { "a", "b" } });
+  gctx.commands.push_back(command{ 0, "multiply", { "a", "b" } });
+  gctx.commands.push_back(command{ 0, "divide", { "a", "b" } });
+  return gctx;
+}
+
+int
+blocks::context::add(int a, int b)
+{
+  return a + b;
+}
+
+int
+blocks::context::minus(int a, int b)
+{
+  return a - b;
+}
+
+int
+blocks::context::multiply(int a, int b)
+{
+  return a * b;
+}
+
+int
+blocks::context::divide(int a, int b)
+{
+  return a / b;
+}
+
+namespace blocks {
+const blocks::command&
+main_command(const blocks::vector<blocks::command>& cmds);
+
+void
+print_main_arguments(const blocks::vector<blocks::string>& args);
+
+blocks::vector<blocks::command>
+subcommands(const blocks::command& cmain);
+}
+
+int
+blocks::execute(const blocks::vector<blocks::command>& cmds)
+{
+  const blocks::command& cmain = blocks::main_command(cmds);
+  // const blocks::vector<command> cmaincmds = blocks::subcommands(cmain);
+
+  blocks::print_main_arguments(cmain.args);
+  // for (auto&& cmd : cmaincmds)
+  ;
+
+  return EXIT_SUCCESS;
+}
+
+const blocks::command&
+blocks::main_command(const blocks::vector<blocks::command>& cmds)
+{
+  // le vecteur donné à cette fonction doit forcément contenir la commande main.
+  const blocks::command* cmain;
+  for (auto&& cmd : cmds)
+    if (cmd.name == "main" && cmd.depth == 0)
+      cmain = &cmd;
+  return *cmain;
+}
+
+void
+blocks::print_main_arguments(const blocks::vector<blocks::string>& args)
+{
+  for (auto&& arg : args)
+    std::cout << arg << " ";
+  std::cout << "\n";
 }
