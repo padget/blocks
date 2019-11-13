@@ -1,38 +1,7 @@
-#include "std.hpp"
+#include "types.hpp"
 #include <iostream>
 
 namespace blocks {
-struct line_token
-{
-  blocks::string line;
-};
-
-struct basic_token
-{
-  blocks::string type;
-  blocks::string value;
-};
-
-struct command
-{
-  blocks::integer depth;
-  blocks::string name;
-  blocks::vector<blocks::string> args;
-  blocks::vector<blocks::command> subcmds;
-};
-
-struct command_argument
-{
-  blocks::string name;
-  blocks::string type;
-};
-
-struct command_definition
-{
-  blocks::string name;
-  blocks::vector<blocks::command_argument> args;
-  blocks::vector<blocks::command> cmds;
-};
 
 blocks::vector<line_token>
 tokenizes_source_to_lines(const blocks::string& source);
@@ -101,7 +70,7 @@ int
 main(int argc, char const* argv[])
 {
   auto&& cmdstok =
-    blocks::tokenizes_source_to_lines("main: 1 a b\n  add: 1 2\n");
+    blocks::tokenizes_source_to_lines("main: a#int b#int\n  add: a b\n");
   auto&& cmds2d = blocks::tokenizes_lines_to_tokens(cmdstok);
   auto&& cmds = blocks::build_commands_from_tokens(cmds2d);
 
@@ -166,6 +135,11 @@ try_tokenize_eol(blocks::string::const_iterator begin,
 blocks::optional<blocks::basic_token>
 try_tokenize_eos(blocks::string::const_iterator begin,
                  blocks::string::const_iterator end);
+
+blocks::optional<blocks::basic_token>
+try_tokenize_dieze(blocks::string::const_iterator begin,
+                   blocks::string::const_iterator end);
+
 } // namespace blocks
 
 blocks::vector2d<blocks::basic_token>
@@ -226,6 +200,14 @@ blocks::tokenizes_line_to_tokens(const blocks::line_token& line)
       if (colon.has_value()) {
         tokens.push_back(colon.value());
         cursor = std::next(cursor, colon.value().value.size());
+        continue;
+      }
+    }
+    {
+      auto&& dieze = blocks::try_tokenize_dieze(cursor, end);
+      if (dieze.has_value()) {
+        tokens.push_back(dieze.value());
+        cursor = std::next(cursor, dieze.value().value.size());
         continue;
       }
     }
@@ -314,6 +296,16 @@ blocks::try_tokenize_eos(blocks::string::const_iterator begin,
 {
   if (begin == end)
     return blocks::basic_token{ "eos", "" };
+  else
+    return std::nullopt;
+}
+
+blocks::optional<blocks::basic_token>
+blocks::try_tokenize_dieze(blocks::string::const_iterator begin,
+                           blocks::string::const_iterator end)
+{
+  if (begin != end && *begin == '#')
+    return blocks::basic_token{ "dieze", blocks::string{ begin, begin + 1 } };
   else
     return std::nullopt;
 }
