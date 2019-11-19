@@ -1,11 +1,10 @@
-#include "types.hpp"
 #include <iostream>
+#include <vector>
+#include <string> 
 
 int main(int argc, char const *argv[])
 {
-  std::string source = "let a#int 12\n"
-                       "let b#int 12\n"
-                       "add a b\n"
+  std::string source = "add a b\n"
                        "print $$\n";
   std::cout << source << "\n";
 
@@ -118,10 +117,111 @@ int main(int argc, char const *argv[])
     std::vector<token>::iterator tokens_begin = tokens.begin();
     std::vector<token>::iterator tokens_end = tokens.end();
     std::vector<token>::iterator tokens_cursor = tokens.begin();
-    
-    while (tokens_begin != tokens_end) 
+
+    while (tokens_begin != tokens_end)
     {
-      
+      bool has_valid_name = false;
+      bool has_some_valid_args = false; /* MAYBE see if needed */
+      /* bypass space tokens */
+      while (tokens_begin != tokens_end and (*tokens_begin).type == "space")
+      {
+        tokens_begin++;
+      }
+
+      if (tokens_begin != tokens_end and (*tokens_begin).type == "eol")
+        continue;
+
+      /* detect name of the command */
+      if (tokens_begin != tokens_end and (*tokens_begin).type == "name")
+      {
+        has_valid_name = true;
+        cmd.name = (*tokens_begin).value;
+
+        /* now detect arguments of the current command */
+        bool has_argument = true;
+        while (tokens_begin != tokens_end and has_argument)
+        {
+          /* before each args we must bypass space tokens */
+          while (tokens_begin != tokens_end and (*tokens_begin).type == "space")
+          {
+            tokens_begin++;
+          }
+
+          /* we can now detect each argument */
+          if (tokens_begin != tokens_end)
+          {
+            auto &&type = (*tokens_begin).type;
+            auto &&value = (*tokens_begin).value;
+
+            if (type == "number")
+            {
+              cmd.args.push_back(argument{value, "number"});
+              tokens_begin++;
+              continue;
+            }
+            else if (type == "name")
+            { /* here we can have just a name or a name with tag (<name>#<tag>)*/
+              auto &&arg_name = (*tokens_begin).value;
+              tokens_begin++;
+              if (tokens_begin != tokens_end)
+              {
+                if ((*tokens_begin).type == "dieze")
+                {
+                  tokens_begin++;
+                  if (tokens_begin != tokens_end and (*tokens_begin).type == "name")
+                  {
+                    /* here we have a name and a tag*/
+                    auto &&arg_tag = (*tokens_begin).value;
+                    cmd.args.push_back(argument{arg_name, arg_tag});
+                    has_some_valid_args = true;
+                    continue;
+                  }
+                  else
+                  {
+                    /* here we have an error !! */
+                    std::cerr << "erreur dans l'ecriture d'une commande\n";
+                    std::exit(EXIT_FAILURE);
+                  }
+                }
+                else
+                {
+                  /* here we have just a name with no tag */
+                  cmd.args.push_back(argument{arg_name});
+                  has_some_valid_args = true;
+                  continue;
+                }
+              }
+              else
+              {
+                /*we have just a name and after end of flow*/
+                has_some_valid_args = true;
+                cmd.args.push_back(argument{arg_name});
+              }
+            }
+            else
+            {
+              // nothing
+              has_argument = false;
+            }
+          }
+        } // End while has_argument
+      }   // End if command has a name
+      else
+      {
+        /* a line with no name but other type of token is an error */
+        std::cerr << "la ligne n'est pas une commande valide et ne semble pourtant pas vide\n";
+        std::cerr << " line : '" << line << "'\n";
+        std::cerr << "current token : '" << (*tokens_begin).value << "'\n";
+        std::exit(EXIT_FAILURE);
+      }
+    }
+
+    std::cout << "result command read \n";
+    std::cout << " name : " << cmd.name << "\n";
+
+    for (auto &&arg : cmd.args)
+    {
+      std::cout << " argument " << arg.value << "#" << arg.tag << "\n";
     }
   } // For each line
 
