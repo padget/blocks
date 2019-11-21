@@ -4,10 +4,10 @@
 
 int main(int argc, char const *argv[])
 {
-  std::string source = "add a b\n"
+  std::string source = "add a b#int\n"
                        "print $$\n";
   std::cout << source << "\n";
-
+  
   std::vector<std::string> lines;
   std::string::iterator source_begin = source.begin();
   std::string::iterator source_end = source.end();
@@ -29,6 +29,20 @@ int main(int argc, char const *argv[])
     std::string type;
     std::string value;
   };
+
+  struct argument
+  {
+    std::string value;
+    std::string tag;
+  };
+
+  struct command
+  {
+    std::string name;
+    std::vector<argument> args;
+  };
+ 
+  std::vector<command> cmds;
 
   for (const std::string &line : lines)
   {
@@ -61,7 +75,7 @@ int main(int argc, char const *argv[])
       else if (*line_cursor == '\n')
       {
         t.type = "eol";
-        t.type = "\n";
+        t.value = "\n";
         line_cursor++;
       }
       else
@@ -87,7 +101,7 @@ int main(int argc, char const *argv[])
             t.value = std::string(line_begin, line_cursor);
           }
           else
-          {
+  	      {
             t.type = "error";
             t.value = *line_cursor;
             line_cursor++;
@@ -101,40 +115,28 @@ int main(int argc, char const *argv[])
     /* Nous avons ici une liste de token pour une ligne en particulier
        Nous pouvons donc essayer de la convertir en commande */
 
-    struct argument
-    {
-      std::string value;
-      std::string tag;
-    };
-
-    struct command
-    {
-      std::string name;
-      std::vector<argument> args;
-    };
 
     command cmd;
     std::vector<token>::iterator tokens_begin = tokens.begin();
     std::vector<token>::iterator tokens_end = tokens.end();
-    std::vector<token>::iterator tokens_cursor = tokens.begin();
 
     while (tokens_begin != tokens_end)
     {
-      bool has_valid_name = false;
-      bool has_some_valid_args = false; /* MAYBE see if needed */
       /* bypass space tokens */
       while (tokens_begin != tokens_end and (*tokens_begin).type == "space")
       {
         tokens_begin++;
       }
 
-      if (tokens_begin != tokens_end and (*tokens_begin).type == "eol")
+      /* if only an eol then by pass this */
+      if (tokens_begin != tokens_end and (*tokens_begin).type == "eol") {
+        tokens_begin++;
         continue;
+      }
 
       /* detect name of the command */
       if (tokens_begin != tokens_end and (*tokens_begin).type == "name")
       {
-        has_valid_name = true;
         cmd.name = (*tokens_begin).value;
 
         /* now detect arguments of the current command */
@@ -165,15 +167,15 @@ int main(int argc, char const *argv[])
               tokens_begin++;
               if (tokens_begin != tokens_end)
               {
-                if ((*tokens_begin).type == "dieze")
+                if ((*tokens_begin).type == "tag")
                 {
                   tokens_begin++;
                   if (tokens_begin != tokens_end and (*tokens_begin).type == "name")
                   {
-                    /* here we have a name and a tag*/
+                    /* here we have a name and a tag */
                     auto &&arg_tag = (*tokens_begin).value;
                     cmd.args.push_back(argument{arg_name, arg_tag});
-                    has_some_valid_args = true;
+                    tokens_begin++;
                     continue;
                   }
                   else
@@ -187,42 +189,43 @@ int main(int argc, char const *argv[])
                 {
                   /* here we have just a name with no tag */
                   cmd.args.push_back(argument{arg_name});
-                  has_some_valid_args = true;
                   continue;
                 }
               }
               else
               {
                 /*we have just a name and after end of flow*/
-                has_some_valid_args = true;
                 cmd.args.push_back(argument{arg_name});
+              }
+            }
+            else if (type == "dollard")
+            {
+              /* we are in the case of '$$' */
+              tokens_begin++;
+              if (tokens_begin != tokens_end && (*tokens_begin).type == "dollard") 
+              {
+                cmd.args.push_back(argument{"$$"});
+                tokens_begin++;
+                continue;
               }
             }
             else
             {
               // nothing
+              std::cout << "has no argument" << std::endl;
               has_argument = false;
             }
           }
         } // End while has_argument
-      }   // End if command has a name
+      } // End if command has a name
       else
       {
         /* a line with no name but other type of token is an error */
-        std::cerr << "la ligne n'est pas une commande valide et ne semble pourtant pas vide\n";
-        std::cerr << " line : '" << line << "'\n";
-        std::cerr << "current token : '" << (*tokens_begin).value << "'\n";
         std::exit(EXIT_FAILURE);
       }
     }
 
-    std::cout << "result command read \n";
-    std::cout << " name : " << cmd.name << "\n";
-
-    for (auto &&arg : cmd.args)
-    {
-      std::cout << " argument " << arg.value << "#" << arg.tag << "\n";
-    }
+    cmds.push_back(cmd);
   } // For each line
 
   return EXIT_SUCCESS;
