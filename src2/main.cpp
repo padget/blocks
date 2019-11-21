@@ -228,5 +228,58 @@ int main(int argc, char const *argv[])
     cmds.push_back(cmd);
   } // For each line
 
+
+  /* now we have commands. We can check if each of 
+   * them is known and correctly used */
+  /**
+	TODO nous devons construire un dictionnaire de commandes
+	POur cela je vais mettre en place une structure commande_definition
+	qui contiendra le nom de la commande ainsi que les arguments et leur 
+	type qu'elle peut prendre. 
+   */
+  struct parameter
+  {
+    /* nom du paramètre */
+    std::string name;
+    /* type du paramètre */
+    std::string type;
+  };
+
+  struct command_definition 
+  {
+    /* nom de la commande */
+    std::string name;
+
+    /* type de retour de la commande */
+    std::string rtype;
+    
+    /* ensemble des paramètres de la commande */
+    /* l'ordre est important et est à respecter 
+       lors de l'appel de la dite commande */
+    std::vector<parameter> params;
+  };
+
+  std::vector<command_definition> cmddefs;
+
+  /* commencons par batir les definitions de commandes natives */
+  
+  cmddefs.push_back({"add", "int", {{"a", "int"}, {"b", "int"}}});
+  cmddefs.push_back({"minus", "int", {{"a", "int"}, {"b", "int"}}});
+  cmddefs.push_back({"divide", "int", {{"a", "int"}, {"b", "int"}}});
+  cmddefs.push_back({"multiply", "int", {{"a", "int"}, {"b", "int"}}});
+  cmddefs.push_back({"mod", "int", {{"a", "int"}, {"b", "int"}}});
+  cmddefs.push_back({"neg", "int", {{"a", "int"}}});
+
+
+
+
+
+
+
+  for (auto&& cmd : cmds) 
+  {
+    
+  }
+  
   return EXIT_SUCCESS;
 }
