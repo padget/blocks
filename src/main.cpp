@@ -2,6 +2,8 @@
 #include <vector>
 #include <string> 
 #include <map>
+#include <functional>
+
 
 int main(int argc, char const *argv[])
 {
@@ -47,6 +49,8 @@ int main(int argc, char const *argv[])
   };
 
   std::vector<command> cmds;
+  
+  std::cout << "--- building of commands \n";
 
   for (const std::string &line : lines)
   {
@@ -58,6 +62,7 @@ int main(int argc, char const *argv[])
     while (line_cursor != line_end)
     {
       token t;
+    
       if (*line_cursor == '#')
       {
         t.type = "tag";
@@ -90,7 +95,7 @@ int main(int argc, char const *argv[])
         }
         if (line_cursor != line_begin)
         {
-          t.type = "number";
+          t.type = "int";
           t.value = std::string(line_begin, line_cursor);
         }
         else
@@ -116,8 +121,6 @@ int main(int argc, char const *argv[])
       line_begin = line_cursor;
       tokens.push_back(std::move(t));
     }
-
-    std::cout << "-- debug tokens ";
 
     for (auto&& tk : tokens)
     {
@@ -161,10 +164,10 @@ int main(int argc, char const *argv[])
           tokens_begin++;
         }
 
-        if (tokens_begin != tokens_end 
-            and (*tokens_begin).type == "eol")
+        if (tokens_begin != tokens_end and (*tokens_begin).type == "eol")
         {
           /* we are a the end of the line so we can by pass */
+          tokens_begin++;
           continue;
         }
 
@@ -174,9 +177,9 @@ int main(int argc, char const *argv[])
           auto &&type = (*tokens_begin).type;
           auto &&value = (*tokens_begin).value;
 
-          if (type == "number")
+          if (type == "int")
           {
-            cmd.args.push_back(argument{value, "number"});
+            cmd.args.push_back(argument{value, "int"});
             tokens_begin++;
             continue;
           }
@@ -250,6 +253,7 @@ int main(int argc, char const *argv[])
     cmds.push_back(cmd);
   } // For each line
 
+  std::cout << "#--- end of building of commands\n";
 
   /* now we have commands. We can check if each of 
    * them is known and correctly used */
@@ -281,6 +285,8 @@ int main(int argc, char const *argv[])
     std::vector<parameter> params;
   };
 
+  std::cout << "---- building of commands dictonnary\n";
+
   std::map<std::string, command_definition> cmddefs;
 
   /* commencons par batir les definitions de commandes natives */
@@ -303,6 +309,9 @@ int main(int argc, char const *argv[])
    * Nous pouvons maintenant vérifier que les commandes sont correctement utilisée. 
    * Pour cela nous commencerons par voir si les noms des commandes utilisé sont bien
    * présents dans le dictionaires de commandes */
+  
+  std::cout << "#--- end of building commands dictonnary\n";
+  std::cout << "---- check if each command using exists in dictonnary\n";
 
   for (auto&& cmd : cmds) 
   {
@@ -314,11 +323,15 @@ int main(int argc, char const *argv[])
     } 
   }
 
+  std::cout << "#--- end of using command existing\n";
+
   /* Maintenant que nous savons que chaque commande utilisée existe, nous allons
    * regardé si celle-ci est correctement utilisées en termes de typage des données. */
 
   /* Commençons donc par déterminé le type de chaque arguments par inférence sur la valeur
    * ou bien sur directement donnée par le tag de l'argument */
+  
+  std::cout << "---- check of arguments types\n";
 
   for (auto&& cmd : cmds) 
   {
@@ -369,14 +382,49 @@ int main(int argc, char const *argv[])
     }
   }
 
-  for (auto&& cmd : cmds)
+  std::cout << "#--- end of check argument types\n";
+
+
+  /* maintenant que le type de chaque argument est défini, 
+   * nous pouvons commencer l'execution des commandes */
+  
+  /* commencons par regarder si chaque commande utilisée est correctement
+   * utilisée du point de vue de sa signature : nombre d'arguments et 
+   * leur type respectif ainsi que l'ordre des arguments */
+  for (auto&& cmd: cmds)
   {
-    std::cout << "commande " << cmd.name << "\n";
-    for (auto&& arg : cmd.args)
+    auto&& def = cmddefs.at(cmd.name);
+    
+    if (def.params.size() != cmd.args.size())
     {
-      std::cout << "  " << arg.value << " : " << arg.tag << "\n";
+      std::cerr << "le nombre d'argument n'est pas identique au nombre de paramètres attendu \n";
+      std::exit(EXIT_FAILURE);
+    }
+
+    for (int i=0; i<def.params.size(); ++i)
+    {
+      auto&& defarg = def.params[i];
+      auto&& arg    = cmd.args[i];
+
+      if (arg.tag != defarg.type)
+      {
+        std::cerr << "signature non correspondante \n";
+        std::exit(EXIT_FAILURE);
+      }
     }
   }
+
+  /* chaque commande utilise le bon nombre d'argument et les bons types */
+  /* nous pouvons maintenant mettre en place un mapping entre le nom de chaque commande et 
+   * un fonction native C++ permettant l'interprétation de cette commande */
+
+  std::map<std::string, std::function<int(int, int)>> fcmds;
+  fcmds.insert({"add", [] (int a, int b) -> int {return a+b;}});
+
+  std::cout << fcmds.at("add")(1, 2) << "\n";
+  /* commencons par la commande add. elle prend en entrée deux int a et b 
+   * on va donc enregistrer dans une map le nom de la commande ainsi que 
+   * la fonction proprepement dite associée !*/
 
   return EXIT_SUCCESS;
 }
