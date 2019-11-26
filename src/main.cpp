@@ -9,8 +9,10 @@ int main(int argc, char const *argv[])
 {
   std::string source = 
     "add 12 13#int\n"
-    "print $$\n";
-  
+    "add $$ 12\n"
+    "minus $$ 1\n"
+    "print \"coucou\"\n";
+
   std::cout << source << "\n";
 
   std::vector<std::string> lines;
@@ -26,7 +28,7 @@ int main(int argc, char const *argv[])
       lines.push_back(std::move(line));
       source_begin = source_cursor + 1;
     }
-  
+
     source_cursor++;
   }
 
@@ -49,8 +51,6 @@ int main(int argc, char const *argv[])
   };
 
   std::vector<command> cmds;
-  
-  std::cout << "--- building of commands \n";
 
   for (const std::string &line : lines)
   {
@@ -62,7 +62,7 @@ int main(int argc, char const *argv[])
     while (line_cursor != line_end)
     {
       token t;
-    
+
       if (*line_cursor == '#')
       {
         t.type = "tag";
@@ -88,43 +88,56 @@ int main(int argc, char const *argv[])
         line_cursor++;
       }
       else
-      {
-        while (line_cursor != line_end and '0' <= *line_cursor and *line_cursor <= '9')
+      { 
+        if (line_cursor != line_end and *line_cursor == '"')
         {
           line_cursor++;
+          while (line_cursor != line_end and *line_cursor != '"')
+          {
+            line_cursor++;
+          }
+          if (line_cursor != line_end and *line_cursor == '"')
+          {
+            line_cursor++;
+            t.value = std::string(line_begin, line_cursor);
+            t.type = "string";
+          }
         }
-        if (line_cursor != line_begin)
+        else 
         {
-          t.type = "int";
-          t.value = std::string(line_begin, line_cursor);
-        }
-        else
-        {
-          while (line_cursor != line_end and 'a' <= *line_cursor and *line_cursor <= 'z')
+
+          while (line_cursor != line_end and '0' <= *line_cursor and *line_cursor <= '9')
           {
             line_cursor++;
           }
           if (line_cursor != line_begin)
           {
-            t.type = "name";
+            t.type = "int";
             t.value = std::string(line_begin, line_cursor);
           }
           else
           {
-            t.type = "error";
-            t.value = *line_cursor;
-            line_cursor++;
+            while (line_cursor != line_end and 'a' <= *line_cursor and *line_cursor <= 'z')
+            {
+              line_cursor++;
+            }
+            if (line_cursor != line_begin)
+            {
+              t.type = "name";
+              t.value = std::string(line_begin, line_cursor);
+            }
+            else
+            {
+              t.type = "error";
+              t.value = *line_cursor;
+              line_cursor++;
+            }
           }
         }
       }
 
       line_begin = line_cursor;
       tokens.push_back(std::move(t));
-    }
-
-    for (auto&& tk : tokens)
-    {
-      std::cout << tk.type << " " << tk.value << "\n";
     }
 
     /* Nous avons ici une liste de token pour une ligne en particulier
@@ -213,14 +226,14 @@ int main(int argc, char const *argv[])
               else
               {
                 /* here we have just a name with no tag */
-                cmd.args.push_back(argument{arg_name});
+                cmd.args.push_back(argument{arg_name, ""});
                 continue;
               }
             }
             else
             {
               /*we have just a name and after end of flow*/
-              cmd.args.push_back(argument{arg_name});
+              cmd.args.push_back(argument{arg_name, ""});
             }
           }
           else if (type == "dollard")
@@ -229,7 +242,7 @@ int main(int argc, char const *argv[])
             tokens_begin++;
             if (tokens_begin != tokens_end && (*tokens_begin).type == "dollard") 
             {
-              cmd.args.push_back(argument{"$$"});
+              cmd.args.push_back(argument{"$$", ""});
               tokens_begin++;
               continue;
             }
@@ -253,16 +266,9 @@ int main(int argc, char const *argv[])
     cmds.push_back(cmd);
   } // For each line
 
-  std::cout << "#--- end of building of commands\n";
-
   /* now we have commands. We can check if each of 
    * them is known and correctly used */
-  /**
-    TODO nous devons construire un dictionnaire de commandes
-    Pour cela je vais mettre en place une structure commande_definition
-    qui contiendra le nom de la commande ainsi que les arguments et leur 
-    type qu'elle peut prendre. 
-    */
+
   struct parameter
   {
     /* nom du paramètre */
@@ -285,33 +291,22 @@ int main(int argc, char const *argv[])
     std::vector<parameter> params;
   };
 
-  std::cout << "---- building of commands dictonnary\n";
-
   std::map<std::string, command_definition> cmddefs;
 
   /* commencons par batir les definitions de commandes natives */
 
   cmddefs.insert({"add", {"add", "int", {{"a", "int"}, {"b", "int"}}}});
-
   cmddefs.insert({"minus", {"minus", "int", {{"a", "int"}, {"b", "int"}}}});
-
   cmddefs.insert({"divide", {"divide", "int", {{"a", "int"}, {"b", "int"}}}});
-
   cmddefs.insert({"multiply", {"multiply", "int", {{"a", "int"}, {"b", "int"}}}});
-
   cmddefs.insert({"mod", {"mod", "int", {{"a", "int"}, {"b", "int"}}}});
-
   cmddefs.insert({"neg", {"neg", "int", {{"a", "int"}}}});
-
   cmddefs.insert({"print", {"print", "void", {{"a", "int"}}}});
 
   /* Nous avons les definitions des commandes natives au langage blocks 
    * Nous pouvons maintenant vérifier que les commandes sont correctement utilisée. 
    * Pour cela nous commencerons par voir si les noms des commandes utilisé sont bien
    * présents dans le dictionaires de commandes */
-  
-  std::cout << "#--- end of building commands dictonnary\n";
-  std::cout << "---- check if each command using exists in dictonnary\n";
 
   for (auto&& cmd : cmds) 
   {
@@ -323,15 +318,11 @@ int main(int argc, char const *argv[])
     } 
   }
 
-  std::cout << "#--- end of using command existing\n";
-
   /* Maintenant que nous savons que chaque commande utilisée existe, nous allons
    * regardé si celle-ci est correctement utilisées en termes de typage des données. */
 
   /* Commençons donc par déterminé le type de chaque arguments par inférence sur la valeur
    * ou bien sur directement donnée par le tag de l'argument */
-  
-  std::cout << "---- check of arguments types\n";
 
   for (auto&& cmd : cmds) 
   {
@@ -358,7 +349,6 @@ int main(int argc, char const *argv[])
           else if ('"' == first)
           { /* l'argument est une string */
             /* pour l'instant les tokens string ne sont pas reconnu */
-            /* TODO reconnaitre les type string en tant que token */
             argument.tag = "string";
           }
           else if ('$' == first)
@@ -382,26 +372,31 @@ int main(int argc, char const *argv[])
     }
   }
 
-  std::cout << "#--- end of check argument types\n";
-
-
   /* maintenant que le type de chaque argument est défini, 
    * nous pouvons commencer l'execution des commandes */
-  
+
   /* commencons par regarder si chaque commande utilisée est correctement
    * utilisée du point de vue de sa signature : nombre d'arguments et 
    * leur type respectif ainsi que l'ordre des arguments */
+
+
+  for (auto&& cmd : cmds)
+  {
+    auto&& def = cmddefs.at(cmd.name);
+
+    if (def.params.size() != cmd.args.size())
+    {
+      std::cerr << "le nombre d'argument n'est pas";
+      std::cerr << " identique au nombre de paramètres attendu \n";
+      std::exit(EXIT_FAILURE);
+    }
+  }
+
   for (auto&& cmd: cmds)
   {
     auto&& def = cmddefs.at(cmd.name);
-    
-    if (def.params.size() != cmd.args.size())
-    {
-      std::cerr << "le nombre d'argument n'est pas identique au nombre de paramètres attendu \n";
-      std::exit(EXIT_FAILURE);
-    }
 
-    for (int i=0; i<def.params.size(); ++i)
+    for (unsigned i=0; i<def.params.size(); ++i)
     {
       auto&& defarg = def.params[i];
       auto&& arg    = cmd.args[i];
@@ -418,13 +413,63 @@ int main(int argc, char const *argv[])
   /* nous pouvons maintenant mettre en place un mapping entre le nom de chaque commande et 
    * un fonction native C++ permettant l'interprétation de cette commande */
 
-  std::map<std::string, std::function<int(int, int)>> fcmds;
-  fcmds.insert({"add", [] (int a, int b) -> int {return a+b;}});
-
-  std::cout << fcmds.at("add")(1, 2) << "\n";
+  auto add = [] (int a, int b) -> int {return a+b;};
+  auto minus = [] (int a, int b) -> int {return a-b;};
+  auto multiply = [] (int a, int b) -> int {return a*b;};
+  auto divide = [] (int a, int b) -> int {return a/b;};
+  auto mod = [] (int a, int b) -> int {return a%b;};
+  auto print = [] (int a) -> void {std::cout << a;};
   /* commencons par la commande add. elle prend en entrée deux int a et b 
    * on va donc enregistrer dans une map le nom de la commande ainsi que 
    * la fonction proprepement dite associée !*/
+  int $$ = 0;
+
+  for (auto &&cmd : cmds)
+  {
+    auto const &name = cmd.name;
+    std::vector<int> ints;
+
+    for (auto&& arg : cmd.args)
+    {
+      if (arg.value == "$$")
+      {
+        ints.push_back($$);
+      }
+      else 
+      {
+        ints.push_back(std::stoi(arg.value));
+      }
+    }
+
+    if (name=="add") 
+    {
+      $$ = add(ints[0], ints[1]);
+    } 
+    else 
+      if (name == "print")
+      {
+        print(ints[0]);
+      }
+      else 
+        if (name == "minus")
+        {
+          $$ = minus(ints[0], ints[1]);
+        }
+        else 
+          if (name == "multiply")
+          {
+            $$ = multiply(ints[0], ints[1]);
+          }
+          else 
+            if (name == "divide")
+            {
+              $$ = divide(ints[0], ints[1]);
+            }
+            else if (name == "mod")
+            {
+              $$ = mod(ints[0], ints[1]);
+            }
+  }
 
   return EXIT_SUCCESS;
 }
