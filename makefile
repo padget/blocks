@@ -10,4 +10,4 @@ run: blocks
 	./blocks.exe
 
 clean:
-	rm -rf **/**.o **/**.exe
+	rm-rf *.o *.exe

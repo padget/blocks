@@ -8,6 +8,7 @@
 int main(int argc, char const *argv[])
 {
   std::string source = 
+    "let a#int 12\n"
     "add 12 13#int\n"
     "add $$ 12\n"
     "minus $$ 1\n"
@@ -246,6 +247,12 @@ int main(int argc, char const *argv[])
               tokens_begin++;
               continue;
             }
+          } 
+          else if (type == "string") 
+          {
+            cmd.args.push_back(argument{value, "string"});
+            tokens_begin++; 
+            continue;
           }
           else
           {
@@ -268,7 +275,7 @@ int main(int argc, char const *argv[])
 
   /* now we have commands. We can check if each of 
    * them is known and correctly used */
-
+  std::cout << "coucou1" << std::endl;
   struct parameter
   {
     /* nom du paramètre */
@@ -301,7 +308,8 @@ int main(int argc, char const *argv[])
   cmddefs.insert({"multiply", {"multiply", "int", {{"a", "int"}, {"b", "int"}}}});
   cmddefs.insert({"mod", {"mod", "int", {{"a", "int"}, {"b", "int"}}}});
   cmddefs.insert({"neg", {"neg", "int", {{"a", "int"}}}});
-  cmddefs.insert({"print", {"print", "void", {{"a", "int"}}}});
+  cmddefs.insert({"print", {"print", "void", {{"a", "any"}}}});
+  cmddefs.insert({"let", {"let", "void", {{"name", "any"}, {"value", "int"}}}}); // TODO take any as any-type in inference process
 
   /* Nous avons les definitions des commandes natives au langage blocks 
    * Nous pouvons maintenant vérifier que les commandes sont correctement utilisée. 
@@ -310,14 +318,13 @@ int main(int argc, char const *argv[])
 
   for (auto&& cmd : cmds) 
   {
-
     if (cmddefs.count(cmd.name) != 1)
     {
       std::cerr << "attention, commande non définie : " << cmd.name << "\n";
       std::exit(EXIT_FAILURE);
     } 
   }
-
+  std::cout << "coucou2\n";
   /* Maintenant que nous savons que chaque commande utilisée existe, nous allons
    * regardé si celle-ci est correctement utilisées en termes de typage des données. */
 
@@ -327,6 +334,7 @@ int main(int argc, char const *argv[])
   for (auto&& cmd : cmds) 
   {
     auto&& arguments = cmd.args;
+
     for (auto&& argument : arguments)
     {
       if (argument.tag.empty()) 
@@ -372,6 +380,8 @@ int main(int argc, char const *argv[])
     }
   }
 
+  std::cout << "coucou3\n";
+
   /* maintenant que le type de chaque argument est défini, 
    * nous pouvons commencer l'execution des commandes */
 
@@ -386,6 +396,7 @@ int main(int argc, char const *argv[])
 
     if (def.params.size() != cmd.args.size())
     {
+      std::cerr << "nb args "<< cmd.args.size() << " def " << def.params.size() << "\n";
       std::cerr << "le nombre d'argument n'est pas";
       std::cerr << " identique au nombre de paramètres attendu \n";
       std::exit(EXIT_FAILURE);
@@ -401,8 +412,9 @@ int main(int argc, char const *argv[])
       auto&& defarg = def.params[i];
       auto&& arg    = cmd.args[i];
 
-      if (arg.tag != defarg.type)
+      if (defarg.type != "any" and arg.tag != defarg.type)
       {
+        std::cerr << cmd.name << "\n";
         std::cerr << "signature non correspondante \n";
         std::exit(EXIT_FAILURE);
       }
@@ -413,63 +425,77 @@ int main(int argc, char const *argv[])
   /* nous pouvons maintenant mettre en place un mapping entre le nom de chaque commande et 
    * un fonction native C++ permettant l'interprétation de cette commande */
 
-  auto add = [] (int a, int b) -> int {return a+b;};
-  auto minus = [] (int a, int b) -> int {return a-b;};
-  auto multiply = [] (int a, int b) -> int {return a*b;};
-  auto divide = [] (int a, int b) -> int {return a/b;};
-  auto mod = [] (int a, int b) -> int {return a%b;};
-  auto print = [] (int a) -> void {std::cout << a;};
-  /* commencons par la commande add. elle prend en entrée deux int a et b 
-   * on va donc enregistrer dans une map le nom de la commande ainsi que 
-   * la fonction proprepement dite associée !*/
-  int $$ = 0;
+  std::map<std::string, int> lets; 
 
-  for (auto &&cmd : cmds)
-  {
-    auto const &name = cmd.name;
-    std::vector<int> ints;
+    auto add = [] (int a, int b) -> int {return a+b;};
+    auto minus = [] (int a, int b) -> int {return a-b;};
+    auto multiply = [] (int a, int b) -> int {return a*b;};
+    auto divide = [] (int a, int b) -> int {return a/b;};
+    auto mod = [] (int a, int b) -> int {return a%b;};
+    auto print = [] (int a) -> void {std::cout << a;};
+    auto let = [&lets] (const std::string& name, int value) {lets[name] = value;};
 
-    for (auto&& arg : cmd.args)
+    /* commencons par la commande add. elle prend en entrée deux int a et b 
+     * on va donc enregistrer dans une map le nom de la commande ainsi que 
+     * la fonction proprepement dite associée !*/
+    int $$ = 0;
+
+    for (auto &&cmd : cmds)
     {
-      if (arg.value == "$$")
-      {
-        ints.push_back($$);
-      }
-      else 
-      {
-        ints.push_back(std::stoi(arg.value));
-      }
-    }
+      std::cout << "cmd " << cmd.name;
+      auto const &name = cmd.name;
+      std::vector<int> ints;
 
-    if (name=="add") 
-    {
-      $$ = add(ints[0], ints[1]);
-    } 
-    else 
-      if (name == "print")
+      for (auto&& arg : cmd.args)
+      {
+        if (arg.value == "$$")
+        {
+          ints.push_back($$);
+        }
+        else if () 
+        {
+            :
+        }
+        else 
+        {
+          ints.push_back(std::stoi(arg.value));
+        }
+      }
+      std::cout << "exec\n";
+      if (name=="add") 
+      {
+        $$ = add(ints[0], ints[1]);
+      } 
+      else if (name == "print")
       {
         print(ints[0]);
       }
-      else 
-        if (name == "minus")
-        {
-          $$ = minus(ints[0], ints[1]);
-        }
-        else 
-          if (name == "multiply")
-          {
-            $$ = multiply(ints[0], ints[1]);
-          }
-          else 
-            if (name == "divide")
-            {
-              $$ = divide(ints[0], ints[1]);
-            }
-            else if (name == "mod")
-            {
-              $$ = mod(ints[0], ints[1]);
-            }
-  }
+      else if (name == "minus")
+      {
+        $$ = minus(ints[0], ints[1]);
+      }
+      else if (name == "multiply")
+      {
+        $$ = multiply(ints[0], ints[1]);
+      }
+      else if (name == "divide")
+      {
+        $$ = divide(ints[0], ints[1]);
+      }
+      else if (name == "mod")
+      {
+        $$ = mod(ints[0], ints[1]);
+      }
+      else if (name == "let") 
+      {
+        auto varname=""; // TODO capture the name of the var
+        auto varvalue=0; // TODO capture the value of the var
+        let(varname, varvalue);
+      }
+    }
 
-  return EXIT_SUCCESS;
+    std::cout << "coucou4\n";
+    std::cout << "EXIT_SUCCESS";
+
+    return EXIT_SUCCESS;
 }
