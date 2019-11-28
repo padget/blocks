@@ -5,14 +5,36 @@
 #include <functional>
 
 
+struct token
+{
+  std::string type;
+  std::string value;
+};
+
+struct argument
+{
+  std::string value;
+  std::string tag;
+};
+
+struct command
+{
+  std::string name;
+  std::vector<argument> args;
+};
+
+
+std::vector<token> scan_source(const std::string& src);
+std::vector<command> parse_tokens(const std::vector<token>& tokens);
+
 int main(int argc, char const *argv[])
 {
   std::string source = 
     "let a#int 12\n"
-    "add 12 13#int\n"
+    "add a 13#int\n"
     "add $$ 12\n"
     "minus $$ 1\n"
-    "print \"coucou\"\n";
+    "print $$\n";
 
   std::cout << source << "\n";
 
@@ -33,113 +55,11 @@ int main(int argc, char const *argv[])
     source_cursor++;
   }
 
-  struct token
-  {
-    std::string type;
-    std::string value;
-  };
-
-  struct argument
-  {
-    std::string value;
-    std::string tag;
-  };
-
-  struct command
-  {
-    std::string name;
-    std::vector<argument> args;
-  };
-
   std::vector<command> cmds;
 
   for (const std::string &line : lines)
   {
-    std::vector<token> tokens;
-    std::string::const_iterator line_begin = line.begin();
-    std::string::const_iterator line_end = line.end();
-    std::string::const_iterator line_cursor = line.begin();
-
-    while (line_cursor != line_end)
-    {
-      token t;
-
-      if (*line_cursor == '#')
-      {
-        t.type = "tag";
-        t.value = "#";
-        line_cursor++;
-      }
-      else if (*line_cursor == '$')
-      {
-        t.type = "dollard";
-        t.value = "$";
-        line_cursor++;
-      }
-      else if (*line_cursor == ' ')
-      {
-        t.type = "space";
-        t.value = " ";
-        line_cursor++;
-      }
-      else if (*line_cursor == '\n')
-      {
-        t.type = "eol";
-        t.value = "\n";
-        line_cursor++;
-      }
-      else
-      { 
-        if (line_cursor != line_end and *line_cursor == '"')
-        {
-          line_cursor++;
-          while (line_cursor != line_end and *line_cursor != '"')
-          {
-            line_cursor++;
-          }
-          if (line_cursor != line_end and *line_cursor == '"')
-          {
-            line_cursor++;
-            t.value = std::string(line_begin, line_cursor);
-            t.type = "string";
-          }
-        }
-        else 
-        {
-
-          while (line_cursor != line_end and '0' <= *line_cursor and *line_cursor <= '9')
-          {
-            line_cursor++;
-          }
-          if (line_cursor != line_begin)
-          {
-            t.type = "int";
-            t.value = std::string(line_begin, line_cursor);
-          }
-          else
-          {
-            while (line_cursor != line_end and 'a' <= *line_cursor and *line_cursor <= 'z')
-            {
-              line_cursor++;
-            }
-            if (line_cursor != line_begin)
-            {
-              t.type = "name";
-              t.value = std::string(line_begin, line_cursor);
-            }
-            else
-            {
-              t.type = "error";
-              t.value = *line_cursor;
-              line_cursor++;
-            }
-          }
-        }
-      }
-
-      line_begin = line_cursor;
-      tokens.push_back(std::move(t));
-    }
+    std::vector<token> tokens = scan_source(line); 
 
     /* Nous avons ici une liste de token pour une ligne en particulier
        Nous pouvons donc essayer de la convertir en commande */
@@ -269,7 +189,6 @@ int main(int argc, char const *argv[])
       std::exit(EXIT_FAILURE);
     }
 
-
     cmds.push_back(cmd);
   } // For each line
 
@@ -347,22 +266,18 @@ int main(int argc, char const *argv[])
           {/* l'argument est un nom */
             /* pour l'instant on ne gère pas les variables intra programme */
             /* TODO ajouter la commande <let: var#type valeur> */
+            argument.tag = "int";
           }
           else if ('0'<=first and first<='9') 
           {/* l'argument est un nombre */
-            /* pour l'instant nous ne gérons que les nombres entiers ! */
-            /* TODO ajouter la possibilité de mettre des nombres floattant */
             argument.tag = "int"; /* j'ajoute le tag par inférence sur la valeur */
           }
           else if ('"' == first)
           { /* l'argument est une string */
-            /* pour l'instant les tokens string ne sont pas reconnu */
             argument.tag = "string";
           }
           else if ('$' == first)
           {/* l'argument fait référence au type retour de la commande précédente */
-            /* pour l'instant il s'agit que de type int */
-            /* TODO faire l'inférence sur le type de la commande précédente */
             argument.tag = "int";
           }
           else 
@@ -396,6 +311,7 @@ int main(int argc, char const *argv[])
 
     if (def.params.size() != cmd.args.size())
     {
+      std::cerr << "sur la commande " << cmd.name << " : \n";
       std::cerr << "nb args "<< cmd.args.size() << " def " << def.params.size() << "\n";
       std::cerr << "le nombre d'argument n'est pas";
       std::cerr << " identique au nombre de paramètres attendu \n";
@@ -427,75 +343,283 @@ int main(int argc, char const *argv[])
 
   std::map<std::string, int> lets; 
 
-    auto add = [] (int a, int b) -> int {return a+b;};
-    auto minus = [] (int a, int b) -> int {return a-b;};
-    auto multiply = [] (int a, int b) -> int {return a*b;};
-    auto divide = [] (int a, int b) -> int {return a/b;};
-    auto mod = [] (int a, int b) -> int {return a%b;};
-    auto print = [] (int a) -> void {std::cout << a;};
-    auto let = [&lets] (const std::string& name, int value) {lets[name] = value;};
+  auto add = [] (int a, int b) -> int {return a+b;};
+  auto minus = [] (int a, int b) -> int {return a-b;};
+  auto multiply = [] (int a, int b) -> int {return a*b;};
+  auto divide = [] (int a, int b) -> int {return a/b;};
+  auto mod = [] (int a, int b) -> int {return a%b;};
+  auto print = [] (int a) -> void {std::cout << a;};
+  auto let = [&lets] (const std::string& name, int value) {lets[name] = value;};
 
-    /* commencons par la commande add. elle prend en entrée deux int a et b 
-     * on va donc enregistrer dans une map le nom de la commande ainsi que 
-     * la fonction proprepement dite associée !*/
-    int $$ = 0;
+  /* commencons par la commande add. elle prend en entrée deux int a et b 
+   * on va donc enregistrer dans une map le nom de la commande ainsi que 
+   * la fonction proprepement dite associée !*/
+  int $$ = 0;
 
-    for (auto &&cmd : cmds)
+  for (auto &&cmd : cmds)
+  {
+    auto const &name = cmd.name;
+    std::vector<int> ints;
+
+    for (auto&& arg : cmd.args)
     {
-      std::cout << "cmd " << cmd.name;
-      auto const &name = cmd.name;
-      std::vector<int> ints;
-
-      for (auto&& arg : cmd.args)
+      if (arg.value == "$$")
       {
-        if (arg.value == "$$")
+        ints.push_back($$);
+      }
+      else  
+      {
+        auto first = *arg.value.begin();
+
+        if ('a' <= first and first <= 'z') 
         {
-          ints.push_back($$);
-        }
-        else if () 
-        {
-            :
+          if (cmd.name != "let") 
+          {
+            ints.push_back(lets.at(arg.value)); 
+          }
         }
         else 
         {
           ints.push_back(std::stoi(arg.value));
         }
       }
-      std::cout << "exec\n";
-      if (name=="add") 
-      {
-        $$ = add(ints[0], ints[1]);
-      } 
-      else if (name == "print")
-      {
-        print(ints[0]);
-      }
-      else if (name == "minus")
-      {
-        $$ = minus(ints[0], ints[1]);
-      }
-      else if (name == "multiply")
-      {
-        $$ = multiply(ints[0], ints[1]);
-      }
-      else if (name == "divide")
-      {
-        $$ = divide(ints[0], ints[1]);
-      }
-      else if (name == "mod")
-      {
-        $$ = mod(ints[0], ints[1]);
-      }
-      else if (name == "let") 
-      {
-        auto varname=""; // TODO capture the name of the var
-        auto varvalue=0; // TODO capture the value of the var
-        let(varname, varvalue);
-      }
     }
 
-    std::cout << "coucou4\n";
-    std::cout << "EXIT_SUCCESS";
+    if (name=="add") 
+    {
+      $$ = add(ints[0], ints[1]);
+    } 
+    else if (name == "print")
+    {
+      print(ints[0]);
+    }
+    else if (name == "minus")
+    {
+      $$ = minus(ints[0], ints[1]);
+    }
+    else if (name == "multiply")
+    {
+      $$ = multiply(ints[0], ints[1]);
+    }
+    else if (name == "divide")
+    {
+      $$ = divide(ints[0], ints[1]);
+    }
+    else if (name == "mod")
+    {
+      $$ = mod(ints[0], ints[1]);
+    }
+    else if (name == "let") 
+    {
+      auto varname=cmd.args[0].value;
+      auto varvalue=std::stoi(cmd.args[1].value);
+      let(varname, varvalue);
+    }
+  }
 
-    return EXIT_SUCCESS;
+  std::cout << "coucou4\n";
+  std::cout << "EXIT_SUCCESS";
+
+  return EXIT_SUCCESS;
+}
+
+std::vector<token> scan_source(const std::string& source) 
+{
+  std::vector<token> tokens;
+
+  auto begin = source.begin();
+  auto end   = source.end();
+  auto step  = source.begin();
+
+  while (begin != end) 
+  {
+    if (*begin == '#') 
+    {
+      tokens.push_back({"tag", "#"});
+      begin++;
+      step = begin;
+    } 
+    else if (*begin == '$')
+    {
+      tokens.push_back({"dollard", "$"});
+      begin++;
+      step = begin;
+    }
+    else if (*begin == ' ') 
+    {
+      /* FIXME pour l'instant nous ne 
+       * prenons pas en compte l'indentation 
+       * de début de ligne */
+      begin++;
+      step = begin;
+    }
+    else if (*begin == '\n') 
+    {
+      tokens.push_back({"eol", "\n"});
+      begin++;
+      step = begin;
+    } 
+    else if (*begin == '"')
+    {
+      begin++;
+
+      while (begin != end 
+          and *begin != '"')
+      {
+        begin++;
+      }
+
+      if (begin != end and *begin == '"')
+      {
+        tokens.push_back({"string", {step, begin}});
+        begin++;
+        step = begin; 
+      } 
+      else
+      {
+        begin = step;
+      }
+    }
+    else if ('a' <= *begin and *begin <= 'z')
+    {
+      begin++;
+
+      while (begin != end 
+          and 'a' <= *begin 
+          and *begin <= 'z')
+      {
+        begin++;
+      }
+
+      tokens.push_back({"name", {step, begin}});
+      step = begin;
+    }
+    else if ('0' <= *begin and *begin <= '9')
+    {
+      begin++;
+
+      while (begin != end 
+          and '0' <= *begin 
+          and *begin <= '9')
+      {
+        begin++;
+      }
+
+      tokens.push_back({"int", {step, begin}});
+      step = begin;
+    }
+    else 
+    {
+      tokens.push_back({"error", {begin, begin + 1}});
+      begin++;
+      step = begin;
+    }
+  }
+
+  return tokens;
+}
+
+
+std::vector<command> parse_tokens(const std::vector<token>& tokens) 
+{
+  std::vector<command> commands;
+
+  auto begin = tokens.begin();
+  auto end   = tokens.end();
+  auto step  = tokens.begin();
+
+  while (begin != end)
+  {
+    command cmd;
+
+    while (begin != end and (*begin).type != "eol")
+    {
+      begin++;
+    }
+
+    while (step != begin)
+    {
+      if ((*step).type == "eol")
+      {
+        step = begin;
+      } 
+      else if ((*step).type == "name")
+      {
+        cmd.name = (*step).value;
+        step++;
+
+        while (step != begin)
+        {
+          if ((*step).type == "eol")
+          {
+            step = begin;
+            continue;
+          } 
+          else if ((*step).type == "int" or (*step).type == "name")
+          {
+            if ((step+1) != begin and (step+2) != begin) 
+            {
+              auto tag     = *(step+1);
+              auto tagname = *(step+2);
+
+              if (tag.type == "tag")
+              {
+                if (tagname.type == "name")
+                {
+                  cmd.args.push_back({(*step).value, tagname.value});
+                  step+=3;
+                } 
+                else
+                {
+                  std::cerr << "un tag doit être suivi d'un nom\n";
+                  std::exit(EXIT_FAILURE);
+                }
+              } 
+              else
+              {
+                cmd.args.push_back({(*step).value, "int"});
+                step++;
+              }
+            }
+          }
+          else if ((*step).type == "dollard") 
+          {
+            auto dollard2 = step+1;
+
+            if (dollard2 != begin and (*dollard2).type == "dollard")
+            {
+              cmd.args.push_back({"$$", "int"});
+              step+=2;
+            }
+            else 
+            {
+              std::cerr << "un premier dollard est suivi d'un second dollard\n";
+              std::exit(EXIT_FAILURE);
+            }
+          }
+          else if ((*step).type == "string")
+          {
+            cmd.args.push_back({(*step).value, "string"});
+            step++;
+          }
+          else if ((*step).type == "error") 
+          {
+            std::cerr << "le token courant n'est pas reconnu par le parsing\n";
+            std::exit(EXIT_FAILURE);
+          }
+          else 
+          {
+            std::cerr << "oops\n";
+            std::exit(EXIT_FAILURE);
+          }
+        }
+      }
+    }
+    
+    commands.push_back(cmd);
+    step = begin;
+  }
+
+
+  return commands;
 }
