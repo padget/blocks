@@ -23,6 +23,58 @@ struct command
   std::vector<argument> args;
 };
 
+struct parameter
+{
+  /* nom du paramètre */
+  std::string name;
+  /* type du paramètre */
+  std::string type;
+};
+
+struct command_definition 
+{
+  /* nom de la commande */
+  std::string name;
+
+  /* type de retour de la commande */
+  std::string rtype;
+
+  /* ensemble des paramètres de la commande */
+  /* l'ordre est important et est à respecter 
+     lors de l'appel de la dite commande */
+  std::vector<parameter> params;
+};
+
+
+
+template<
+  typename literal>
+bool between(
+    literal a, 
+    literal min, 
+    literal max)
+{
+  return min <= a and a <= max;
+}
+
+template<
+typename object, 
+         typename value, 
+  typename ... values> 
+bool eq_or(
+    object&& o, 
+    value&& v, 
+    values&&... vs)
+{
+  return std::forward<object>(o) == std::forward<value>(v) 
+    or eq_or(std::forward<object>(o), std::forward<values>(vs)...);
+}
+
+  template<typename object>
+bool eq_or(object&&)
+{
+  return false; 
+}
 
 std::vector<token> scan_source(const std::string& src);
 std::vector<command> parse_tokens(const std::vector<token>& tokens);
@@ -38,185 +90,11 @@ int main(int argc, char const *argv[])
 
   std::cout << source << "\n";
 
-  std::vector<std::string> lines;
-  std::string::iterator source_begin = source.begin();
-  std::string::iterator source_end = source.end();
-  std::string::iterator source_cursor = source.begin();
-
-  while (source_cursor != source_end)
-  {
-    if (*source_cursor == '\n')
-    {
-      std::string line{source_begin, source_cursor + 1};
-      lines.push_back(std::move(line));
-      source_begin = source_cursor + 1;
-    }
-
-    source_cursor++;
-  }
-
-  std::vector<command> cmds;
-
-  for (const std::string &line : lines)
-  {
-    std::vector<token> tokens = scan_source(line); 
-
-    /* Nous avons ici une liste de token pour une ligne en particulier
-       Nous pouvons donc essayer de la convertir en commande */
-
-    command cmd;
-    std::vector<token>::iterator tokens_begin = tokens.begin();
-    std::vector<token>::iterator tokens_end = tokens.end();
-
-    /* bypass space tokens */
-    while (tokens_begin != tokens_end and (*tokens_begin).type == "space")
-    {
-      tokens_begin++;
-    }
-
-    /* if only an eol then by pass this */
-    if (tokens_begin != tokens_end and (*tokens_begin).type == "eol") 
-    {
-      tokens_begin++;
-      continue;
-    }
-
-    /* detect name of the command */
-    if (tokens_begin != tokens_end and (*tokens_begin).type == "name")
-    {
-      cmd.name = (*tokens_begin).value;
-      tokens_begin++;
-
-      /* now detect arguments of the current command */
-      bool has_argument = true;
-
-      while (tokens_begin != tokens_end and has_argument)
-      {
-        /* before each args we must bypass space tokens */
-        while (tokens_begin != tokens_end and (*tokens_begin).type == "space")
-        {
-          tokens_begin++;
-        }
-
-        if (tokens_begin != tokens_end and (*tokens_begin).type == "eol")
-        {
-          /* we are a the end of the line so we can by pass */
-          tokens_begin++;
-          continue;
-        }
-
-        /* we can now detect each argument */
-        if (tokens_begin != tokens_end)
-        {
-          auto &&type = (*tokens_begin).type;
-          auto &&value = (*tokens_begin).value;
-
-          if (type == "int")
-          {
-            cmd.args.push_back(argument{value, "int"});
-            tokens_begin++;
-            continue;
-          }
-          else if (type == "name")
-          { 
-            /* here we can have just a name or a name with tag (<name>#<tag>)*/
-            auto &&arg_name = (*tokens_begin).value;
-            tokens_begin++;
-
-            if (tokens_begin != tokens_end)
-            {
-              if ((*tokens_begin).type == "tag")
-              {
-                tokens_begin++;
-
-                if (tokens_begin != tokens_end and (*tokens_begin).type == "name")
-                {
-                  /* here we have a name and a tag */
-                  auto &&arg_tag = (*tokens_begin).value;
-                  cmd.args.push_back(argument{arg_name, arg_tag});
-                  tokens_begin++;
-                  continue;
-                }
-                else
-                {
-                  /* here we have an error !! */
-                  std::cerr << "erreur dans l'ecriture d'une commande\n";
-                  std::exit(EXIT_FAILURE);
-                }
-              }
-              else
-              {
-                /* here we have just a name with no tag */
-                cmd.args.push_back(argument{arg_name, ""});
-                continue;
-              }
-            }
-            else
-            {
-              /*we have just a name and after end of flow*/
-              cmd.args.push_back(argument{arg_name, ""});
-            }
-          }
-          else if (type == "dollard")
-          {
-            /* we are in the case of '$$' */
-            tokens_begin++;
-            if (tokens_begin != tokens_end && (*tokens_begin).type == "dollard") 
-            {
-              cmd.args.push_back(argument{"$$", ""});
-              tokens_begin++;
-              continue;
-            }
-          } 
-          else if (type == "string") 
-          {
-            cmd.args.push_back(argument{value, "string"});
-            tokens_begin++; 
-            continue;
-          }
-          else
-          {
-            // nothing
-            has_argument = false;
-          }
-        }
-      } // End while has_argument
-    } // End if command has a name
-    else
-    {
-      /* a line with no name but other type of token is an error */
-      std::cerr << "la ligne présente des tokens qu'elle ne devrait pas avoir\n";
-      std::exit(EXIT_FAILURE);
-    }
-
-    cmds.push_back(cmd);
-  } // For each line
+  std::vector<token> tokens = scan_source(source);
+  std::vector<command> cmds = parse_tokens(tokens);
 
   /* now we have commands. We can check if each of 
    * them is known and correctly used */
-  std::cout << "coucou1" << std::endl;
-  struct parameter
-  {
-    /* nom du paramètre */
-    std::string name;
-    /* type du paramètre */
-    std::string type;
-  };
-
-  struct command_definition 
-  {
-    /* nom de la commande */
-    std::string name;
-
-    /* type de retour de la commande */
-    std::string rtype;
-
-    /* ensemble des paramètres de la commande */
-    /* l'ordre est important et est à respecter 
-       lors de l'appel de la dite commande */
-    std::vector<parameter> params;
-  };
-
   std::map<std::string, command_definition> cmddefs;
 
   /* commencons par batir les definitions de commandes natives */
@@ -243,7 +121,7 @@ int main(int argc, char const *argv[])
       std::exit(EXIT_FAILURE);
     } 
   }
-  std::cout << "coucou2\n";
+
   /* Maintenant que nous savons que chaque commande utilisée existe, nous allons
    * regardé si celle-ci est correctement utilisées en termes de typage des données. */
 
@@ -295,16 +173,12 @@ int main(int argc, char const *argv[])
     }
   }
 
-  std::cout << "coucou3\n";
-
   /* maintenant que le type de chaque argument est défini, 
    * nous pouvons commencer l'execution des commandes */
 
   /* commencons par regarder si chaque commande utilisée est correctement
    * utilisée du point de vue de sa signature : nombre d'arguments et 
    * leur type respectif ainsi que l'ordre des arguments */
-
-
   for (auto&& cmd : cmds)
   {
     auto&& def = cmddefs.at(cmd.name);
@@ -417,15 +291,16 @@ int main(int argc, char const *argv[])
     }
   }
 
-  std::cout << "coucou4\n";
   std::cout << "EXIT_SUCCESS";
 
   return EXIT_SUCCESS;
 }
 
-std::vector<token> scan_source(const std::string& source) 
+std::vector<token> scan_source(
+    const std::string& source) 
 {
   std::vector<token> tokens;
+  token t;
 
   auto begin = source.begin();
   auto end   = source.end();
@@ -435,13 +310,17 @@ std::vector<token> scan_source(const std::string& source)
   {
     if (*begin == '#') 
     {
-      tokens.push_back({"tag", "#"});
+      t.type = "tag";
+      t.value = "#";
+      tokens.push_back(t);
       begin++;
       step = begin;
     } 
     else if (*begin == '$')
     {
-      tokens.push_back({"dollard", "$"});
+      t.type = "dollard";
+      t.value = "$";
+      tokens.push_back(t);
       begin++;
       step = begin;
     }
@@ -455,7 +334,9 @@ std::vector<token> scan_source(const std::string& source)
     }
     else if (*begin == '\n') 
     {
-      tokens.push_back({"eol", "\n"});
+      t.type = "eol"; 
+      t.value = "\n";
+      tokens.push_back(t);
       begin++;
       step = begin;
     } 
@@ -471,7 +352,9 @@ std::vector<token> scan_source(const std::string& source)
 
       if (begin != end and *begin == '"')
       {
-        tokens.push_back({"string", {step, begin}});
+        t.type = "string";
+        t.value = {step, begin};
+        tokens.push_back(t);
         begin++;
         step = begin; 
       } 
@@ -480,7 +363,7 @@ std::vector<token> scan_source(const std::string& source)
         begin = step;
       }
     }
-    else if ('a' <= *begin and *begin <= 'z')
+    else if (between(*begin, 'a', 'z'))
     {
       begin++;
 
@@ -491,26 +374,31 @@ std::vector<token> scan_source(const std::string& source)
         begin++;
       }
 
-      tokens.push_back({"name", {step, begin}});
+      t.type = "name"; 
+      t.value = {step, begin};
+      tokens.push_back(t);
       step = begin;
     }
-    else if ('0' <= *begin and *begin <= '9')
+    else if (between(*begin, '0', '9'))
     {
       begin++;
 
       while (begin != end 
-          and '0' <= *begin 
-          and *begin <= '9')
+          and between(*begin, '0', '9'))
       {
         begin++;
       }
 
-      tokens.push_back({"int", {step, begin}});
+      t.type = "int";
+      t.value = {step, begin};
+      tokens.push_back(t);
       step = begin;
     }
     else 
     {
-      tokens.push_back({"error", {begin, begin + 1}});
+      t.type = "error"; 
+      t.value = {begin, begin+1};
+      tokens.push_back(t);
       begin++;
       step = begin;
     }
@@ -526,100 +414,127 @@ std::vector<command> parse_tokens(const std::vector<token>& tokens)
 
   auto begin = tokens.begin();
   auto end   = tokens.end();
-  auto step  = tokens.begin();
+  auto numline = 1;
 
   while (begin != end)
   {
-    command cmd;
+    auto eol = begin;
 
-    while (begin != end and (*begin).type != "eol")
+    command cmd;
+    argument arg;
+
+    bool has_name = false;
+
+    while (eol != end and (*eol).type != "eol")
     {
-      begin++;
+      eol++;
     }
 
-    while (step != begin)
+    numline++;
+
+    if (eol != begin) 
     {
-      if ((*step).type == "eol")
+      if ((*begin).type == "name")
       {
-        step = begin;
-      } 
-      else if ((*step).type == "name")
-      {
-        cmd.name = (*step).value;
-        step++;
-
-        while (step != begin)
-        {
-          if ((*step).type == "eol")
-          {
-            step = begin;
-            continue;
-          } 
-          else if ((*step).type == "int" or (*step).type == "name")
-          {
-            if ((step+1) != begin and (step+2) != begin) 
-            {
-              auto tag     = *(step+1);
-              auto tagname = *(step+2);
-
-              if (tag.type == "tag")
-              {
-                if (tagname.type == "name")
-                {
-                  cmd.args.push_back({(*step).value, tagname.value});
-                  step+=3;
-                } 
-                else
-                {
-                  std::cerr << "un tag doit être suivi d'un nom\n";
-                  std::exit(EXIT_FAILURE);
-                }
-              } 
-              else
-              {
-                cmd.args.push_back({(*step).value, "int"});
-                step++;
-              }
-            }
-          }
-          else if ((*step).type == "dollard") 
-          {
-            auto dollard2 = step+1;
-
-            if (dollard2 != begin and (*dollard2).type == "dollard")
-            {
-              cmd.args.push_back({"$$", "int"});
-              step+=2;
-            }
-            else 
-            {
-              std::cerr << "un premier dollard est suivi d'un second dollard\n";
-              std::exit(EXIT_FAILURE);
-            }
-          }
-          else if ((*step).type == "string")
-          {
-            cmd.args.push_back({(*step).value, "string"});
-            step++;
-          }
-          else if ((*step).type == "error") 
-          {
-            std::cerr << "le token courant n'est pas reconnu par le parsing\n";
-            std::exit(EXIT_FAILURE);
-          }
-          else 
-          {
-            std::cerr << "oops\n";
-            std::exit(EXIT_FAILURE);
-          }
-        }
+        has_name = true;
+        cmd.name = (*begin).value;
+        begin++;
       }
     }
-    
-    commands.push_back(cmd);
-    step = begin;
-  }
 
+    if (!has_name)
+    {
+      std::cerr << "syntax error : ";
+      std::cerr << " (line " << numline << ") ";
+      std::cerr << "a command must begin by a <cmd-name>";
+      std::exit(EXIT_FAILURE);
+    }
+
+    while (begin != eol)
+    {
+      bool is_name = false;
+      bool is_int = false;
+
+      if ((*begin).type == "name")
+      {
+        is_name = true; 
+        arg.value = (*begin).value;
+        begin++;
+      } 
+      else if ((*begin).type == "int")
+      {
+        is_int = true;
+        arg.value = (*begin).value;
+        begin++;
+      }
+
+      bool can_have_tag = false;
+
+      if (is_name or is_int)
+      {
+        if (begin != eol 
+            and (*begin).type == "tag")
+        {
+          can_have_tag = true;
+          begin++;
+        }
+      }
+
+      if (can_have_tag)
+      {
+        if (begin != eol 
+            and (*begin).type == "name")
+        {
+          arg.tag = (*begin).value;
+          begin++;
+        } 
+        else
+        {
+          std::cerr << "syntax error : ";
+          std::cerr << "a # must followed by a <tag-name>";
+          std::exit(EXIT_FAILURE);
+        } 
+      }
+
+      if (is_name or is_int)
+      {
+        cmd.args.push_back(arg);
+        continue;
+      }
+
+      auto dollard1 = begin;
+      auto dollard2 = begin + 1;
+
+      if ((*dollard1).type == "dollard")
+      {
+        if ((*dollard2).type == "dollard")
+        {
+          begin+=2;
+          arg.value = "$$";
+          arg.tag   = "int";
+          cmd.args.push_back(arg);
+          continue;
+        }
+        else 
+        {
+          std::cerr << "syntax error : ";
+          std::cerr << "a $ must be followed by $";
+          std::exit(EXIT_FAILURE);
+        }
+      }
+
+      if ((*begin).type == "error")
+      {
+        std::cerr << "token error : ";
+        std::cerr << "the token " << (*begin).value;
+        std::cerr << " isn't authorized !\n" ;
+        std::exit(EXIT_FAILURE);
+      }
+    }
+
+    begin++;
+    commands.push_back(cmd);
+  }
 
   return commands;
 }
