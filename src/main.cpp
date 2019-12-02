@@ -25,27 +25,21 @@ struct command
 
 struct parameter
 {
-  /* nom du paramètre */
   std::string name;
-  /* type du paramètre */
   std::string type;
 };
 
 struct command_definition 
 {
-  /* nom de la commande */
   std::string name;
-
-  /* type de retour de la commande */
   std::string rtype;
-
-  /* ensemble des paramètres de la commande */
-  /* l'ordre est important et est à respecter 
-     lors de l'appel de la dite commande */
   std::vector<parameter> params;
 };
 
-
+struct context
+{
+  std::map<std::string, command_definition> definitions;
+};
 
 template<
   typename literal>
@@ -57,27 +51,18 @@ bool between(
   return min <= a and a <= max;
 }
 
-template<
-typename object, 
-         typename value, 
-  typename ... values> 
-bool eq_or(
-    object&& o, 
-    value&& v, 
-    values&&... vs)
-{
-  return std::forward<object>(o) == std::forward<value>(v) 
-    or eq_or(std::forward<object>(o), std::forward<values>(vs)...);
-}
-
-  template<typename object>
-bool eq_or(object&&)
-{
-  return false; 
-}
-
 std::vector<token> scan_source(const std::string& src);
 std::vector<command> parse_tokens(const std::vector<token>& tokens);
+void infer_args_type(std::vector<command>& commands);
+
+bool check_commands_name (
+    const std::vector<command> & commands, 
+    const context & ctx);
+
+bool check_commands_params(
+    const std::vector<command> & commands,
+    const context& ctx);
+
 
 int main(int argc, char const *argv[])
 {
@@ -108,90 +93,30 @@ int main(int argc, char const *argv[])
   cmddefs.insert({"print", {"print", "void", {{"a", "any"}}}});
   cmddefs.insert({"let", {"let", "void", {{"name", "any"}, {"value", "int"}}}}); // TODO take any as any-type in inference process
 
-  /* Nous avons les definitions des commandes natives au langage blocks 
-   * Nous pouvons maintenant vérifier que les commandes sont correctement utilisée. 
-   * Pour cela nous commencerons par voir si les noms des commandes utilisé sont bien
-   * présents dans le dictionaires de commandes */
+  context ctx {cmddefs};
 
-  for (auto&& cmd : cmds) 
+  bool all_names_are_good = check_commands_name(cmds, ctx);
+
+  if (!all_names_are_good)
   {
-    if (cmddefs.count(cmd.name) != 1)
-    {
-      std::cerr << "attention, commande non définie : " << cmd.name << "\n";
-      std::exit(EXIT_FAILURE);
-    } 
+    std::cerr << "semantic error : ";
+    std::cerr << "some commands don't exists\n";
+    std::exit(EXIT_FAILURE);
+  }
+  
+  infer_args_type(cmds);
+  
+  bool all_args_are_good = check_commands_params(cmds, ctx);
+
+  if (!all_args_are_good)
+  {
+    std::cerr << "semantic error : ";
+    std::cerr << "some commands are malformed\n";
+    std::exit(EXIT_FAILURE);
   }
 
-  /* Maintenant que nous savons que chaque commande utilisée existe, nous allons
-   * regardé si celle-ci est correctement utilisées en termes de typage des données. */
-
-  /* Commençons donc par déterminé le type de chaque arguments par inférence sur la valeur
-   * ou bien sur directement donnée par le tag de l'argument */
-
-  for (auto&& cmd : cmds) 
-  {
-    auto&& arguments = cmd.args;
-
-    for (auto&& argument : arguments)
-    {
-      if (argument.tag.empty()) 
-      {
-        /* l'argument n'a pas de tag et donc le type est a devinée en fonction de sa valeur */
-        if (!argument.value.empty()) 
-        {
-          auto first = argument.value[0];
-          if ('a'<=first and first<='z') 
-          {/* l'argument est un nom */
-            /* pour l'instant on ne gère pas les variables intra programme */
-            /* TODO ajouter la commande <let: var#type valeur> */
-            argument.tag = "int";
-          }
-          else if ('0'<=first and first<='9') 
-          {/* l'argument est un nombre */
-            argument.tag = "int"; /* j'ajoute le tag par inférence sur la valeur */
-          }
-          else if ('"' == first)
-          { /* l'argument est une string */
-            argument.tag = "string";
-          }
-          else if ('$' == first)
-          {/* l'argument fait référence au type retour de la commande précédente */
-            argument.tag = "int";
-          }
-          else 
-          { /* si on arrive ici c'est que les tentatives d'inférence ont échoué ! */
-            std::cerr << "le type ne peut être déterminé\n";
-            std::exit(EXIT_FAILURE);
-          }
-        }
-        else 
-        {
-          std::cout<<"un argument doit avoir une valeur\n";
-          std::exit(EXIT_FAILURE);
-        }
-      }
-    }
-  }
-
-  /* maintenant que le type de chaque argument est défini, 
-   * nous pouvons commencer l'execution des commandes */
-
-  /* commencons par regarder si chaque commande utilisée est correctement
-   * utilisée du point de vue de sa signature : nombre d'arguments et 
-   * leur type respectif ainsi que l'ordre des arguments */
-  for (auto&& cmd : cmds)
-  {
-    auto&& def = cmddefs.at(cmd.name);
-
-    if (def.params.size() != cmd.args.size())
-    {
-      std::cerr << "sur la commande " << cmd.name << " : \n";
-      std::cerr << "nb args "<< cmd.args.size() << " def " << def.params.size() << "\n";
-      std::cerr << "le nombre d'argument n'est pas";
-      std::cerr << " identique au nombre de paramètres attendu \n";
-      std::exit(EXIT_FAILURE);
-    }
-  }
+ /* maintenant que le type de chaque argument est défini, 
+  * nous pouvons commencer l'execution des commandes */
 
   for (auto&& cmd: cmds)
   {
@@ -408,7 +333,8 @@ std::vector<token> scan_source(
 }
 
 
-std::vector<command> parse_tokens(const std::vector<token>& tokens) 
+std::vector<command> parse_tokens(
+    const std::vector<token>& tokens) 
 {
   std::vector<command> commands;
 
@@ -538,3 +464,126 @@ std::vector<command> parse_tokens(const std::vector<token>& tokens)
 
   return commands;
 }
+
+// TODO à voir si on devrait pas intégrer ceci directement à la 
+// construction de la commande plutôt que de le faire de manière 
+// séparée dans le processus de compilation.
+void infer_args_type(std::vector<command>& commands)
+{
+  for (auto && cmd : commands)
+  {
+    for (auto && arg : cmd.args)
+    {
+      if (!arg.tag.empty())
+      {
+        continue;
+      }
+      
+      auto && value = arg.value;
+      
+      if (!value.empty() and 
+          '0' <= value[0] and 
+          value[0] <= '9')
+      {
+        arg.tag = "int";
+      } 
+      else if (!value.empty() and
+          'a' <= value[0] and 
+          value[0] 'z')
+      {
+        arg.tag = "int"; // TODO pour l'instant 
+        // les name sont forcément des int. On verra ensuite 
+        // pour mettre en place un systeme de variable
+        // avec espace de nom et portée des variables !
+      } 
+      else if (!value.empty() and 
+          '$' == value[0])
+      {
+        // TODO voir pour introspecter la commande précedente 
+        // si elle renvoi quelque chose et ainsi de suite 
+        // jusqu'à trouver autre chose que void
+        arg.tag = "int"; 
+      }
+      else 
+      {
+        // TODO voir s'il ne faudrait pas mettre en place un système
+        // d'accumulation des erreurs comme pour les autres cas déjà
+        // évoqués.
+        std::cerr << "semantic error : ";
+        std::cerr << "cannot infer type of the argument\n";
+        std::exit(EXIT_FAILURE);
+      }
+    }
+  }
+}
+
+
+
+// TODO a voir pour faire une accumulation des erreurs pour 
+// laisser la main au code client de gérer lui même l'erreur.
+// On peut envisager la production d'un rapport par le code 
+// client. Il lui faudra alors la liste des commandes qui 
+// ne passe pas le check plutot qu'un simple boolean qui dit
+// "quelque chose ne va pas" !
+bool check_commands_name (
+    const std::vector<command> & commands, 
+    const context & ctx)
+{
+  bool res = true;
+
+  for(auto&& cmd : commands)
+  {
+    auto&& name = cmd.name;
+
+    if (context.definitions.count(name)==0) 
+    {
+      res = false;
+    }
+  }
+
+  return res;
+}
+
+// TODO mettre en place un système de gestion d'erreur 
+// cumulative afin d'envisager la création de rapport
+// d'erreur par le code client de cette fonction.
+bool check_commands_params(
+    const std::vector<command> & commands, 
+    const context & ctx)
+{
+  bool res = true;
+
+  for (auto&& cmd : commands)
+  {
+    auto&& name = cmd.name;
+    auto&& def = ctx.definitions.at(name);
+
+    auto&& params = def.params;
+    auto&& args = cmd.args;
+
+    auto&& paramssize = params.size();
+    auto&& argssize = args.size();
+
+    if (paramssize != argssize)
+    {
+      res = false;
+    }
+    else 
+    {
+      for (unsigned i=0u; i<paramssize; ++i)
+      {
+        auto&& paramtype = params[i].type;
+        auto&& argtype = args[i].type;
+
+        if (paramtype != argtype)
+        {
+          res = false;
+        }
+      }
+    }
+  }
+
+  return res;
+}
+
+
