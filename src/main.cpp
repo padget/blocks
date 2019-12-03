@@ -12,9 +12,9 @@ struct token
 };
 
 struct argument
-{
+{ 
   std::string value;
-  std::string tag;
+  std::string type;
 };
 
 struct command
@@ -23,10 +23,26 @@ struct command
   std::vector<argument> args;
 };
 
+struct check_command_error 
+{
+  size_t line;
+  std::string name;
+};
+
 struct parameter
 {
   std::string name;
   std::string type;
+};
+
+struct check_param_error 
+{ // TODO rajouter une référence 
+  // vers la commande pour avoir
+  // plus d'information sur la
+  // localisation de l'erreur.
+  size_t line;
+  std::string param;
+  std::string expected;
 };
 
 struct command_definition 
@@ -35,7 +51,6 @@ struct command_definition
   std::string rtype;
   std::vector<parameter> params;
 };
-
 struct context
 {
   std::map<std::string, command_definition> definitions;
@@ -51,170 +66,77 @@ bool between(
   return min <= a and a <= max;
 }
 
-std::vector<token> scan_source(const std::string& src);
-std::vector<command> parse_tokens(const std::vector<token>& tokens);
-void infer_args_type(std::vector<command>& commands);
+std::vector<token> 
+scan_source(
+    const std::string& src);
 
-bool check_commands_name (
+std::vector<command> 
+parse_tokens(
+    const std::vector<token>& tokens);
+
+void 
+infer_args_type(
+    std::vector<command>& commands);
+
+std::vector<check_command_error> 
+check_commands_name (
     const std::vector<command> & commands, 
     const context & ctx);
 
-bool check_commands_params(
+void treat_check_command_errors(
+    const std::vector<check_command_error> & errors);
+
+std::vector<check_param_error> 
+check_commands_params(
     const std::vector<command> & commands,
     const context& ctx);
+
+void treat_check_param_errors(
+    const std::vector<check_param_error>& errors);
+
+void interpret_commands(
+    const std::vector<command>& commands);
 
 
 int main(int argc, char const *argv[])
 {
-  std::string source = 
+  std::string source =
+    // TODO prendre en compte le type file 
+    // pour pouvoir interagir avec le monde 
+    // exterieur !
+    // "let c#file 0\n"
+    // "fopen c 'main.cpp' 'r'\n"
     "let a#int 12\n"
-    "add a 13#int\n"
-    "add $$ 12\n"
-    "minus $$ 1\n"
-    "print $$\n";
+    "let b#int a#int\n"
+    "add b#int 13\n"
+    "add $$#int 12\n"
+    "minus $$#int 1\n"
+    "print $$#int\n";
 
   std::cout << source << "\n";
 
   std::vector<token> tokens = scan_source(source);
   std::vector<command> cmds = parse_tokens(tokens);
 
-  /* now we have commands. We can check if each of 
-   * them is known and correctly used */
   std::map<std::string, command_definition> cmddefs;
-
-  /* commencons par batir les definitions de commandes natives */
-
-  cmddefs.insert({"add", {"add", "int", {{"a", "int"}, {"b", "int"}}}});
-  cmddefs.insert({"minus", {"minus", "int", {{"a", "int"}, {"b", "int"}}}});
-  cmddefs.insert({"divide", {"divide", "int", {{"a", "int"}, {"b", "int"}}}});
-  cmddefs.insert({"multiply", {"multiply", "int", {{"a", "int"}, {"b", "int"}}}});
-  cmddefs.insert({"mod", {"mod", "int", {{"a", "int"}, {"b", "int"}}}});
-  cmddefs.insert({"neg", {"neg", "int", {{"a", "int"}}}});
-  cmddefs.insert({"print", {"print", "void", {{"a", "any"}}}});
-  cmddefs.insert({"let", {"let", "void", {{"name", "any"}, {"value", "int"}}}}); // TODO take any as any-type in inference process
-
+  cmddefs.insert({"add",      {"add",      "int",  {{"a", "int"},    {"b", "int"}}}});
+  cmddefs.insert({"minus",    {"minus",    "int",  {{"a", "int"},    {"b", "int"}}}});
+  cmddefs.insert({"divide",   {"divide",   "int",  {{"a", "int"},    {"b", "int"}}}});
+  cmddefs.insert({"multiply", {"multiply", "int",  {{"a", "int"},    {"b", "int"}}}});
+  cmddefs.insert({"mod",      {"mod",      "int",  {{"a", "int"},    {"b", "int"}}}});
+  cmddefs.insert({"neg",      {"neg",      "int",  {{"a", "int"}}}});
+  cmddefs.insert({"print",    {"print",    "void", {{"a", "any"}}}});
+  cmddefs.insert({"let",      {"let",      "void", {{"name", "any"}, {"value", "int"}}}});
   context ctx {cmddefs};
 
-  bool all_names_are_good = check_commands_name(cmds, ctx);
+  auto && command_errors = check_commands_name(cmds, ctx);
+  treat_check_command_errors(command_errors);
 
-  if (!all_names_are_good)
-  {
-    std::cerr << "semantic error : ";
-    std::cerr << "some commands don't exists\n";
-    std::exit(EXIT_FAILURE);
-  }
-  
   infer_args_type(cmds);
-  
-  bool all_args_are_good = check_commands_params(cmds, ctx);
+  auto && param_errors = check_commands_params(cmds, ctx);
+  treat_check_param_errors(param_errors); 
 
-  if (!all_args_are_good)
-  {
-    std::cerr << "semantic error : ";
-    std::cerr << "some commands are malformed\n";
-    std::exit(EXIT_FAILURE);
-  }
-
- /* maintenant que le type de chaque argument est défini, 
-  * nous pouvons commencer l'execution des commandes */
-
-  for (auto&& cmd: cmds)
-  {
-    auto&& def = cmddefs.at(cmd.name);
-
-    for (unsigned i=0; i<def.params.size(); ++i)
-    {
-      auto&& defarg = def.params[i];
-      auto&& arg    = cmd.args[i];
-
-      if (defarg.type != "any" and arg.tag != defarg.type)
-      {
-        std::cerr << cmd.name << "\n";
-        std::cerr << "signature non correspondante \n";
-        std::exit(EXIT_FAILURE);
-      }
-    }
-  }
-
-  /* chaque commande utilise le bon nombre d'argument et les bons types */
-  /* nous pouvons maintenant mettre en place un mapping entre le nom de chaque commande et 
-   * un fonction native C++ permettant l'interprétation de cette commande */
-
-  std::map<std::string, int> lets; 
-
-  auto add = [] (int a, int b) -> int {return a+b;};
-  auto minus = [] (int a, int b) -> int {return a-b;};
-  auto multiply = [] (int a, int b) -> int {return a*b;};
-  auto divide = [] (int a, int b) -> int {return a/b;};
-  auto mod = [] (int a, int b) -> int {return a%b;};
-  auto print = [] (int a) -> void {std::cout << a;};
-  auto let = [&lets] (const std::string& name, int value) {lets[name] = value;};
-
-  /* commencons par la commande add. elle prend en entrée deux int a et b 
-   * on va donc enregistrer dans une map le nom de la commande ainsi que 
-   * la fonction proprepement dite associée !*/
-  int $$ = 0;
-
-  for (auto &&cmd : cmds)
-  {
-    auto const &name = cmd.name;
-    std::vector<int> ints;
-
-    for (auto&& arg : cmd.args)
-    {
-      if (arg.value == "$$")
-      {
-        ints.push_back($$);
-      }
-      else  
-      {
-        auto first = *arg.value.begin();
-
-        if ('a' <= first and first <= 'z') 
-        {
-          if (cmd.name != "let") 
-          {
-            ints.push_back(lets.at(arg.value)); 
-          }
-        }
-        else 
-        {
-          ints.push_back(std::stoi(arg.value));
-        }
-      }
-    }
-
-    if (name=="add") 
-    {
-      $$ = add(ints[0], ints[1]);
-    } 
-    else if (name == "print")
-    {
-      print(ints[0]);
-    }
-    else if (name == "minus")
-    {
-      $$ = minus(ints[0], ints[1]);
-    }
-    else if (name == "multiply")
-    {
-      $$ = multiply(ints[0], ints[1]);
-    }
-    else if (name == "divide")
-    {
-      $$ = divide(ints[0], ints[1]);
-    }
-    else if (name == "mod")
-    {
-      $$ = mod(ints[0], ints[1]);
-    }
-    else if (name == "let") 
-    {
-      auto varname=cmd.args[0].value;
-      auto varvalue=std::stoi(cmd.args[1].value);
-      let(varname, varvalue);
-    }
-  }
+  interpret_commands(cmds);
 
   std::cout << "EXIT_SUCCESS";
 
@@ -235,7 +157,7 @@ std::vector<token> scan_source(
   {
     if (*begin == '#') 
     {
-      t.type = "tag";
+      t.type = "type";
       t.value = "#";
       tokens.push_back(t);
       begin++;
@@ -265,17 +187,17 @@ std::vector<token> scan_source(
       begin++;
       step = begin;
     } 
-    else if (*begin == '"')
+    else if (*begin == '\'')
     {
       begin++;
 
       while (begin != end 
-          and *begin != '"')
+          and *begin != '\'')
       {
         begin++;
       }
 
-      if (begin != end and *begin == '"')
+      if (begin != end and *begin == '\'')
       {
         t.type = "string";
         t.value = {step, begin};
@@ -399,7 +321,7 @@ std::vector<command> parse_tokens(
       if (is_name or is_int)
       {
         if (begin != eol 
-            and (*begin).type == "tag")
+            and (*begin).type == "type")
         {
           can_have_tag = true;
           begin++;
@@ -411,7 +333,7 @@ std::vector<command> parse_tokens(
         if (begin != eol 
             and (*begin).type == "name")
         {
-          arg.tag = (*begin).value;
+          arg.type= (*begin).value;
           begin++;
         } 
         else
@@ -437,7 +359,7 @@ std::vector<command> parse_tokens(
         {
           begin+=2;
           arg.value = "$$";
-          arg.tag   = "int";
+          arg.type  = "int";
           cmd.args.push_back(arg);
           continue;
         }
@@ -474,24 +396,24 @@ void infer_args_type(std::vector<command>& commands)
   {
     for (auto && arg : cmd.args)
     {
-      if (!arg.tag.empty())
+      if (!arg.type.empty())
       {
         continue;
       }
-      
+
       auto && value = arg.value;
-      
+
       if (!value.empty() and 
           '0' <= value[0] and 
           value[0] <= '9')
       {
-        arg.tag = "int";
+        arg.type = "int";
       } 
       else if (!value.empty() and
           'a' <= value[0] and 
-          value[0] 'z')
+          value[0] <= 'z')
       {
-        arg.tag = "int"; // TODO pour l'instant 
+        arg.type = "int"; // TODO pour l'instant 
         // les name sont forcément des int. On verra ensuite 
         // pour mettre en place un systeme de variable
         // avec espace de nom et portée des variables !
@@ -502,7 +424,7 @@ void infer_args_type(std::vector<command>& commands)
         // TODO voir pour introspecter la commande précedente 
         // si elle renvoi quelque chose et ainsi de suite 
         // jusqu'à trouver autre chose que void
-        arg.tag = "int"; 
+        arg.type = "int"; 
       }
       else 
       {
@@ -519,39 +441,36 @@ void infer_args_type(std::vector<command>& commands)
 
 
 
-// TODO a voir pour faire une accumulation des erreurs pour 
-// laisser la main au code client de gérer lui même l'erreur.
-// On peut envisager la production d'un rapport par le code 
-// client. Il lui faudra alors la liste des commandes qui 
-// ne passe pas le check plutot qu'un simple boolean qui dit
-// "quelque chose ne va pas" !
-bool check_commands_name (
+  std::vector<check_command_error> 
+check_commands_name (
     const std::vector<command> & commands, 
     const context & ctx)
 {
-  bool res = true;
+  std::vector<check_command_error> errors;
+  check_command_error error;
 
   for(auto&& cmd : commands)
   {
     auto&& name = cmd.name;
 
-    if (context.definitions.count(name)==0) 
+    if (ctx.definitions.count(name)==0) 
     {
-      res = false;
+      error.name = name;
+      error.line = 0;
+      errors.push_back(error);
     }
   }
 
-  return res;
+  return errors;
 }
 
-// TODO mettre en place un système de gestion d'erreur 
-// cumulative afin d'envisager la création de rapport
-// d'erreur par le code client de cette fonction.
-bool check_commands_params(
+  std::vector<check_param_error> 
+check_commands_params(
     const std::vector<command> & commands, 
     const context & ctx)
 {
-  bool res = true;
+  std::vector<check_param_error> errors;
+  check_param_error error;
 
   for (auto&& cmd : commands)
   {
@@ -566,7 +485,10 @@ bool check_commands_params(
 
     if (paramssize != argssize)
     {
-      res = false;
+      error.line     = 0;
+      error.param    = "all";
+      error.expected = "size !=";
+      errors.push_back(error);
     }
     else 
     {
@@ -575,15 +497,217 @@ bool check_commands_params(
         auto&& paramtype = params[i].type;
         auto&& argtype = args[i].type;
 
+        if (paramtype == "any")
+        {
+          continue;
+        }
+
         if (paramtype != argtype)
         {
-          res = false;
+          error.line     = 0;
+          error.expected = params[i].name+"#"+paramtype;
+          error.param    = args[i].value+"#"+argtype;
+          errors.push_back(error);
         }
       }
     }
   }
 
-  return res;
+  return errors;
 }
 
+  void
+treat_check_command_errors(
+    const std::vector<check_command_error>& errors)
+{
+  for (auto&& error:errors)
+  {
+    std::cerr << "semantic error : ";
+    std::cerr << error.name ;
+    std::cerr << " not found in the context\n";
+  }
 
+  if (!errors.empty())
+  {
+    std::exit(EXIT_FAILURE);
+  }
+}
+
+  void
+treat_check_param_errors(
+    const std::vector<check_param_error>& errors)
+{
+  for (auto&& error:errors)
+  {
+    std::cerr << "semantic error : ";
+    std::cerr << error.param ;
+    std::cerr << " instead of " ;
+    std::cerr << error.expected;
+    std::cerr << "\n";
+  }
+
+  if (!errors.empty())
+  {
+    std::exit(EXIT_FAILURE);
+  }
+}
+
+auto add(auto a, auto b) 
+{
+  return a+b;
+}
+
+auto minus(auto a, auto b) 
+{
+  return a-b;
+}
+
+auto multiply(auto a, auto b) 
+{
+  return a*b;
+}
+
+auto divide(auto a, auto b) 
+{
+  return a/b;
+}
+
+auto modulo(auto a, auto b) 
+{
+  return a%b;
+}
+
+void print(auto a) 
+{
+  std::cout << a;
+}
+
+void let(
+    const std::string& name, 
+    const std::string& value, 
+    auto& lets) 
+{
+  lets.insert({name, value});
+}
+
+void type(
+    const std::string& name, 
+    auto argsbegin, 
+    auto argsend)
+{
+  std::cout << "new type " ;
+  std::cout << name ;
+
+  while (argsbegin != argsend)
+  {
+    std::cout << " " << (*argsbegin).value ;
+    std::cout << "#" << (*argsbegin).type ;
+    argsbegin++;
+  }
+}
+
+int resolve_name(
+    const std::string& name, 
+    const std::map<std::string, std::string>& lets)
+{
+  auto&& resolved = lets.at(name);
+  auto&& firstc = *resolved.begin();
+
+  if (between(firstc, 'a', 'z'))
+  {
+    return resolve_name(resolved, lets);
+  } 
+  else
+  {
+    return std::stoi(resolved);
+  }
+}
+
+// TODO introduire les string...
+void interpret_commands(
+    const std::vector<command>& commands)
+{
+  int $$ = 0;
+  std::map<std::string, std::string> lets;
+
+  for (auto&& cmd:commands)
+  {
+    auto&& name = cmd.name;
+    auto&& args = cmd.args;
+
+    std::vector<int> ints;
+
+    for (auto&& arg:args)
+    {
+      auto&& value = arg.value;
+
+      if (value == "$$")
+      {
+        ints.push_back($$);
+        continue;
+      }
+
+      auto firstc = *value.begin();
+
+      if (between(firstc, 'a', 'z'))
+      {
+        if (name != "let")
+        {
+          auto&& i = resolve_name(value, lets);
+          ints.push_back(i);
+          continue;
+        }
+      }
+
+      if (between(firstc, '0', '9'))
+      {
+        ints.push_back(std::stoi(value));
+        continue;
+      }
+    }
+
+    if (name == "add") 
+    {
+      auto&& arg1 = ints[0];
+      auto&& arg2 = ints[1];
+      $$ = add(arg1, arg2);
+    }
+    else if (name == "minus")
+    {
+      auto&& arg1 = ints[0];
+      auto&& arg2 = ints[1];
+      $$ = minus(arg1, arg2);
+    }
+    else if (name == "multiply")
+    {
+      auto&& arg1 = ints[0];
+      auto&& arg2 = ints[1];
+      $$ = multiply(arg1, arg2);
+    }
+    else if (name == "divide")
+    {
+      auto&& arg1 = ints[0];
+      auto&& arg2 = ints[1];
+      $$ = divide(arg1, arg2);
+    } 
+    else if (name == "print")
+    {
+      auto&& arg = ints[0];
+      print(arg);
+    }
+    else if (name == "let")
+    {
+      auto&& name = args[0].value; 
+      auto&& value = args[1].value;
+      let(name, value, lets);
+    } 
+    else if (name == "type")
+    {
+      auto&& name = args[0].value;
+      auto&& begin = args.begin()+1;
+      auto&& end = args.end();
+      type(name, begin, end);
+    }
+  }
+
+}
