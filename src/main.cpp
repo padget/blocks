@@ -78,6 +78,8 @@ void
 infer_args_type(
     std::vector<command>& commands);
 
+context build_context();
+
 std::vector<check_command_error> 
 check_commands_name (
     const std::vector<command> & commands, 
@@ -109,33 +111,20 @@ int main(int argc, char const *argv[])
     "let a#int 12\n"
     "let b#int a#int\n"
     "add b#int 13\n"
-    "add $$#int 12\n"
-    "minus $$#int 1\n"
-    "print $$#int\n";
+    "add $$ 12\n"
+    "minus $$ 1\n"
+    "print $$\n";
 
   std::cout << source << "\n";
 
   std::vector<token> tokens = scan_source(source);
   std::vector<command> cmds = parse_tokens(tokens);
-
-  std::map<std::string, command_definition> cmddefs;
-  cmddefs.insert({"add",      {"add",      "int",  {{"a", "int"},    {"b", "int"}}}});
-  cmddefs.insert({"minus",    {"minus",    "int",  {{"a", "int"},    {"b", "int"}}}});
-  cmddefs.insert({"divide",   {"divide",   "int",  {{"a", "int"},    {"b", "int"}}}});
-  cmddefs.insert({"multiply", {"multiply", "int",  {{"a", "int"},    {"b", "int"}}}});
-  cmddefs.insert({"mod",      {"mod",      "int",  {{"a", "int"},    {"b", "int"}}}});
-  cmddefs.insert({"neg",      {"neg",      "int",  {{"a", "int"}}}});
-  cmddefs.insert({"print",    {"print",    "void", {{"a", "any"}}}});
-  cmddefs.insert({"let",      {"let",      "void", {{"name", "any"}, {"value", "int"}}}});
-  context ctx {cmddefs};
-
+  context&& ctx = build_context();
   auto && command_errors = check_commands_name(cmds, ctx);
   treat_check_command_errors(command_errors);
-
   infer_args_type(cmds);
   auto && param_errors = check_commands_params(cmds, ctx);
   treat_check_param_errors(param_errors); 
-
   interpret_commands(cmds);
 
   std::cout << "EXIT_SUCCESS";
@@ -439,6 +428,21 @@ void infer_args_type(std::vector<command>& commands)
   }
 }
 
+context build_context()
+{
+  std::map<std::string, command_definition> cmddefs;
+  cmddefs.insert({"add",      {"add",      "int",  {{"a", "int"},    {"b", "int"}}}});
+  cmddefs.insert({"minus",    {"minus",    "int",  {{"a", "int"},    {"b", "int"}}}});
+  cmddefs.insert({"divide",   {"divide",   "int",  {{"a", "int"},    {"b", "int"}}}});
+  cmddefs.insert({"multiply", {"multiply", "int",  {{"a", "int"},    {"b", "int"}}}});
+  cmddefs.insert({"mod",      {"mod",      "int",  {{"a", "int"},    {"b", "int"}}}});
+  cmddefs.insert({"neg",      {"neg",      "int",  {{"a", "int"}}}});
+  cmddefs.insert({"print",    {"print",    "void", {{"a", "any"}}}});
+  cmddefs.insert({"let",      {"let",      "void", {{"name", "any"}, {"value", "int"}}}});
+  context ctx {cmddefs};
+
+  return ctx;
+}
 
 
   std::vector<check_command_error> 
