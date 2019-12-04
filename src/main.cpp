@@ -2,8 +2,8 @@
 #include <vector>
 #include <string> 
 #include <map>
-#include <functional>
 
+#include "./commander.hpp"
 
 struct token
 {
@@ -51,9 +51,11 @@ struct command_definition
   std::string rtype;
   std::vector<parameter> params;
 };
+
 struct context
 {
   std::map<std::string, command_definition> definitions;
+  std::string $$;
 };
 
 template<
@@ -118,16 +120,17 @@ int main(int argc, char const *argv[])
   std::cout << source << "\n";
 
   std::vector<token> tokens = scan_source(source);
-  std::vector<command> cmds = parse_tokens(tokens);
-  context&& ctx = build_context();
-  auto && command_errors = check_commands_name(cmds, ctx);
-  treat_check_command_errors(command_errors);
-  infer_args_type(cmds);
-  auto && param_errors = check_commands_params(cmds, ctx);
-  treat_check_param_errors(param_errors); 
-  interpret_commands(cmds);
 
-  std::cout << "EXIT_SUCCESS";
+  liner l;
+  auto&& lines = l.from_tokens(tokens.begin(), tokens.end());
+
+  for (auto&& line:lines)
+  {
+    for (auto&& token:line)
+    {
+      std::cout << token.type << " " << token.value << "\n";
+    }
+  }
 
   return EXIT_SUCCESS;
 }
@@ -428,6 +431,60 @@ void infer_args_type(std::vector<command>& commands)
   }
 }
 
+auto add(auto a, auto b) 
+{
+  return a+b;
+}
+
+auto minus(auto a, auto b) 
+{
+  return a-b;
+}
+
+auto multiply(auto a, auto b) 
+{
+  return a*b;
+}
+
+auto divide(auto a, auto b) 
+{
+  return a/b;
+}
+
+auto modulo(auto a, auto b) 
+{
+  return a%b;
+}
+
+void print(auto a) 
+{
+  std::cout << a;
+}
+
+void let(
+    const std::string& name, 
+    const std::string& value, 
+    auto& lets) 
+{
+  lets.insert({name, value});
+}
+
+void type(
+    const std::string& name, 
+    auto argsbegin, 
+    auto argsend)
+{
+  std::cout << "new type " ;
+  std::cout << name ;
+
+  while (argsbegin != argsend)
+  {
+    std::cout << " " << (*argsbegin).value ;
+    std::cout << "#" << (*argsbegin).type ;
+    argsbegin++;
+  }
+}
+
 context build_context()
 {
   std::map<std::string, command_definition> cmddefs;
@@ -553,60 +610,6 @@ treat_check_param_errors(
   if (!errors.empty())
   {
     std::exit(EXIT_FAILURE);
-  }
-}
-
-auto add(auto a, auto b) 
-{
-  return a+b;
-}
-
-auto minus(auto a, auto b) 
-{
-  return a-b;
-}
-
-auto multiply(auto a, auto b) 
-{
-  return a*b;
-}
-
-auto divide(auto a, auto b) 
-{
-  return a/b;
-}
-
-auto modulo(auto a, auto b) 
-{
-  return a%b;
-}
-
-void print(auto a) 
-{
-  std::cout << a;
-}
-
-void let(
-    const std::string& name, 
-    const std::string& value, 
-    auto& lets) 
-{
-  lets.insert({name, value});
-}
-
-void type(
-    const std::string& name, 
-    auto argsbegin, 
-    auto argsend)
-{
-  std::cout << "new type " ;
-  std::cout << name ;
-
-  while (argsbegin != argsend)
-  {
-    std::cout << " " << (*argsbegin).value ;
-    std::cout << "#" << (*argsbegin).type ;
-    argsbegin++;
   }
 }
 
