@@ -10,15 +10,17 @@ namespace blocks
   using char_citerator = std::string::const_iterator;
 
   
-  enum struct token_type
+  enum class token_type: int
   {
+    BLANK,
     CMDNAME,
     ARGNAME,
     ARGTYPE,
     ARGNUMBER,
     ARGSTRING,
     ARG$$,
-    EOL
+    EOL,
+    ERROR
   };
 
 
