@@ -36,7 +36,26 @@ namespace blocks
       
       if (c == ':')
       {
+        begin++;
         return token{step, begin, type};
+      }
+    }
+
+    return std::nullopt;
+  }
+
+  template<typename iterator>
+  std::optional<token>
+  lex_eol(
+      iterator begin, 
+      iterator eol)
+  {
+    if (begin != eol)
+    {
+      auto c = *begin;
+      if (c == '\n')
+      {
+        return token{begin, std::next(begin), token_type::EOL};
       }
     }
 
@@ -219,6 +238,7 @@ namespace blocks
       return arg$$;
     }
 
+
     return std::nullopt;
   }
 
@@ -251,6 +271,14 @@ namespace blocks
       {
         tks.push_back(otk2.value());
         begin = otk2.value().end;
+        continue;
+      }
+
+      auto&& otk3 = lex_eol(begin, eol);
+      if (otk3.has_value())
+      {
+        tks.push_back(otk3.value());
+        begin = otk3.value().end;
         continue;
       }
 
@@ -305,7 +333,6 @@ namespace blocks
 
     return tks;
   }
-
 }
 
 #endif

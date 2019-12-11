@@ -49,10 +49,9 @@ namespace blocks
 
   struct command 
   {
+    std::size_t line;
     token name;
-    arguments   args;
-    token_citerator begin;
-    token_citerator eol;
+    arguments args;
   };
   
 
