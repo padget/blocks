@@ -50,7 +50,7 @@ namespace blocks
   struct command 
   {
     std::size_t line;
-    token name;
+    std::string name;
     arguments args;
   };
   

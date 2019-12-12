@@ -238,7 +238,6 @@ namespace blocks
       return arg$$;
     }
 
-
     return std::nullopt;
   }
 
