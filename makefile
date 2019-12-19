@@ -1,20 +1,13 @@
-all: blocks
+all: blocks.exe
 
-blocks.exe: main.o lexer.o parser.o semanticker.o
-	g++ -o blocks.exe main.o lexer.o parser.o semanticker.o
+blocks.exe: main.o command_building.o
+	g++ -o blocks.exe main.o command_building.o
 
-lexer.o: src/lexer.cpp src/lexer.hpp
-	gcc -o lexer.o -c src/lexer.cpp -W -Wall -ansi -pedantic -std=c++17
+command_building.o: src/command_building.cpp src/command_building.hpp
+	gcc -o command_building.o -c src/command_building.cpp -W -Wall -ansi -pedantic -std=c++17
 
-parser.o: src/parser.cpp src/parser.hpp
-	gcc -o parser.o -c src/parser.cpp -W -Wall -ansi -pedantic -std=c++17
-
-semanticker.o: src/semanticker.cpp src/semanticker.hpp
-	gcc -o semanticker.o -c src/semanticker.cpp -W -Wall -ansi -pedantic -std=c++17
-
-
-main.o: src/main.cpp
-	gcc -o main.o -c src/main.cpp -W -Wall -ansi -pedantic -std=c++17 -fconcepts
+main.o: src/main.cpp src/command_building.hpp
+	gcc -o main.o -c src/main.cpp -W -Wall -ansi -pedantic -std=c++17
 
 run: blocks.exe
 	./blocks.exe

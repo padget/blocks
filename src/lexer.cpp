@@ -86,7 +86,7 @@ lex_argument_name(
                   blocks::char_citerator eol)
 {
   auto step = begin;
-
+  
   while (begin != eol)
   {
     auto c = *begin;

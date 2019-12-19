@@ -86,14 +86,15 @@ void infer_arguments_type_for_each_command(blocks::commands& cmds)
 
 blocks::step
 check_commands_well_used(
-                         const blocks::commands& cmds, 
-                         const dictonnary& ndict)
+                         const blocks::commands& cmds,
+                         const blocks::dictonnary& ndict)
 {
   blocks::step step{"check all commands well-used",
     "check if all writen commands are well-used in function of their signature (name of the command and type of the argument)",
     {},
     blocks::step_status::PROCESSING};
 
+  std::hash<blocks::command> hash_me;
 
   for (auto&& cmd:cmds)
   {
@@ -137,13 +138,12 @@ blocks::report blocks::semantic_check(blocks::commands& cmds)
   // qui sont indexées. Nous verrons plus tard pour mettre en place les
   // définitions de commandes non natives. Il faudra mettre en place à ce
   // moment là, la notion de scope... (gros sujet en soit).
-  std::hash<blocks::command> hash_me;
-
-  report.steps
-    .push_back(check_commands_well_used(cmds, ndict));
-
-  report.steps.push_back(std::move(step));
-
+  report.steps.push_back(check_commands_well_used(cmds, ndict));
+  report.status = blocks::report_status::OK;
+  // TODO mettre en place le calcul 
+  // exact du statut du rapport
+  // OK : Toutes les steps sont OK
+  // KO : Une step ou plus est KO
   return report;
 
 }
