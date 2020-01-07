@@ -1,5 +1,6 @@
 #include "command_building.hpp"
 #include "model.hpp"
+#include "../../include/cxx.hpp"
 #include <iterator>
 #include <string>
 
@@ -7,7 +8,9 @@
 template <typename char_t>
 bool is_letter(char_t c)
 {
-  return 'a' <= c and c <= 'z';
+  	auto more_a = cxx::less_equal('a', c);
+	auto less_z = cxx::less_aqual(c, 'z');
+	return cxx::and_(more_a, less_z);
 }
 
 
@@ -21,13 +24,13 @@ expect_cname(
 {
   auto step = begin;
 
-  while (begin != end)
+  while (cxx::not_equals(begin, end))
     if (is_letter(*begin))
       std::advance(begin, 1);
     else break;
 
-  if (begin != end)
-    if (*begin == ':')
+  if (cxx::not_equals(begin, end))
+    if (cxx::equals(*begin, ':'))
       std::advance(begin, 1);
 
   return std::string(step, begin);
@@ -51,9 +54,10 @@ try_name(string_citerator begin,
 {
   auto step = begin;
 
-  while (begin != end)
+  while (cxx::not_equals(begin, end))
   {
     auto&& c = *begin;
+
     if (is_letter(c))
       std::advance(begin, 1);
     else
@@ -67,7 +71,10 @@ try_name(string_citerator begin,
 template<typename char_t>
 bool is_digit(char_t c)
 {
-  return '1'<=c and c<='9';
+	auto more_0 = cxx::less_equal('0', c);
+	auto less_9 = cxx::less_equal(c, '9');
+
+	return cxx::and_(more_0, less_9);
 }
 
 
