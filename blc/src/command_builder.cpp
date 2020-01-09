@@ -1,16 +1,15 @@
-#include "command_building.hpp"
-#include "model.hpp"
+#include "command_builder.hpp"
 #include "../../include/cxx.hpp"
 #include <iterator>
 #include <string>
-
+#include <algorithm>
 
 template <typename char_t>
 bool is_letter(char_t c)
 {
-  	auto more_a = cxx::less_equal('a', c);
-	auto less_z = cxx::less_aqual(c, 'z');
-	return cxx::and_(more_a, less_z);
+  auto more_a = cxx::less_equal('a', c);
+  auto less_z = cxx::less_equal(c, 'z');
+  return cxx::and_(more_a, less_z);
 }
 
 
@@ -36,18 +35,6 @@ expect_cname(
   return std::string(step, begin);
 }
 
-
-blocks::step::step_error
-on_cname_error(const blocks::coordinates& coord)
-{
-  return blocks::step::step_error{
-    "filename",
-      coord.line,
-      coord.column,
-      "no command name found : '<name>:' ... "
-  };
-}
-
 std::string
 try_name(string_citerator begin,
          string_citerator end)
@@ -71,10 +58,10 @@ try_name(string_citerator begin,
 template<typename char_t>
 bool is_digit(char_t c)
 {
-	auto more_0 = cxx::less_equal('0', c);
-	auto less_9 = cxx::less_equal(c, '9');
+  auto more_0 = cxx::less_equal('0', c);
+  auto less_9 = cxx::less_equal(c, '9');
 
-	return cxx::and_(more_0, less_9);
+  return cxx::and_(more_0, less_9);
 }
 
 
@@ -265,14 +252,6 @@ blocks::build_command(
   auto && cname = expect_cname(begin, end);
   auto && cnsize = cname.size();
 
-  if (cnsize == 0)
-  {
-    auto&& err = on_cname_error(coord);
-    stp.errors.push_back(err);
-    return; // TODO ici nous devons retourner 
-    // autre chose qu'une simple commande qui 
-    // ne contient pas d'information d'erreur.
-  }
 
   column += cnsize;
   std::advance(begin, cnsize);
@@ -281,15 +260,30 @@ blocks::build_command(
   auto&& args = expect_arguments(begin, end);
   auto&& arsize = args.size();
 
-  if (arsize==0 and begin != end)
-    return; // TODO ici nous devons retourner 
-  // autre chose qu'une simple commande qui
-  // ne contient pas d'information d'erreur.
-
-
   return blocks::command {
     coord.line,
       cname,
       args
   };
+}
+
+blocks::commands 
+blocks::build_commands(const std::string& src, const blocks::coordinates& coord)
+{
+  blocks::commands cmds;
+  auto begin = src.begin();
+  auto end   = src.end();
+
+  while (begin != end)
+  {
+    auto it = std::find_if(begin, end, [](auto c){ return c =='\n';});
+    if (it != end)
+    {
+      auto cmd = build_command({begin, it}, coord);
+      cmds.push_back(cmd);
+      begin = it;
+    }
+  }
+
+  return cmds;
 }

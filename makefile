@@ -3,13 +3,14 @@
 # > blocks compile main.blocks
 # ===============================================
 
-blc: blc_main.o
-	g++ -o blocks-compile.exe blc_main.o
+blc: blc_main.o command_builder.o
+	g++ -o blocks-compile.exe blc_main.o command_builder.o
 
 blc_main.o: blc/src/main.cpp include/arguments.hpp
 	g++ -o blc_main.o -c blc/src/main.cpp -W -Wall -ansi -pedantic -std=c++17 -fconcepts
 
-
+command_builder.o: blc/src/command_builder.hpp blc/src/command_builder.cpp
+	g++ -o command_builder.o -c blc/src/command_builder.cpp -W -Wall -ansi -pedantic -std=c++17 -fconcepts
 
 # ===============================================
 # blexe est l'interpreteur de blocks invoocable par

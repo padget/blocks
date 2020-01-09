@@ -6,7 +6,7 @@
 #include <fstream>
 #include "../../include/cxx.hpp"
 #include "../../include/arguments.hpp"
-
+#include "command_builder.hpp"
 
 int main(int argc, char** argv)
 {
@@ -33,14 +33,20 @@ int main(int argc, char** argv)
   if (args.count("--file") == 1)
   {
     auto filename = args.at("--file").value;
-    std::cout << "fichier à compiler " << filename << std::endl; 
     std::ifstream is(args.at("--file").value);
     std::istreambuf_iterator<char> endfile;
     std::istreambuf_iterator<char> beginfile(is);
     auto src = std::string(beginfile, endfile);
+    blocks::coordinates coord;
+    auto cmds = blocks::build_commands(src, coord);
 
-    std::cout << src << std::endl;
+    for (auto&& cmd:cmds)
+    {
+      
+    }
   }
+
+
 
   return 0;
 }

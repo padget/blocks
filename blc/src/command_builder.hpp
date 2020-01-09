@@ -1,7 +1,7 @@
 #ifndef __blocks_command_building_hpp__
 #define __blocks_command_building_hpp__
 
-#include "model.hpp"
+#include "../../include/commands.hpp"
 
 namespace blocks
 {
