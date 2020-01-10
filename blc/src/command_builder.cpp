@@ -270,20 +270,26 @@ blocks::build_command(
 blocks::commands 
 blocks::build_commands(const std::string& src, const blocks::coordinates& coord)
 {
+  std::cout << "commands building...\n";
   blocks::commands cmds;
   auto begin = src.begin();
   auto end   = src.end();
 
   while (begin != end)
   {
+    std::cout << "new command detection\n";
     auto it = std::find_if(begin, end, [](auto c){ return c =='\n';});
     if (it != end)
     {
+      std::cout << *it << std::endl;
       auto cmd = build_command({begin, it}, coord);
       cmds.push_back(cmd);
       begin = it;
+      std::cout << "new command added\n";
     }
+     begin++;
   }
-
+  
+  std::cout << "return all commands \n";
   return cmds;
 }

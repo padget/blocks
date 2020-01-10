@@ -30,7 +30,7 @@ using command_definition = void(*)(std::vector<int> const&, memory&);
 using type_definition    = std::tuple<int, std::string>;
 
 constexpr int $$int = 0;
-
+/*
 void add (std::vector<int> const& args, memory& mem) 
 {
   int arg1=args[0];
@@ -57,7 +57,7 @@ std::vector<command_definition> ci()
   defs.push_back(&add);
   defs.push_back(&print);
   return defs;
-}
+}*/
 }
 
 #endif

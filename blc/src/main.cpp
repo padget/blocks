@@ -42,7 +42,7 @@ int main(int argc, char** argv)
 
     for (auto&& cmd:cmds)
     {
-      
+      std::cout << cmd.name << std::endl;      
     }
   }
 
