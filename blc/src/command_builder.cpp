@@ -258,7 +258,6 @@ blocks::build_command(
 
   /* try detect command arguments */
   auto&& args = expect_arguments(begin, end);
-  auto&& arsize = args.size();
 
   return blocks::command {
     coord.line,

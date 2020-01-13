@@ -1,3 +1,17 @@
+all: blc blexe blocks
+
+# ===============================================
+# blocks est le programme principale qui se
+# chargera d'appeler les autres sous programmes
+# en fonction des arguments passés
+# > blocks --compile example/add.blocks
+# ===============================================
+blocks: blocks_main.o
+	g++ -o blocks.exe blocks_main.o
+
+blocks_main.o: blocks/src/main.cpp include/arguments.hpp
+	g++ -o blocks_main.o -c blocks/src/main.cpp -W -Wall -ansi -pedantic -std=c++17 -fconcepts
+
 # ===============================================
 # blc est le compilateur de blocks invocable par
 # > blocks compile main.blocks
@@ -18,14 +32,10 @@ command_builder.o: blc/src/command_builder.hpp blc/src/command_builder.cpp
 # ===============================================
 
 blexe: blexe_main.o
+	g++ -o blocks-execute.exe blexe_main.o
+
+blexe_main.o: blexe/src/main.cpp include/arguments.hpp
 	g++ -o blexe_main.o -c blexe/src/main.cpp -W -Wall -ansi -pedantic -std=c++17 -fconcepts
-
-blexe_main.o: blexe/src/main.o include/arguments,hpp
-
-
-
-
-
 
 # ==============================================
 # le goal clean permet de nettoyer le projet
