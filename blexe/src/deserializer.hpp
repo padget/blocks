@@ -1,6 +1,8 @@
 #ifndef __blocks_deserializer_hpp__
 #define __blocks_deserializer_hpp__
 
+#include <string>
+
 namespace blocks
 {
 	template<typename type>
@@ -13,6 +15,9 @@ namespace blocks
 		};
 	template<typename format>
 		struct inplace_reader
+    {
+    
+    }
 }
 
 #endif
