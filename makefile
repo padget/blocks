@@ -7,10 +7,10 @@ all: blc blexe blocks
 # > blocks --compile example/add.blocks
 # ===============================================
 blocks: blocks_main.o
-	g++ -o blocks.exe blocks_main.o
+	gcc -o blocks.exe blocks_main.o
 
-blocks_main.o: blocks/src/main.cpp include/arguments.hpp
-	g++ -o blocks_main.o -c blocks/src/main.cpp -Wall -W -pedantic -ansi -std=c++17
+blocks_main.o: blocks/src/main.c
+	gcc -o blocks_main.o -c blocks/src/main.c -Wall -W -pedantic
 
 # ===============================================
 # blc est le compilateur de blocks invocable par
