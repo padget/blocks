@@ -10,7 +10,7 @@ blocks: blocks_main.o
 	g++ -o blocks.exe blocks_main.o
 
 blocks_main.o: blocks/src/main.cpp include/arguments.hpp
-	g++ -o blocks_main.o -c blocks/src/main.cpp -W -Wall -ansi -pedantic -std=c++17 -fconcepts
+	g++ -o blocks_main.o -c blocks/src/main.cpp -Wall -W -pedantic -ansi -std=c++17
 
 # ===============================================
 # blc est le compilateur de blocks invocable par
@@ -32,10 +32,10 @@ command_builder.o: blc/src/command_builder.hpp blc/src/command_builder.cpp
 # ===============================================
 
 blexe: blexe_main.o
-	g++ -o blocks-execute.exe blexe_main.o
+	gcc -o blocks-execute.exe blexe_main.o
 
-blexe_main.o: blexe/src/main.cpp include/arguments.hpp
-	g++ -o blexe_main.o -c blexe/src/main.cpp -W -Wall -ansi -pedantic -std=c++17 -fconcepts
+blexe_main.o: blexe/src/main.cpp
+	gcc -o blexe_main.o -c blexe/src/main.c -W -Wall -pedantic
 
 # ==============================================
 # le goal clean permet de nettoyer le projet
