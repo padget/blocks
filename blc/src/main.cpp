@@ -16,6 +16,7 @@ using miwriter = blocks::multi_inplace_writer<scformat>;
 
 int main(int argc, char** argv)
 {
+	std::cout << "coucou" << std::endl;
 	auto&& args = cxx::from_args(argc, argv);
 	// une fois quon a lesenble des arguments, on doit verifier et prendre 
 	// largument qui mindique quel fichier blc doit compiler et transformer 

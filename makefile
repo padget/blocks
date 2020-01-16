@@ -34,7 +34,7 @@ command_builder.o: blc/src/command_builder.hpp blc/src/command_builder.cpp
 blexe: blexe_main.o
 	gcc -o blocks-execute.exe blexe_main.o
 
-blexe_main.o: blexe/src/main.cpp
+blexe_main.o: blexe/src/main.c
 	gcc -o blexe_main.o -c blexe/src/main.c -W -Wall -pedantic
 
 # ==============================================
