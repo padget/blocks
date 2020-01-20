@@ -17,14 +17,12 @@ blocks_main.o: blocks/src/main.c
 # > blocks compile main.blocks
 # ===============================================
 
-blc: blc_main.o command_builder.o
-	g++ -o blocks-compile.exe blc_main.o command_builder.o
+blc: blc_main.o lmemory
+	gcc -o blocks-compile.exe blc_main.o memory.o
 
-blc_main.o: blc/src/main.cpp include/arguments.hpp
-	g++ -o blc_main.o -c blc/src/main.cpp -W -Wall -ansi -pedantic -std=c++17 -fconcepts
+blc_main.o: blc/src/main.c experimental/memory.h 
+	gcc -o blc_main.o -c blc/src/main.c -W -Wall -pedantic 
 
-command_builder.o: blc/src/command_builder.hpp blc/src/command_builder.cpp
-	g++ -o command_builder.o -c blc/src/command_builder.cpp -W -Wall -ansi -pedantic -std=c++17 -fconcepts
 
 # ===============================================
 # blexe est l'interpreteur de blocks invoocable par
@@ -36,6 +34,15 @@ blexe: blexe_main.o
 
 blexe_main.o: blexe/src/main.c
 	gcc -o blexe_main.o -c blexe/src/main.c -W -Wall -pedantic
+
+# ==============================================
+# La section experimental contient l'ensemble 
+# des petites librairie en conception experimentale
+# pour les programmes de la suite blocks.
+# ==============================================
+
+lmemory: experimental/memory.c experimental/memory.h
+	gcc -o memory.o -c experimental/memory.c
 
 # ==============================================
 # le goal clean permet de nettoyer le projet
