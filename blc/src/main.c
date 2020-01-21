@@ -9,10 +9,17 @@
 
 memory mem;
 
+typedef struct argument
+{
+  char* type;
+  char* value;
+} argument;
+
 typedef struct command
 {
-  const char* name;
-  const char** args;
+  char* name;
+  argument* bargs;
+  argument* eargs;
 } command;
 
 typedef struct commands 
@@ -20,8 +27,9 @@ typedef struct commands
   command* begin;
   command* end;
 } commands ;
+
 void readfile(FILE* file, char** buffer);
-void parsesource(const char* src);
+void parsesource(const char* src, commands* cmds);
 
 int main()
 {
@@ -31,9 +39,10 @@ int main()
 
   if (fsrc)
   {
+    commands cmds;
     char* src = NULL;
     readfile(fsrc, &src);
-    parsesource(&src, &cmds);
+    parsesource(src, &cmds);
   
   }
 
@@ -72,4 +81,8 @@ void readfile(FILE* file, char** buffer)
 
   *tmp = '\0';
   *buffer = begin;
+}
+
+void parsesource(const char* src, commands* cmds)
+{
 }
