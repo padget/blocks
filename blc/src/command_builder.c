@@ -33,6 +33,26 @@ unsigned count_lines(const char* src)
   }
   return count;
 }
+char* command_name(const char* begin, 
+                   const char* end)
+{
+
+}
+
+void build_command(const char* begin, 
+                   const char* end, 
+                   command* cmd)
+{
+  if (*begin!='\n' && *begin!='\0')
+    return;
+
+  char* name = command_name(begin, end);
+
+  while (begin != end)
+  {
+     begin++;
+  }
+}
 
 void build_commands(const char* src, commands* cmds)
 {
@@ -41,10 +61,20 @@ void build_commands(const char* src, commands* cmds)
 
   if (cmds_buffer == NULL)
     return;
+  command* bcmds = cmds_buffer;
+  command* ecmds = cmds_buffer+lines_count;
 
-  const char* bline = src; 
-  const char* eline = until_eol(bline);
+  // Pour chaque ligne je cherche
+  // a construire une commande.
+  //
+  while (bcmds != ecmds)
+  {
+    const char* bline = src; 
+    const char* eline = until_eol(bline);
 
-  
-  while (bline)
+    command cmd;
+    build_command(bline, eline, &command);
+    
+    bcmds++;
+  }
 }
