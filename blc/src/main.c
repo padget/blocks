@@ -3,6 +3,7 @@
 #include <string.h>
 #include <errno.h>
 #include "../../experimental/memory.h"
+//#include "../../experimental/array.h"
 
 #define SRC_FILENAME "examples/add.blocks"
 #define FILE_READMODE "r"

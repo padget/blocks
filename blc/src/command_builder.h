@@ -1,17 +1,30 @@
 #ifndef __blocks_command_builder_h__
 #define __blocks_command_builder_h__
 
+typedef struct vstring
+{
+  const char* bstr;
+  const char* estr;
+} vstring;
+
+vs_is_empty(vstring* vs);
+
 typedef struct argument
 {
-  char* type;
-  char* value;
+  vstring type;
+  vstring value;
 } argument;
+
+typedef struct arguments
+{
+  argument* barg;
+  argument* earg;
+} arguments;
 
 typedef struct command
 {
-  char* name;
-  argument* bargs;
-  argument* eargs;
+  vstring name;
+  arguments args;
 } command;
 
 typedef struct commands
@@ -20,8 +33,28 @@ typedef struct commands
   command* ecmd;
 } commands;
 
-void build_commands(const char* src, commands* cmds);
 void free_commands(commands cmds);
-void free_becommands(command* begin, command* end);
 
-#endif
+typedef struct building_error
+{
+	command* cmd;
+	char* error;
+	size_t column;
+} building_error;
+
+typedef struct building_errors
+{
+	building_error berr;
+	building_error eerr;
+} building_errors;
+
+typedef struct building_report 
+{
+	commands cmds;
+	errors errs  ;
+} building_report;
+
+building_report build_commands(const char* src);
+
+void free_building_errors(building_errors errors);
+void free_building_report(building_report report);
