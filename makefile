@@ -1,3 +1,5 @@
+COMPILER=gcc
+
 all: blc blexe blocks
 
 # ===============================================
@@ -16,13 +18,18 @@ blocks_main.o: blocks/src/main.c
 # blc est le compilateur de blocks invocable par
 # > blocks compile main.blocks
 # ===============================================
+BLC_DEPS=blc_main.o lmemory lstring lvstring
+BLC_OBJS=blc_main.o memory.o string.o vstring.o
+BLC_EXE =blocks-compile.exe
 
-blc: blc_main.o lmemory
-	gcc -o blocks-compile.exe blc_main.o memory.o
+blc: ${BLC_DEPS}
+	${COMPILER} -o ${BLC_EXE} ${BLC_OBJS}
 
 blc_main.o: blc/src/main.c experimental/memory.h 
 	gcc -o blc_main.o -c blc/src/main.c -W -Wall -pedantic 
 
+command_builder.o: blc/src/command_builder.c blc/src/command_builder.h
+	gcc -o command_builder.o -c blc/src/command_builder.c -Wall -W -pedantic
 
 # ===============================================
 # blexe est l'interpreteur de blocks invoocable par
@@ -43,6 +50,13 @@ blexe_main.o: blexe/src/main.c
 
 lmemory: experimental/memory.c experimental/memory.h
 	gcc -o memory.o -c experimental/memory.c
+
+lstring: experimental/string.c experimental/string.h
+	gcc -o string.o -c experimental/string.c
+
+lvstring: experimental/vstring.c experimental/vstring.h
+	gcc -o vstring.o -c experimental/vstring.c
+
 
 # ==============================================
 # le goal clean permet de nettoyer le projet

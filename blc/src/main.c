@@ -3,87 +3,32 @@
 #include <string.h>
 #include <errno.h>
 #include "../../experimental/memory.h"
-//#include "../../experimental/array.h"
+#include "../../experimental/string.h"
+#include "../../experimental/vstring.h"
 
 #define SRC_FILENAME "examples/add.blocks"
 #define FILE_READMODE "r"
 
 memory mem;
 
-typedef struct argument
-{
-  char* type;
-  char* value;
-} argument;
-
-typedef struct command
-{
-  char* name;
-  argument* bargs;
-  argument* eargs;
-} command;
-
-typedef struct commands 
-{
-  command* begin;
-  command* end;
-} commands ;
-
-void readfile(FILE* file, char** buffer);
-void parsesource(const char* src, commands* cmds);
+void printc(const char* c) {
+  putchar(*c);
+}
 
 int main()
 {
-  mem_init(&mem, 10);
 
   FILE* fsrc = fopen(SRC_FILENAME, FILE_READMODE); 
 
-  if (fsrc)
-  {
-    commands cmds;
-    char* src = NULL;
-    readfile(fsrc, &src);
-    parsesource(src, &cmds);
-  
-  }
+  if (fsrc == NULL)
+    return EXIT_FAILURE;
 
-  mem_destroy(&mem); 
+
+  string src = s_construct_from_file(fsrc);
+  cvstring cvs = cvs_construct(src.bstr, src.estr);
+  cvs_foreach(cvs, &printc);
+
+  return EXIT_SUCCESS;
 }
 
-typedef const char* errormsg;
 
-void exit_if_enomem(void* ptr, errormsg msg)
-{
-  if (ptr==NULL&&errno==ENOMEM)
-  {
-    perror(msg);
-    mem_destroy(&mem);
-    exit(EXIT_FAILURE);
-  }
-}
-
-void readfile(FILE* file, char** buffer) 
-{
-  fseek(file, 0L, SEEK_END);
-  unsigned size = ftell(file);
-  fseek(file, 0L, SEEK_SET);
-
-  char* tmp = (char*)malloc(sizeof(char)*size+1);
-  char* begin = tmp;
-
-  exit_if_enomem(tmp, "can't read file because not enough memory");
-
-  int c; 
-  while ((c=getc(file))!=EOF)
-  {
-    *tmp = (char)c;
-    tmp++;
-  }
-
-  *tmp = '\0';
-  *buffer = begin;
-}
-
-void parsesource(const char* src, commands* cmds)
-{
-}

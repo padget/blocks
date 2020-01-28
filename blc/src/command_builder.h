@@ -1,13 +1,16 @@
 #ifndef __blocks_command_builder_h__
 #define __blocks_command_builder_h__
 
+#include <stdbool.h>
+#include <stdlib.h>
+
 typedef struct vstring
 {
   const char* bstr;
   const char* estr;
 } vstring;
 
-vs_is_empty(vstring* vs);
+bool vs_is_empty(vstring* vs);
 
 typedef struct argument
 {
@@ -51,7 +54,7 @@ typedef struct building_errors
 typedef struct building_report 
 {
 	commands cmds;
-	errors errs  ;
+	building_errors errs  ;
 } building_report;
 
 building_report build_commands(const char* src);
