@@ -2,6 +2,7 @@
 # define __experimental_vstring_h__
 
 #include <stdlib.h>
+#include <stdbool.h>
 
 /**
  * A vstring is a string view
@@ -41,6 +42,10 @@ vstring vs_default();
  */
 vstring vs_construct(char* begin, char* end);
 
+// TODO Documentation
+vstring vs_from_cstring(char* cstr);
+
+
 /**
  * Returns the size of a vstring
  * 
@@ -48,6 +53,19 @@ vstring vs_construct(char* begin, char* end);
  * @return the size of vs
  */
 size_t vs_size(const vstring vs);
+
+
+/**
+ * Returns true if v2 and v1 are equals.
+ * 
+ * @param v1 first vstring
+ * @param v2 second vstring
+ * @return true v1 == v2 else false
+ */
+bool vs_isequal(vstring v1, vstring v2);
+
+
+
 
 /**
  * A cvstring represents a constant
@@ -94,6 +112,15 @@ cvstring cvs_construct(const char* begin,
  * @return the size of vs
  */
 size_t cvs_size(const cvstring vs);
+
+/**
+ * Returns true if v2 and v1 are equals.
+ * 
+ * @param v1 first cvstring
+ * @param v2 second cvstring
+ * @return true v1 == v2 else false
+ */
+bool cvs_isequal(cvstring v1, cvstring v2);
 
 
 

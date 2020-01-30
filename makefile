@@ -18,14 +18,14 @@ blocks_main.o: blocks/src/main.c
 # blc est le compilateur de blocks invocable par
 # > blocks compile main.blocks
 # ===============================================
-BLC_DEPS=blc_main.o lmemory lstring lvstring
-BLC_OBJS=blc_main.o memory.o string.o vstring.o
+BLC_DEPS=blc_main.o lmemory lstring lvstring largument
+BLC_OBJS=blc_main.o memory.o string.o vstring.o argument.o
 BLC_EXE =blocks-compile.exe
 
 blc: ${BLC_DEPS}
 	${COMPILER} -o ${BLC_EXE} ${BLC_OBJS}
 
-blc_main.o: blc/src/main.c experimental/memory.h 
+blc_main.o: blc/src/main.c experimental/memory.h
 	gcc -o blc_main.o -c blc/src/main.c -W -Wall -pedantic 
 
 command_builder.o: blc/src/command_builder.c blc/src/command_builder.h
@@ -56,6 +56,9 @@ lstring: experimental/string.c experimental/string.h
 
 lvstring: experimental/vstring.c experimental/vstring.h
 	gcc -o vstring.o -c experimental/vstring.c
+
+largument: experimental/argument.c experimental/argument.h experimental/vstring.h
+	gcc -o argument.o -c experimental/argument.c
 
 
 # ==============================================
