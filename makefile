@@ -10,8 +10,10 @@ all: blc blexe blocks
 # en fonction des arguments passés
 # > blocks --compile example/add.blocks
 # ===============================================
-blocks: blocks_main.o
-	gcc -o blocks.exe blocks_main.o
+
+BLOCKS_LIB=largument
+blocks: blocks_main.o largument
+	gcc -o blocks.exe blocks_main.o argument.o
 
 blocks_main.o: blocks/src/main.c
 	gcc -o blocks_main.o -c blocks/src/main.c ${CC_O_ARGS}

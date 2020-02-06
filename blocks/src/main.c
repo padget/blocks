@@ -1,157 +1,70 @@
 #include <stdlib.h>
 #include <stdio.h>
-#include <sys/types.h>
 #include <string.h>
-#include <stdbool.h>
-#include "main.h"
 
-#ifndef EXIT_SUCCESS
-#  define EXIT_SUCCESS 0
-#endif
+#include "../../experimental/argument.h"
 
+#define FIRST_ARG 1
+#define SECOND_ARG 2
 
-void on_compile(const property* p);
-void on_execute(const property* p);
+#define HELP    "blocks-help.exe"
+#define COMPILE "blocks-compile.exe"
+#define EXECUTE "blocks-execute.exe"
+#define REPORTS "blocks-reports.exe"
+#define CLEAN   "blocks-clean.exe"
+
+size_t arguments_sum_sizes(arguments* args);
+char* concat_name_arguments(const char* exe, arguments* args);
 
 
 int main(int argc, char** argv)
 {
-  arguments args = from_main_args(argc, argv);
-  property c = extract_property("--compile", args);
-  property e = extract_property("--execute", args);
+  const char* exe = HELP;
 
-  on_property(&c, "--compile", &on_compile);
-  on_property(&e, "--execute", &on_execute);
+  arguments args = args_from_argv(argv, argc);
 
-  free_arguments(args);
+  if (args_exists_at(&args, "compile", FIRST_ARG))
+    exe = COMPILE;
+  else if (args_exists_at(&args, "execute", FIRST_ARG))
+    exe = EXECUTE;
+  else if (args_exists_at(&args, "reports", FIRST_ARG))
+    exe = REPORTS;
+  else if (args_exists_at(&args, "clean", FIRST_ARG))
+    exe = CLEAN;
+
+
+  arguments subargs = args_subrange(&args, SECOND_ARG);
+  char* cmd = concat_name_arguments(exe, &subargs);
+  
+  printf("%s", cmd);
+  system(cmd);
+  
+  free(cmd);
   return EXIT_SUCCESS;
 }
 
-
-void on_compile(const property* p)
+char* concat_name_arguments(const char* exe, arguments* args)
 {
-	char cmd[1024] = "blocks-compile.exe";
-	const char* vcmd = cmd;
-	argument* begin = p->fvalue;
-	argument* end   = p->evalue;
-	
-	while (begin!=end)
-	{
-		sprintf(cmd, "%s %s", vcmd, begin->value);
-		begin++;
-	}
+  size_t size = arguments_sum_sizes(args);
+  char* cmd = malloc(sizeof(char) * (size + 1 + strlen(exe)+args->size));
+  cmd[0] = '\0';
 
-	system(cmd);
-}
-
-void on_execute(const property* p)
-{
-	char cmd[1024] = "blocks-execute.exe";
-	const char* vcmd = cmd;
-	argument* begin = p->fvalue;
-	argument* end   = p->evalue;
-	
-	while (begin!=end)
-	{
-		sprintf(cmd, "%s %s", vcmd, begin->value);
-		begin++;
-	}
-
-	system(cmd);
-}
-
-void on_property(const property* p, const char* name, pcallback cb)
-{
-	bool found = property_found(p);
-	bool same  = found && strcmp(name, p->name) == 0;
-	
-	if (same)
-		cb(p);
-}
-
-bool property_found(const property* p)
-{
-	return p->name != NULL;
-}
-
-bool property_has_arguments(const property* p)
-{
-	return p->fvalue != p->evalue;
-}
-
-
-bool start_with_dashdash(const char* str)
-{
-  return 
-    strlen(str) >= 2 && 
-    str[0] == str[1] && 
-    str[0] == '-';
-}
-
-
-arguments from_main_args(int argc, char** argv)
-{
-  arguments args;
-
-  args.nargs = argc-1;
-  args.args  = malloc(sizeof(argument)*args.nargs);
-
-  for (unsigned i=0; i<args.nargs; ++i)
-    args.args[i].value = NULL;
-
-  for (unsigned i=0; i<args.nargs; ++i)
+  strcat(cmd, exe);
+  for (int i=0; i<args->size; ++i)
   {
-    bool is_name = start_with_dashdash(argv[i+1]);
-
-    if (is_name)
-      args.args[i].type = arg_name;
-    else 
-      args.args[i].type = arg_value;
-
-    args.args[i].value = argv[i+1];
+    strcat(cmd, " ");
+    strcat(cmd, args_at(args, i));
   }
+  return cmd;
 
-  return args;
 }
 
-
-void free_arguments(arguments args)
+size_t arguments_sum_sizes(arguments* args)
 {
-  free(args.args);
-}
+  size_t size = 0;
 
+  for (int i=0; i<args->size; ++i)
+    size += strlen(args_at(args, i));
 
-property extract_property(const char* propname, arguments args)
-{
-  property prop = {NULL, NULL, NULL};
-
-  bool found = false;  
-  
-  argument* current = args.args;
-  argument* end     = current + args.nargs;
-
-  while (current != end && !found) 
-  {
-    if (current->type == arg_name && 
-        strcmp(current->value, propname)==0)
-      found = true;
-    else
-      current++;
-  }
-
-  if (!found)
-    return prop;
-
-  prop.name = current->value;
-  current++;
-  prop.fvalue = current;
-  
-  while (current != end && current->type == arg_value)
-    current++;
-
-  prop.evalue = current;
-
-  printf("prop.name %s\n", prop.name);
-
-  return prop;
+  return size;
 }

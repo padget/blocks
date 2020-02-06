@@ -126,6 +126,8 @@ int main()
     bytecode bc = fread_bytecode(f);
     commands cmds = bcread_commands(bc, 0);
 
+    printf("coucou");
+
     free_bytecode(bc);
     free_commands(cmds);
     fclose(f);

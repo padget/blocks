@@ -4,6 +4,14 @@
 # include "string.h"
 # include <stdbool.h>
 
+
+/**
+ * arguments représente les arguments reçus
+ * par le processus principal.
+ * 
+ * @param args la liste des valeurs des arguments
+ * @param size la taille de la liste des arguments
+ */ 
 typedef struct
 {
   char** args;
@@ -33,6 +41,19 @@ arguments args_from_argv(char** argv, size_t size);
  * false sinon
  */
 bool args_exists(arguments* args, const char* name);
+
+/**
+ * Determine si un argument en particulier existe
+ * en fonction du nom passé en paramètre à l'emplacement
+ * spécifique précisé.
+ *
+ * @param args valeurs des arguments passés
+ * @param name nom du paramètre recherché
+ * @param index localisation de l'argument
+ * @return true si le paramètre existe à l'
+ * emplacement indiqué
+ */
+bool args_exists_at(arguments* args, const char* name, int index);
 
 /**
  * Trouve dans la liste des arguments passés le
@@ -71,7 +92,30 @@ char* args_value(arguments* args, const char* name);
 int args_pfind(arguments* args, const char* name);
 
 /**
- * Un argument reprent le nom et la valeur d'un argument passé en paramètre.
+ * Retourne l'argument situé à la localisation
+ * indiqué par l'index passé en paramètre.
+ *
+ * @param args valeurs des arguments passés
+ * @param index localisation recherchée
+ * @return argument à la localisation index
+ */
+char* args_at(arguments* args, size_t index);
+
+/**
+ * Retourne un sous-ensemble des arguments passés
+ * à partir d'un index de départ également passé.
+ *
+ * @param args valeurs des arguments passés
+ * @param index index de départ à partir duquel va
+ * démarrer le sous ensemble voulu
+ * @return le sous ensemble d'arguments commençant
+ * à partir de l'index.
+ */
+arguments args_subrange(arguments* args, int index);
+
+/**
+ * Un argument reprent le nom et la valeur 
+ * d'un argument passé en paramètre.
  */
 typedef struct
 {
@@ -90,6 +134,5 @@ argument;
  * trouvé dans la liste des arguments passés. 
  */
 argument args_argument(arguments* args, const char* name);
-
 
 #endif
