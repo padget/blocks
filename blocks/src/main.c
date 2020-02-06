@@ -36,7 +36,6 @@ int main(int argc, char** argv)
   arguments subargs = args_subrange(&args, SECOND_ARG);
   char* cmd = concat_name_arguments(exe, &subargs);
   
-  printf("%s", cmd);
   system(cmd);
   
   free(cmd);
