@@ -1,130 +1,76 @@
 #include "argument.h"
+
 #include <string.h>
 
-argument arg_default()
-{
-  argument arg;
-  arg.name = vs_default();
-  arg.value = vs_default();
-  return arg;
-}
-
-argument arg_construct(vstring name, vstring value)
-{
-  argument arg;
-  arg.name = name;
-  arg.value = value;
-  return arg;
-}
-
-argument arg_from_property(char* prop)
-{
-  size_t size = strlen(prop);
-  char* begin = prop;
-  char* end   = prop+size;
-  size_t eqi  = 0;
-
-  while (eqi < size)
-  {
-    if (prop[eqi] == '=')
-      break;
-    eqi++;
-  }
-
-  argument arg = arg_default();
-  arg.name = vs_construct(prop, prop+eqi);
-
-  if (eqi == size)
-    arg.value = vs_default();
-  else 
-    arg.value = vs_construct(prop+eqi+1, prop+size);
-
-  return arg;
-}
-
-bool arg_has_value(argument arg)
-{
-  return vs_size(arg.value);
-}
-
-arguments args_default()
+arguments args_from_argv(char** argv, size_t size)
 {
   arguments args;
-  args.barg = NULL;
-  args.earg = NULL;
+  args.args = argv;
+  args.size = size;
   return args;
 }
 
-arguments args_construct_from_size(size_t size)
+bool args_exists(arguments* args, const char* name)
 {
-  arguments args;
-  args.barg = malloc(sizeof(argument)*size);
+  return args_find(args, name) == NULL;
+} 
 
-  if (args.barg == NULL)
-    return args_default();
+char* args_find(arguments* args, const char* name)
+{
+  if (args == NULL)
+    return NULL;
 
-  args.earg = args.barg + size;
+  int i = args_pfind(args, name);
 
-  argument* barg;
-  argument* earg;
-  argument def = arg_default();
+  if (i!=-1)
+    return args->args[i];
 
-  while (barg!=earg)
+  return NULL;
+}
+
+char* args_value(arguments* args, const char* name)
+{
+  if (args==NULL)
+    return NULL;
+  
+  int i = args_pfind(args, name);
+
+  if (i!=-1 && i+1<args->size)
+    return args->args[i+1];
+
+  return NULL;
+}
+
+argument args_argument(arguments* args, const char* name)
+{
+  argument arg;
+  arg.name = NULL;
+  arg.value = NULL;
+
+  if (args == NULL)
+    return arg; 
+
+  int i = args_pfind(args, name);
+
+  if (i!=-1)
   {
-    *barg = def;
-    barg++;
+    arg.name = args->args[i];
+    
+    if (i+1 < args->size)
+      arg.value = args->args[i+1];
   }
 
-  return args;
+  return arg;
 }
 
-size_t args_size(arguments args)
+int args_pfind(arguments* args, const char* name)
 {
-  return args.earg - args.barg;
-}
+  if (args==NULL)
+    return -1;
 
-arguments args_insert(arguments args, size_t index, argument arg)
-{
-  if (index < args_size(args))
-    args.barg[index] = arg;
+  for (size_t i=0; i<args->size; ++i)
+    if (strcmp(name, args->args[i])==0)
+      return i;
 
-  return args;
-}
-
-arguments args_append(arguments args, argument arg)
-{
-  size_t size = args_size(args);
-
-  argument* barg = args.barg;
-  argument* targ = realloc(barg, size+1);
-
-  if (targ == NULL)
-    return args;
-
-  targ[size] = arg;
-  args.barg = targ;
-  args.earg = targ+size+1;
-
-  return args;
-}
-
-argument args_at(arguments args, vstring name)
-{
-  argument* begin = args.barg;
-  argument* end   = args.earg;
-
-  while (begin!=end)
-  {
-    if (vs_isequal(begin->name, name))
-      return *begin;
-    else
-      begin++;
-  }
-
-  return arg_default();
-}
-
-void args_free_arguments(arguments args)
-{
-  free(args.barg);
+  return -1;
 }

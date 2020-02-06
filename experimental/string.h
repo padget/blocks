@@ -13,8 +13,8 @@
  */
 typedef struct string
 {
-  char* bstr;
-  char* estr;
+  char* data;
+  size_t size;
 } string;
 
 /**
@@ -24,21 +24,6 @@ typedef struct string
  * @return empty string
  */
 string s_default();
-
-/**
- * Reserves s bytes in memory and 
- * allocate those into a new string 
- * that will be returned.
- * If the memory can't be allocated
- * and empty string will be returned.
- * If the size s is negative an empty
- * string will be returned.
- *
- * @param s size of the built string
- * @returns a new string with its size
- * at s.
- */
-string s_construct_from_size(size_t s);
 
 /**
  * Copy str into a new string (copy 
@@ -62,7 +47,17 @@ string s_copy(const string str);
  * @param e end of the string to copy
  * @returns a copy of [b, e) chars
  */
-string s_copy_from_bounds(const char* b, const char* e);
+string s_from_bounds(const char* b, const char* e);
+
+/**
+ * Reserves bytes in memory and
+ * copy the cstring into the new
+ * string.
+ * 
+ * @param cstr cstring to copy
+ * @return string built by the copy
+ */
+string s_from_cstring(const char* cstr);
 
 /**
  * Returns the size of s.
@@ -80,7 +75,6 @@ size_t s_size(const string s);
  */
 void s_free(string s);
 
-
 /**
  * Constructs a new string from a file
  * opened in the read mode. The file must
@@ -91,6 +85,8 @@ void s_free(string s);
  * @param f opened file to read into a string
  * @returns a new string filled with f content 
  */
-string s_construct_from_file(FILE* f);
+string s_from_file(FILE* f);
+
+const char* cs_find(const char* cs, const char* end, const char c);
 
 #endif

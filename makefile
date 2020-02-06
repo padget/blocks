@@ -1,4 +1,6 @@
-COMPILER=gcc
+COMPILER  = gcc
+CC        = gcc
+CC_O_ARGS = -Wall -W -pedantic
 
 all: blc blexe blocks
 
@@ -12,7 +14,7 @@ blocks: blocks_main.o
 	gcc -o blocks.exe blocks_main.o
 
 blocks_main.o: blocks/src/main.c
-	gcc -o blocks_main.o -c blocks/src/main.c -Wall -W -pedantic
+	gcc -o blocks_main.o -c blocks/src/main.c ${CC_O_ARGS}
 
 # ===============================================
 # blc est le compilateur de blocks invocable par
@@ -26,10 +28,10 @@ blc: ${BLC_DEPS}
 	${COMPILER} -o ${BLC_EXE} ${BLC_OBJS}
 
 blc_main.o: blc/src/main.c experimental/memory.h
-	gcc -o blc_main.o -c blc/src/main.c -W -Wall -pedantic 
+	gcc -o blc_main.o -c blc/src/main.c ${CC_O_ARGS} 
 
 command_builder.o: blc/src/command_builder.c blc/src/command_builder.h
-	gcc -o command_builder.o -c blc/src/command_builder.c -Wall -W -pedantic
+	gcc -o command_builder.o -c blc/src/command_builder.c ${CC_O_ARGS}
 
 # ===============================================
 # blexe est l'interpreteur de blocks invoocable par
@@ -40,7 +42,7 @@ blexe: blexe_main.o
 	gcc -o blocks-execute.exe blexe_main.o
 
 blexe_main.o: blexe/src/main.c
-	gcc -o blexe_main.o -c blexe/src/main.c -W -Wall -pedantic
+	gcc -o blexe_main.o -c blexe/src/main.c ${CC_O_ARGS}
 
 # ==============================================
 # La section experimental contient l'ensemble 
