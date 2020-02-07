@@ -4,19 +4,13 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
-typedef struct vstring
-{
-  const char* bstr;
-  const char* estr;
-} vstring;
 
-bool vs_is_empty(vstring* vs);
-
-typedef struct argument
+typedef struct 
 {
-  vstring type;
-  vstring value;
-} argument;
+  char* type;
+  char* value;
+} 
+argument;
 
 typedef struct arguments
 {

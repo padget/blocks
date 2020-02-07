@@ -246,5 +246,3 @@ void free_building_report(building_report report)
 	free_building_errors(report.errors);
 }
 
-
-

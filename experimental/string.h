@@ -15,7 +15,8 @@ typedef struct string
 {
   char* data;
   size_t size;
-} string;
+}
+string;
 
 /**
  * Construct a default empty string;
