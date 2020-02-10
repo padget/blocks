@@ -1,119 +1,36 @@
 #include "vstring.h"
 #include <string.h>
 
-void vs_foreach(vstring vs, vs_foreach_fn fn)
+vstring vstrbds ( char* begin, char* end )
 {
-  char* begin = vs.bstr;
-  char* end   = vs.estr;
+  vstring s;
+  s.view = begin;
+  s.size = end - begin;
+  return s;
+}
+
+vstring vstrlen ( char* begin, size_t size )
+{
+  return vstrbds ( begin, begin + size );
+}
+
+int vstrcmp ( vstring* s1, vstring* s2 ) 
+{
+  size_t s1len = vstrlen ( s1 );
+  size_t s2len = vstrlen ( s2 );
   
-  while (begin != end)
-  {
-    fn(begin);
-    begin++;
-   }
+  char* v1 = s1->view;
+  char* v2 = s2->view;
+
+  if ( s1len == s2len )
+    return strncmp ( v1, v2, s1len );   
+  else if ( s1len < s2len )
+    return -1;
+  else
+    return 1;
 }
 
-vstring vs_default() 
+size_t vstrlen ( vstring* s )
 {
-  vstring vs;
-  vs.bstr = NULL;
-  vs.estr = NULL;
-  return vs;
+  return s->size;
 }
-
-vstring vs_construct(char* begin, char* end)
-{
-  vstring vs;
-  vs.bstr = begin;
-  vs.estr = end; 
-  return vs;
-}
-
-vstring vs_from_cstring(char* cstr)
-{
-  size_t cstrlen = strlen(cstr);
-  vstring vs;
-  vs.bstr = cstr;
-  vs.estr = cstr+cstrlen;
-  return vs;
-}
-
-size_t vs_size(const vstring vs)
-{
-  return vs.estr - vs.bstr;
-}
-
-bool vs_isequal(vstring v1, vstring v2)
-{
-  size_t sz1 = vs_size(v1);
-  size_t sz2 = vs_size(v2);
-
-  if (sz1 != sz2)
-    return false;
-
-  while(v1.bstr != v1.estr)
-  {
-    if (*v1.bstr != *v2.bstr)
-      break;
-
-    v1.bstr++;
-    v2.bstr++;
-  }
-
-  return v1.bstr == v1.estr;
-}
-
-void cvs_foreach(cvstring vs, cvs_foreach_fn fn)
-{
-  const char* begin = vs.bstr; 
-  const char* end = vs.estr;
-  
-  while (begin != end)
-  {
-    fn(begin);
-    begin++;
-  }
-}
-
-cvstring cvs_default()
-{
-  cvstring vs;
-  vs.bstr = NULL;
-  vs.estr = NULL;
-  return vs;
-}
-
-cvstring cvs_construct(const char* begin, const char* end)
-{
-  cvstring vs;
-  vs.bstr = begin; 
-  vs.estr = end;
-  return vs;
-}
-
-size_t cvs_size(const cvstring vs)
-{
-  return vs.estr - vs.bstr;
-}
-
-bool cvs_isequal(cvstring v1, cvstring v2)
-{
-  size_t sz1 = cvs_size(v1);
-  size_t sz2 = cvs_size(v2);
-
-  if (sz1 != sz2)
-    return false;
-
-  while(v1.bstr != v1.estr)
-  {
-    if (*v1.bstr != *v2.bstr)
-      break;
-
-    v1.bstr++;
-    v2.bstr++;
-  }
-
-  return v1.bstr == v1.estr;
-}
-
-

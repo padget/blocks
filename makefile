@@ -64,6 +64,9 @@ lvstring: experimental/vstring.c experimental/vstring.h
 largument: experimental/argument.c experimental/argument.h experimental/vstring.h
 	gcc -o argument.o -c experimental/argument.c
 
+ltest: experimental/test.c experimental/test.h
+	gcc -o test.o -c experimental/test.c
+
 
 # ==============================================
 # le goal clean permet de nettoyer le projet

@@ -12,116 +12,47 @@
  */
 typedef struct vstring
 {
-  char* bstr;
-  char* estr;
-} vstring;
-
-typedef void(vs_foreach_fn) (char* c);
+  char* view;
+  size_t size;
+} 
+vstring;
 
 /**
- *  Execute a function on each element
- *  contained in the vstring.
+ * Builds a vstring with the boundaries of the 
+ * view. 
  *
- *  @param vs the vstring to iterate
- *  @param fn the function to apply on 
- *  each element of vs.
+ * @param begin the first character
+ * @param end the after last character
+ * @return a vstring built with begin and end
  */
-void vs_foreach(vstring vs, vs_foreach_fn fn);
+vstring vstrbds ( char* begin, char* end );
 
 /**
- *  Build default vstring with
- *  bstr and estr at NULL;
+ * Builds a vstring with the the first character
+ * and its size after begin.
  *
- *  @return the default built vstring.
+ * @param begin the first character
+ * @param size the size of the view
+ * @return a vstring built with begin and size
  */
-vstring vs_default();
+vstring vstrlen ( char* begin, size_t size );
 
 /**
- * Constructs a vstring with begin as bstr
- * and end as estr.
- */
-vstring vs_construct(char* begin, char* end);
-
-// TODO Documentation
-vstring vs_from_cstring(char* cstr);
-
-
-/**
- * Returns the size of a vstring
+ * Compares two vstring by a lexicalographic order
+ * and return the 'distance' between the two vstring.
  * 
- * @param vs vstring to have the size
- * @return the size of vs
+ * @param s1 the first vstring
+ * @param s2 the second vstring
+ * @return the lexicalographic distance [s1-s2]
  */
-size_t vs_size(const vstring vs);
-
-
-/**
- * Returns true if v2 and v1 are equals.
- * 
- * @param v1 first vstring
- * @param v2 second vstring
- * @return true v1 == v2 else false
- */
-bool vs_isequal(vstring v1, vstring v2);
-
-
-
+int vstrcmp ( vstring* s1 vstring* s2);
 
 /**
- * A cvstring represents a constant
- * view on a portion of an existing
- * string.
- */ 
-typedef struct cvstring
-{
-  const char* bstr;
-  const char* estr;
-} cvstring;
-
-typedef void(cvs_foreach_fn) (const char* c);
-
-/**
- *  Execute a function on each element
- *  contained in the vstring.
+ * Returns the length of the vstring.
  *
- *  @param vs the vstring to iterate
- *  @param fn the function to apply on 
- *  each element of vs.
+ * @param s the vstring 
+ * @return the length of s  
  */
-void cvs_foreach(cvstring vs, cvs_foreach_fn fn);
-
-/**
- *  Build default vstring with
- *  bstr and estr at NULL;
- *
- *  @return the default built vstring.
- */
-cvstring cvs_default();
-
-/**
- * Constructs a vstring with begin as bstr
- * and end as estr.
- */
-cvstring cvs_construct(const char* begin, 
-                       const char* end);
-
-/**
- * Returns the size of a vstring
- * 
- * @param vs vstring to have the size
- * @return the size of vs
- */
-size_t cvs_size(const cvstring vs);
-
-/**
- * Returns true if v2 and v1 are equals.
- * 
- * @param v1 first cvstring
- * @param v2 second cvstring
- * @return true v1 == v2 else false
- */
-bool cvs_isequal(cvstring v1, cvstring v2);
-
-
+size_t vstrlen ( vstring* s );
 
 #endif
