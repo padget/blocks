@@ -3,7 +3,7 @@
 
 #include <stdbool.h>
 #include <stdlib.h>
-
+#include <string.h>
 
 typedef struct 
 {
@@ -12,46 +12,26 @@ typedef struct
 } 
 argument;
 
-typedef struct arguments
+typedef struct
 {
-  argument* barg;
-  argument* earg;
-} arguments;
+  argument* args;
+  size_t nbargs;
+}
+arguments;
 
-typedef struct command
+typedef struct
 {
-  vstring name;
+  char* name;
   arguments args;
-} command;
+} 
+command;
 
-typedef struct commands
+typedef struct
 {
-  command* bcmd;
-  command* ecmd;
-} commands;
+  command* cmds;
+  size_t size;
+} 
+commands;
 
-void free_commands(commands cmds);
-
-typedef struct building_error
-{
-	command* cmd;
-	char* error;
-	size_t column;
-} building_error;
-
-typedef struct building_errors
-{
-	building_error berr;
-	building_error eerr;
-} building_errors;
-
-typedef struct building_report 
-{
-	commands cmds;
-	building_errors errs  ;
-} building_report;
-
-building_report build_commands(const char* src);
-
-void free_building_errors(building_errors errors);
-void free_building_report(building_report report);
+commands build_commands(char* source);
+void free_commands(command* cmds);
