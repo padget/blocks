@@ -4,37 +4,32 @@
 
 #include "../../experimental/argument.h"
 
-#define FIRST_ARG 1
-#define SECOND_ARG 2
-
 #define HELP    "blocks-help.exe"
 #define COMPILE "blocks-compile.exe"
 #define EXECUTE "blocks-execute.exe"
 #define REPORTS "blocks-reports.exe"
 #define CLEAN   "blocks-clean.exe"
 
-size_t arguments_sum_sizes(arguments* args);
-char* concat_name_arguments(const char* exe, arguments* args);
+size_t arguments_sum(int argc, char** argv);
+char* build_command_call(const char* exe, int argc, char** argv);
 
 
 int main(int argc, char** argv)
 {
   const char* exe = HELP;
 
-  arguments args = args_from_argv(argv, argc);
-
-  if (args_exists_at(&args, "compile", FIRST_ARG))
+  if (args_exists_at(argc, argv, "compile", 1))
     exe = COMPILE;
-  else if (args_exists_at(&args, "execute", FIRST_ARG))
+  else if (args_exists_at(argc, argv, "execute", 1))
     exe = EXECUTE;
-  else if (args_exists_at(&args, "reports", FIRST_ARG))
+  else if (args_exists_at(argc, argv, "reports", 1))
     exe = REPORTS;
-  else if (args_exists_at(&args, "clean", FIRST_ARG))
+  else if (args_exists_at(argc, argv, "clean", 1))
     exe = CLEAN;
 
 
-  arguments subargs = args_subrange(&args, SECOND_ARG);
-  char* cmd = concat_name_arguments(exe, &subargs);
+  char** exearg = args_subrange(argc, argv, 2);
+  char* cmd = build_command_call(exe, argc-2, exearg);
   
   system(cmd);
   
@@ -42,28 +37,41 @@ int main(int argc, char** argv)
   return EXIT_SUCCESS;
 }
 
-char* concat_name_arguments(const char* exe, arguments* args)
+char* build_command_call(const char* exe, int argc, char** argv)
 {
-  size_t size = arguments_sum_sizes(args);
-  char* cmd = malloc(sizeof(char) * (size + 1 + strlen(exe)+args->size));
+  size_t sum = arguments_sum(argc, argv);
+  size_t s_char = sizeof(char);
+  size_t s_exe = strlen(exe);
+  size_t s_cmd = s_char*(s_exe+argc+sum+1);
+  char* cmd = malloc(s_cmd);
+  
   cmd[0] = '\0';
 
   strcat(cmd, exe);
-  for (int i=0; i<args->size; ++i)
+  int i=0; 
+  
+  while (i<argc)
   {
     strcat(cmd, " ");
-    strcat(cmd, args_at(args, i));
+    strcat(cmd, argv[i]);
+    ++i;
   }
+  
   return cmd;
-
 }
 
-size_t arguments_sum_sizes(arguments* args)
+size_t arguments_sum(int argc, char** argv)
 {
-  size_t size = 0;
+  size_t sum = 0;
+  int i = 0;
+  
+  while (i<argc)
+  {
+    char* arg = argv[i];
+    size_t sarg = strlen(arg);
+    sum += sarg;
+    ++i;
+  }
 
-  for (int i=0; i<args->size; ++i)
-    size += strlen(args_at(args, i));
-
-  return size;
+  return sum;
 }

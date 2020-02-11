@@ -22,14 +22,14 @@ blocks_main.o: blocks/src/main.c
 # blc est le compilateur de blocks invocable par
 # > blocks compile main.blocks
 # ===============================================
-BLC_DEPS=blc_main.o lstring largument
-BLC_OBJS=blc_main.o string.o argument.o
+BLC_DEPS=blc_main.o lstring largument 
+BLC_OBJS=blc_main.o string.o argument.o 
 BLC_EXE =blocks-compile.exe
 
 blc: ${BLC_DEPS}
 	${COMPILER} -o ${BLC_EXE} ${BLC_OBJS}
 
-blc_main.o: blc/src/main.c experimental/memory.h
+blc_main.o: blc/src/main.c experimental/memory.h 
 	gcc -o blc_main.o -c blc/src/main.c ${CC_O_ARGS} 
 
 command_builder.o: blc/src/command_builder.c blc/src/command_builder.h

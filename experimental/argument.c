@@ -2,112 +2,77 @@
 
 #include <string.h>
 
-arguments args_from_argv(char** argv, size_t size)
+
+bool args_exists(int argc, char** argv, const char* name)
 {
-  arguments args;
-  args.args = argv;
-  args.size = size;
-  return args;
+  return args_find(argc, argv, name) != NULL;
 }
 
-bool args_exists(arguments* args, const char* name)
+bool args_exists_at(int argc, char** argv, const char* name, int index)
 {
-  return args_find(args, name) != NULL;
-}
-
-bool args_exists_at(arguments* args, const char* name, int index)
-{
-  if (args == NULL)
+  if (argc == 0 || 
+      name == NULL || 
+      argv == NULL)
     return false;
 
-  char* arg = args->args[index];
+  char* arg = argv[index];
   return strcmp(name, arg) == 0;
 }
 
-char* args_find(arguments* args, const char* name)
+char* args_find(int argc, char** argv, const char* name)
 {
-  if (args == NULL)
-    return NULL;
+  if (argc == 0 || 
+      name == NULL || 
+      argv == NULL)
+    return false;
 
-  int i = args_pfind(args, name);
+  int i = args_ifind(argc, argv, name);
 
   if (i!=-1)
-    return args->args[i];
+    return argv[i];
 
   return NULL;
 }
 
-char* args_value(arguments* args, const char* name)
+char* args_value(int argc, char** argv, const char* name)
 {
-  if (args==NULL)
+  if (argc == 0 || 
+      argv == NULL ||
+      name == NULL) 
     return NULL;
-  
-  int i = args_pfind(args, name);
 
-  if (i!=-1 && i+1<args->size)
-    return args->args[i+1];
+  int i = args_ifind(argc, argv, name);
+
+  if (i!=-1 && i+1<argc)
+    return argv[i+1];
 
   return NULL;
 }
 
-arguments args_subrange(arguments* args, int index)
+char** args_subrange(int argc, char** argv, int index)
 {
-  arguments subargs;
-  subargs.args = NULL;
-  subargs.size = 0;
+  if (argv == NULL ||
+      argc == 0 ||
+      index >= argc)
+    return NULL;
 
-  if (args == NULL)
-    return subargs;
-
-  if (index >= args->size)
-    return subargs;
-
-  subargs.args = args->args + index;
-  subargs.size = args->size - index;
-  return subargs;
+  return argv + index;
 }
 
-argument args_argument(arguments* args, const char* name)
+#define NOT_FOUND -1
+
+int args_ifind(int argc, char** argv, const char* name)
 {
-  argument arg;
-  arg.name = NULL;
-  arg.value = NULL;
+  if (argv == NULL ||
+      argc == 0 ||
+      name == NULL)
+    return NOT_FOUND;
 
-  if (args == NULL)
-    return arg; 
-
-  int i = args_pfind(args, name);
-
-  if (i!=-1)
-  {
-    arg.name = args->args[i];
-    
-    if (i+1 < args->size)
-      arg.value = args->args[i+1];
-  }
-
-  return arg;
-}
-
-int args_pfind(arguments* args, const char* name)
-{
-  if (args==NULL)
-    return -1;
-
-  for (size_t i=0; i<args->size; ++i)
-    if (strcmp(name, args->args[i])==0)
+  size_t i=0;
+  while (i<argc)
+    if (strcmp(name, argv[i])==0)
       return i;
 
-  return -1;
+  return NOT_FOUND;
 }
 
-char* args_at(arguments* args, size_t index)
-{
-  if (args == NULL)
-    return NULL;
-
-  if (index >= args->size)
-    return NULL;
-
-  return args->args[index];
-}
