@@ -6,7 +6,7 @@
 #include "../../experimental/argument.h"
 #include "../../experimental/string.h"
 
-//#include "command_builder.h"
+#include "command_builder.h"
 
 char* freadall(const char*);
 size_t fsize(FILE* file);
@@ -16,15 +16,20 @@ int main(int argc, char** argv)
   
   if (!args_exists(argc, argv, "--file"))
     return EXIT_FAILURE;
-  
+ 
+  if (!args_exists(argc, argv, "--nb-cmds"))
+    return EXIT_FAILURE;
+
   char* fname = args_value(argc, argv, "--file");
-  printf("file to read%s\n", fname);
+  int nbcmds = args_as_num(argc, argv, "--nb-cmds");
 
   char* src = freadall(fname);
+  blc_command* cmds = blc_cmds_init(nbcmds);
+  blc_cmds_fill(nbcmds, cmds, src);
   
-  printf("%s", src);  
-
+  free(cmds);
   free(src);
+  
   return EXIT_SUCCESS;
 }
 

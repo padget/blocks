@@ -15,4 +15,7 @@ char* args_value(int argc, char**argv, const char* name);
 char** args_subrange(int argc, char** arg, int index);
 
 int args_ifind(int argc, char** argv, const char* name);
+
+int args_as_num(int argc, char** argv, const char* name);
+
 #endif

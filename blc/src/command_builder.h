@@ -29,40 +29,10 @@ typedef struct
 } 
 blc_command;
 
-typedef struct 
-{
-  blc_command* mem;
-  size_t size;
-}
-blc_commands;
+blc_command*
+blc_cmds_init(size_t nb);
 
-/**
- * Initialize a commands_memory with
- * size octet in memory.
- *
- * @param size nb octet of the memory
- * @return the initialized memory
- */
-blc_commands
-cmdm_init(size_t nbcmds);
-
-/**
- * Get the command at the index i in the
- * commands_memory cmdm.
- * 
- * @param cmdm commands_memory to search
- * @param i index of the command
- * @return a pointer to command present (or NULL)
- * at the index i in cmdm.
- */
-blc_command* 
-cmdm_command_at(blc_commands* cmdm,
-                size_t i);
-                
-void cmdm_fill(blc_commands* cmdm, 
-               string* source);
- 
 void 
-cmdm_free(blc_commands cmdm);
-                
+blc_cmds_fill(size_t nb, blc_command* cmds, char* src);
+
 #endif

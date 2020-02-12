@@ -1,7 +1,7 @@
 #include "argument.h"
 
 #include <string.h>
-
+#include <stdlib.h>
 
 bool args_exists(int argc, char** argv, const char* name)
 {
@@ -76,3 +76,19 @@ int args_ifind(int argc, char** argv, const char* name)
   return NOT_FOUND;
 }
 
+int args_as_num(int argc, char** argv, const char* name)
+{
+  char* value=args_value(argc, argv, name);
+  char* prev=value;
+
+  while ('0'<=*value&&*value<='9')
+    value++;
+
+  if (*value !='\0')
+  {
+    fprintf(stderr, "the argument %s : %s must be a number", name, prev);
+    exit(EXIT_FAILURE);
+  }
+
+  return atoi(prev);
+}
