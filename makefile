@@ -1,6 +1,6 @@
 COMPILER  = gcc
 CC        = gcc
-CC_O_ARGS = -Wall -W -pedantic
+CC_O_ARGS = -std=c11 -Wall -W -pedantic
 
 all: blc blexe blocks
 
@@ -27,7 +27,7 @@ BLC_OBJS=blc_main.o string.o argument.o command_builder.o
 BLC_EXE =blocks-compile.exe
 
 blc: ${BLC_DEPS}
-	${COMPILER} -o ${BLC_EXE} ${BLC_OBJS}
+	${COMPILER} -o ${BLC_EXE} ${BLC_OBJS} ${CC_O_ARGS}
 
 blc_main.o: blc/src/main.c experimental/memory.h 
 	gcc -o blc_main.o -c blc/src/main.c ${CC_O_ARGS} 
@@ -53,19 +53,19 @@ blexe_main.o: blexe/src/main.c
 # ==============================================
 
 lmemory: experimental/memory.c experimental/memory.h
-	gcc -o memory.o -c experimental/memory.c
+	gcc -o memory.o -c experimental/memory.c ${CC_O_ARGS}
 
 lstring: experimental/string.c experimental/string.h
-	gcc -o string.o -c experimental/string.c
+	gcc -o string.o -c experimental/string.c ${CC_O_ARGS}
 
 lvstring: experimental/vstring.c experimental/vstring.h
-	gcc -o vstring.o -c experimental/vstring.c
+	gcc -o vstring.o -c experimental/vstring.c ${CC_O_ARGS}
 
 largument: experimental/argument.c experimental/argument.h experimental/vstring.h
-	gcc -o argument.o -c experimental/argument.c
+	gcc -o argument.o -c experimental/argument.c ${CC_O_ARGS}
 
 ltest: experimental/test.c experimental/test.h
-	gcc -o test.o -c experimental/test.c
+	gcc -o test.o -c experimental/test.c ${CC_O_ARGS}
 
 
 # ==============================================

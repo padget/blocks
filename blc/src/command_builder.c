@@ -1,10 +1,28 @@
 #include "command_builder.h"
 #include <stdlib.h>
+#include <stdio.h>
 
 #define EOS '\0'
 #define EOL '\n'
 
-void blc_cmds_init_cstr(int nb, blc_command* cmds);
+void blc_cmds_init_cstr(int nb, blc_command* cmds) 
+{
+  int i=0; 
+  while(i<nb)
+  {
+    cmds[i].name[0]=EOS;
+
+    int j=0; 
+    while(j<ARGS_MAX)
+    {
+      cmds[i].args[j].type[0]=EOS;
+      cmds[i].args[j].value[0]=EOS;
+      ++j;
+    }
+
+    i++;
+  }
+}
 
 blc_command* 
 blc_cmds_init(size_t nb)
@@ -18,269 +36,124 @@ blc_cmds_init(size_t nb)
   return cmds;
 }
 
-char* blc_cmd_name(char* src);
-char* blc_cmd_var(char* src);
-char* blc_cmd_type(char* src);
-char* blc_cmd_number(char* src);
-char* blc_cmd_arg(char* src);
-
-char* blc_bypass_blank(char* src);
-char* blc_bypass_emptyline(char* src);
-char* blc_bypass_emptylines(char* src);
-
-char* blc_cmd_fill_name(blc_command* cmd, char* src);
-char* blc_cmd_fill_args(blc_command* cmd, char* src);
-
-char*
-blc_cmds_fill_one(blc_command* cmd, char* src)
+char* overblank(char* c)
 {
-  src=blc_bypass_emptylines(src);
-  src=blc_bypass_blank(src);
-  src=blc_cmd_fill_name(cmd, src);
-  src=blc_bypass_blank(src);
-  src=blc_cmd_fill_args(cmd, src);
-  src=blc_bypass_emptylines(src);
-  return src;
+  while (c!=NULL&&(*c==' '||*c=='\t'))
+    c++;
+  return c;
 }
 
-void
-blc_cmds_fill(size_t nb, blc_command* cmds, char* src)
+char* overcmdname(char* c)
+{
+  while (c!=NULL&&'a'<=*c&&*c<='z')
+    c++;
+  if (c!=NULL&&*c==':')
+    c++;
+  return c;
+}
+
+char* overargnumber(char* c)
+{
+  while (c!=NULL&&'0'<=*c&&*c<='9')
+    c++;
+  return c;
+}
+
+char* untileol(char* c)
+{
+  while (c!=NULL&&*c!=EOS&&*c!=EOL)
+    c++;
+  return c;
+}
+
+void copy(char*b, char*e, char* buf)
+{
+  while (b!=e)
+  {
+    *buf=*b;
+    ++buf; 
+    ++b;
+  }
+
+  *buf='\0';
+}
+
+bool checkcmdname(char* b, char* e)
+{ 
+  int s=e-b;
+  return 
+    0<s&&s<CMD_NAME_MAX&&
+    'a'<=*b&&*b<='z'&&
+    *(e-1)==':';
+}
+
+bool checkargnumber(char* b, char* e)
+{
+  int s=e-b;
+  return 0<s&&s<ARG_VALUE_MAX;
+}
+
+void blc_cmds_fill(size_t nb, blc_command* cmds, char* src)
 {
   size_t i=0;
 
-  while (i<nb)
+  while (*src!=EOS&&i<nb)
   {
-    src=blc_cmds_fill_one(&cmds[i], src);
-    ++i;
-  }
-}
+    char* bol=src;
+    char* eol=untileol(bol); 
 
-char*
-blc_cmd_fill_name(blc_command* cmd, char* src)
-{
-  char* begin=src;
-  char* end=blc_cmd_name(src);
+    bol=overblank(bol);
 
-  if (begin==end)
-    return NULL;
+    char* bname=bol;
+    char* ename=bol;
 
-  if (end-begin>CMD_NAME_MAX)
-    return NULL;
+    ename=overcmdname(ename);
 
-  char* name=cmd->name;
-
-  while (begin!=end)
-  {
-    *name=*begin;
-    ++name;
-    ++begin;
-  }
-
-  name='\0';
-
-  return end;
-}
-
-void 
-blc_extract_type(blc_argument* arg, char* begin, char* end)
-{
-  while (begin!=end)
-    if (*begin!='#')
-      begin++;
+    if (checkcmdname(bname, ename))
+      copy(bname, ename, cmds[i].name);
     else 
-      break;
+      // TODO error
+      return;
+    
+    bol=ename;
+    bol=overblank(bol);
 
-  if (begin!=end)
-    begin++;
+    size_t j=0;
+    char* bargs=bol;
+    char* eargs=eol;
 
-  size_t dist=end-begin;
-
-  if (0<dist&&dist<ARG_TYPE_MAX)
-  {
-    char* type = arg->type;
-
-    while (begin!=end)
+    while (bargs!=eargs&&j<ARGS_MAX)
     {
-      *type=*begin;
-      ++type;
-      ++begin;
-    }
-  }
-}
+      char* bnb=bargs;
+      char* enb=bargs;
 
-void 
-blc_extract_value(blc_argument* arg, char* begin, char* end)
-{
-  char* value=arg->value;
+      enb=overargnumber(enb);
 
-  while (begin!=end)
-  {
-    if (*begin!='#')
-    {
-      *value=*begin;
-      begin++;
-      value++;
-    } 
-    else 
-      break;
-  }
-}
+      if (checkargnumber(bnb, enb))
+        copy(bnb, enb, cmds[i].args[j].value); 
+      else 
+        // TODO erreur
+        return;
 
-char*
-blc_cmd_fill_args(blc_command* cmd, char* src)
-{
-  blc_argument* arg = cmd->args;
-
-  char* begin=src;
-  char* end;
-
-  while ((end=blc_cmd_arg(begin))==begin)
-  {
-    blc_extract_type(arg, begin, end);
-    blc_extract_value(arg, begin, end);
-    ++arg;
-  }
-
-  return end;
-}
-
-
-void 
-blc_cmds_init_cstr(int nb, blc_command* cmds)
-{
-  int i=0;
-
-  while (i<nb)
-  {
-    blc_command* cmd = &cmds[i];
-    cmd->name[0]=EOS;
-
-    int j=0;
-
-    while (j<ARGS_MAX)
-    {
-      cmd->args[j].value[0]=EOS;
-      cmd->args[j].type[0]=EOS;
+      enb=overblank(enb);  
 
       ++j;
+      bargs=enb;
     }
 
+    if (j==ARGS_MAX&&bargs!=eargs)
+      // TODO ERROR  
+      return;
+
     ++i;
-  }
-}
 
-
-char* blc_cmd_name(char* src)
-{
-  char* prev = src;
-
-  while (*src!=EOS)
-    if ('a'<=*src&&*src<='z')
-      ++src;
+    if (*eol==EOS)
+      src=eol;
     else 
-      break;
-
-  if (*src==':')
-    return src;
-  else 
-    return prev; 
-}
-
-char* blc_bypass_blank(char* src)
-{
-  while (*src!=EOS)
-    if (*src==' '||*src=='\t')
-      ++src;
-    else 
-      break;
-
-  return src;
-}
-
-char* blc_bypass_emptyline(char* src)
-{
-  src=blc_bypass_blank(src);
-
-  if (*src=='\n')
-    ++src;
-
-  return src;
-}
-
-char* blc_bypass_emptylines(char* src)
-{
-  char* prev = src;
-  char* tmp;
-
-  while ((tmp=blc_bypass_emptyline(prev))!=prev)
-    ;
-
-  return tmp;
-}
-
-
-char* blc_cmd_var(char* src)
-{
-  while (*src!=EOS)
-    if ('a'<=*src&&*src<='z')
-      ++src;
-    else 
-      break;
-
-  return src;
-}
-
-char* blc_cmd_type(char* src)
-{
-  char* prev=src;
-
-  if (*src=='#')
-    ++src;
-  else 
-    return prev;
-
-  while (*src!=EOS)
-    if ('a'<=*src&&*src<='z')
-      ++src;
-    else 
-      break;
-
-  if (src>prev+1)
-    return src;
-  else 
-
-    return prev;
-}
-
-char* blc_cmd_number(char* src)
-{
-  while (*src!=EOS)
-    if ('0'<=*src&&*src<='9')
-      ++src;
-    else 
-      break;
-
-  return src;
-}
-
-char* blc_cmd_arg(char* src)
-{
-  char* prev=src;
-
-  src=blc_cmd_var(src);
-
-  if (src!=prev)
-  {
-    char* prev2=src;
-    src=blc_cmd_type(src);
-    if (src!=prev2)
-      return src;
+      src=eol+1;
   }
 
-  src=blc_cmd_number(src);
-
-  if (src!=prev)
-    return src;
-
-  return prev;
+  if (i==nb&&*src!=EOS)
+    // TODO ERROR
+    return;
 }

@@ -68,11 +68,14 @@ int args_ifind(int argc, char** argv, const char* name)
       name == NULL)
     return NOT_FOUND;
 
-  size_t i=0;
+  int i=0;
+
   while (i<argc)
     if (strcmp(name, argv[i])==0)
       return i;
-
+    else 
+      ++i;
+  
   return NOT_FOUND;
 }
 

@@ -1,2 +1,2 @@
 add: 2 3
-print: $$:int
+print: 11 11 11 
