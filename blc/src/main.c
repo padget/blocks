@@ -25,10 +25,10 @@ int main(int argc, char** argv)
   char* src = freadall(fname);
 
 
-  blc_command* cmds = blc_cmds_init(10);
+  blc_command* cmds = blc_cmds_init(nbcmds);
   blc_cmds_fill(nbcmds, cmds, src);
 
-  printcmds(10, cmds);
+  printcmds(nbcmds, cmds);
 
   free(cmds);
   free(src);
