@@ -1,14 +1,21 @@
-COMPILER  = gcc
-CC        = gcc
-CC_O_ARGS = -std=c11 -Wall -W -pedantic
-
-all: blc blexe blocks
+cc        = gcc
+ccflags = -Wall -W -pedantic -Werror -std=c11
 
 # ===============================================
-# blocks est le programme principale qui se
-# chargera d'appeler les autres sous programmes
-# en fonction des arguments passés
-# > blocks --compile example/add.blocks
+# Goal: all
+# 
+# Description: all goal that build all project
+# ===============================================
+
+all: clean blp blc blexe blocks
+
+# ===============================================
+# Goal: blocks
+# 
+# Description: blocks est le programme principale 
+#              qui se chargera d'appeler les 
+#    					 autres sous programmes en fonction 
+#              des arguments passés
 # ===============================================
 
 BLOCKS_LIB=largument
@@ -16,7 +23,28 @@ blocks: blocks_main.o largument
 	gcc -o blocks.exe blocks_main.o argument.o
 
 blocks_main.o: blocks/src/main.c
-	gcc -o blocks_main.o -c blocks/src/main.c ${CC_O_ARGS}
+	gcc -o blocks_main.o -c blocks/src/main.c ${ccflags}
+
+# ===============================================
+# Goal: blp
+#
+# Description: blp est le programme permettant de 
+#              preparer un ensemble de métrique
+#              sur le fichier que l'on va compiler
+#              Par exemple, on veut connaitre le 
+#              nombre de commandes potentielles
+#              à analyser.
+# ===============================================
+blpo=blp_main.o
+blpsrc=blp/src
+blpmain=${blpsrc}/main.c
+blpexe=blocks-prepare.exe
+
+blp: ${blpo}
+	${cc} -o ${blpexe} ${blpo} ${ccflags}
+
+${blpo}: ${blpmain} 
+	${cc} -o ${blpo} -c ${blpmain} ${ccflags}
 
 # ===============================================
 # blc est le compilateur de blocks invocable par
@@ -27,13 +55,13 @@ BLC_OBJS=blc_main.o string.o argument.o command_builder.o
 BLC_EXE =blocks-compile.exe
 
 blc: ${BLC_DEPS}
-	${COMPILER} -o ${BLC_EXE} ${BLC_OBJS} ${CC_O_ARGS}
+	${cc} -o ${BLC_EXE} ${BLC_OBJS} ${ccflags}
 
 blc_main.o: blc/src/main.c experimental/memory.h 
-	gcc -o blc_main.o -c blc/src/main.c ${CC_O_ARGS} 
+	${cc} -o blc_main.o -c blc/src/main.c ${ccflags} 
 
 command_builder.o: blc/src/command_builder.c blc/src/command_builder.h
-	gcc -o command_builder.o -c blc/src/command_builder.c ${CC_O_ARGS}
+	${cc} -o command_builder.o -c blc/src/command_builder.c ${ccflags}
 
 # ===============================================
 # blexe est l'interpreteur de blocks invoocable par
@@ -41,10 +69,10 @@ command_builder.o: blc/src/command_builder.c blc/src/command_builder.h
 # ===============================================
 
 blexe: blexe_main.o
-	gcc -o blocks-execute.exe blexe_main.o
+	${cc} -o blocks-execute.exe blexe_main.o
 
 blexe_main.o: blexe/src/main.c
-	gcc -o blexe_main.o -c blexe/src/main.c ${CC_O_ARGS}
+	${cc} -o blexe_main.o -c blexe/src/main.c ${ccflags}
 
 # ==============================================
 # La section experimental contient l'ensemble 
@@ -53,19 +81,19 @@ blexe_main.o: blexe/src/main.c
 # ==============================================
 
 lmemory: experimental/memory.c experimental/memory.h
-	gcc -o memory.o -c experimental/memory.c ${CC_O_ARGS}
+	${cc} -o memory.o -c experimental/memory.c ${ccflags}
 
 lstring: experimental/string.c experimental/string.h
-	gcc -o string.o -c experimental/string.c ${CC_O_ARGS}
+	${cc} -o string.o -c experimental/string.c ${ccflags}
 
 lvstring: experimental/vstring.c experimental/vstring.h
-	gcc -o vstring.o -c experimental/vstring.c ${CC_O_ARGS}
+	${cc} -o vstring.o -c experimental/vstring.c ${ccflags}
 
 largument: experimental/argument.c experimental/argument.h experimental/vstring.h
-	gcc -o argument.o -c experimental/argument.c ${CC_O_ARGS}
+	${cc} -o argument.o -c experimental/argument.c ${ccflags}
 
 ltest: experimental/test.c experimental/test.h
-	gcc -o test.o -c experimental/test.c ${CC_O_ARGS}
+	${cc} -o test.o -c experimental/test.c ${ccflags}
 
 
 # ==============================================
