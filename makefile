@@ -1,4 +1,4 @@
-cc        = gcc
+cc      = gcc
 ccflags = -Wall -W -pedantic -Werror -std=c11
 
 # ===============================================
@@ -7,7 +7,7 @@ ccflags = -Wall -W -pedantic -Werror -std=c11
 # Description: all goal that build all project
 # ===============================================
 
-all: clean blp blc blexe blocks
+all: clean blp blc blexe blocks blh
 
 # ===============================================
 # Goal: blocks
@@ -45,6 +45,16 @@ blp: ${blpo}
 
 ${blpo}: ${blpmain} 
 	${cc} -o ${blpo} -c ${blpmain} ${ccflags}
+
+# ===============================================
+# Goal: blh
+#
+# Description: blh est le programme permettant 
+# 	       d'afficher l'aide de blocks
+# ===============================================
+blocks-help.exe: blh/main.c
+	${cc} -o blocks-help.exe -c blh/main.c ${ccflags}
+
 
 # ===============================================
 # blc est le compilateur de blocks invocable par
