@@ -1,7 +1,6 @@
 #ifndef __blocks_argument_h__
 # define __blocks_argument_h__
 
-# include "string.h"
 # include <stdbool.h>
 
 bool args_exists(int argc, char** argv, const char* name);

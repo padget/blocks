@@ -2,6 +2,10 @@
 
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
+
+
+#define NOT_FOUND -1
 
 bool args_exists(int argc, char** argv, const char* name)
 {
@@ -10,7 +14,7 @@ bool args_exists(int argc, char** argv, const char* name)
 
 bool args_exists_at(int argc, char** argv, const char* name, int index)
 {
-  if (argc == 0 || 
+  if (argc >= index || 
       name == NULL || 
       argv == NULL)
     return false;
@@ -59,7 +63,6 @@ char** args_subrange(int argc, char** argv, int index)
   return argv + index;
 }
 
-#define NOT_FOUND -1
 
 int args_ifind(int argc, char** argv, const char* name)
 {
@@ -95,3 +98,5 @@ int args_as_num(int argc, char** argv, const char* name)
 
   return atoi(prev);
 }
+
+#undef NOT_FOUND
