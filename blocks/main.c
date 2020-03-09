@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "../../experimental/argument.h"
+#include "../experimental/argument.h"
 
 #define HELP "blocks-help.exe"
 #define COMPILE "blocks-compile.exe"

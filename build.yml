@@ -1,0 +1,62 @@
+compiler: gcc
+cflags: -Wall -W -pedantic -Werror -std=c11
+
+shared:
+  - name: 'experimental library argument'
+    target: argument.o
+    source: experimental/argument.c
+
+programs:
+  - name: 'blocks program'
+    sources: blocks
+    target: blocks.exe
+    libs:
+      - name: 'main library'
+        target: blocks.o
+        source: main.c
+    shared:
+      - argument.o
+   
+  - name: 'blocks-help program'
+    sources: blh
+    target: blocks-help.exe
+    libs:
+      - name: 'main library'
+        target: blocks-help.o
+        source: main.c
+   
+  - name: 'blocks-compile program'
+    sources: blc
+    target: blocks-compile.exe
+    libs:
+      - name: 'build_commands library'
+        target: command_builder.o
+        source: command_builder.c
+      - name: 'main library'
+        target: blocks-compile.o
+        source: main.c
+    shared:
+      - argument.o
+  
+  - name: 'blocks-execute program'
+    sources: blexe
+    target: blocks-execute.exe
+    libs:
+      - name: 'main library'
+        target: blocks-execute.o
+        source: main.c
+    shared:
+      - argument.o
+  
+  - name: 'blocks-prepare program'
+    sources: blp
+    target: blocks-prepare.exe
+    libs:
+      - name: 'main library'
+        target: blocks-prepare.o
+        source: main.c
+    shared:
+      - argument.o
+
+purge:
+  - '*.o'

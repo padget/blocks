@@ -1,53 +1,98 @@
-#!/usr/bin/env python3
-
+from pyaml import yaml
+import sys
 import subprocess
+from os import path
 
-# generic variables
-cc      = 'gcc'
-ccflags =  ['-Wall', '-W', '-pedantic', '-Werror', '-std=c11']
+yamld = ''
+with open('build.yml', 'r') as content_file:
+    yamld = content_file.read()
 
-# program name variables
-blocks_prog         = 'blocks.exe'
-blocks_help_prog    = 'blocks-help.exe'
-blocks_prepare_prog = 'blocks-prepare.exe'
-blocks_compile_prog = 'blocks-compile.exe'
-blocks_execute_prog = 'blocks-execute.exe'
-
-# object name variables
-blocks_object         = 'blocks.o'
-blocks_compile_object = 'blocks-compile.o'
-blocks_execute_object = 'blocks-execute.o'
-blocks_help_object    = 'blocks-help.o'
-blocks_prepare_object = 'blocks-prepare.o'
-
-# experimental variables
-argument_object = 'argument.o'
-argument_source = 'experimental/argument.c'
-
-# main source name variables
-blocks_main = 'blocks/src/main.c'
-
-# dependances variables
-blocks_deps = ['argument.o']
+def build_object(compiler, clfags, name, source, target):
+  print('compiling {} ...'.format(name))
+  
+  args = [compiler, '-o', target, '-c', source]
+  args.extend(cflags.split(' '))
+  
+  subprocess.run(args)
 
 
-def build_blocks_program():
-    args = [cc, '-o', argument_object, '-c', argument_source]
-    args.extend(ccflags)
-    subprocess.run(args=args, shell=True)
+def build_shared(compiler, cflags, lib):
+  name   = str(lib.get('name', ''))
+  target = str(lib.get('target', ''))
+  source = str(lib.get('source', ''))
+  build_object(compiler, cflags, name, source, target)
 
-    args=[cc, '-o', blocks_object,'-c',  blocks_main]
-    args.extend(ccflags)
-    subprocess.run(args=args, shell=True)
+
+
+def build_lib(compiler, cflags, lib, sources):
+  name   = str(lib.get('name'))
+  target = str(lib.get('target'))
+  source = '{}/{}'.format(sources, str(lib.get('source', '')))
+  build_object(compiler, cflags, name, source, target)
+
+
+def verify_lib(libname):
+  if not path.exists(libname):
+    raise OSError()
+
+
+def build_program(compiler, cflags, prog):
+  name    = str(prog.get('name', ''))
+  target  = str(prog.get('target', ''))
+  libs    = list(prog.get('libs', []))
+  shared  = list(prog.get('shared', []))
+
+  libs = [dict(lib).get('target') for lib in libs]
+
+  args = [compiler, '-o', target]
+  args.extend(libs)
+  args.extend(shared)
+  args.extend(cflags.split(' '))
+  
+  print('compiling program {}'.format(name))
+  subprocess.run(args)
+
+
+
+obj = dict(yaml.safe_load(yamld))
+
+compiler = str(obj.get('compiler', ''))
+cflags   = str(obj.get('cflags', ''))
+shared   = list(obj.get('shared', []))
+programs = list(obj.get('programs', []))
+purge    = list(obj.get('purge', []))
+
+if not compiler:
+  print('no compiler defined')
+  sys.exit(-1)
+
+# il y a des shared libs à compiler
+if len(shared) > 0:
+  for lib in shared:
+    build_shared(compiler, cflags, lib)
+
+
+if len(programs) > 0:
+  for prog in programs:
     
-    args=[cc, '-o', blocks_prog, blocks_object]
-    args.extend(blocks_deps)
-    args.extend(ccflags)
-    subprocess.run(args=args, shell=True)
+    name = str(prog.get('name', ''))
+    sources = str(prog.get('sources', ''))
+    target = str(prog.get('target', ''))
+    libs = list(prog.get('libs', []))
+    shared = list(prog.get('shared', []))
 
+    print('building programm {}'.format(name))
 
-if __name__=='__main__':
-    print('building project')
-    build_blocks_program()
+    for lib in libs: 
+      build_lib(compiler, cflags, lib, sources)
+    
+    for libname in shared: 
+      verify_lib(libname)
 
+    build_program(compiler, cflags, prog)
 
+if len(purge) > 0:
+  for p in purge:
+    import glob, os
+    for f in glob.glob(p):
+      os.remove(f)

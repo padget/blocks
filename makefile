@@ -60,8 +60,8 @@ blocks-help.exe: blh/main.c
 # blc est le compilateur de blocks invocable par
 # > blocks compile main.blocks
 # ===============================================
-BLC_DEPS=blc_main.o lstring largument command_builder.o 
-BLC_OBJS=blc_main.o string.o argument.o command_builder.o
+BLC_DEPS=blc_main.o largument command_builder.o 
+BLC_OBJS=blc_main.o argument.o command_builder.o
 BLC_EXE =blocks-compile.exe
 
 blc: ${BLC_DEPS}
