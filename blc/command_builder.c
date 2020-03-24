@@ -229,7 +229,7 @@ void blc_cmds_fill(size_t nb, blc_command *cmds, char *src)
         else
         {
           enb = overarg$$(bargs);
-          
+
           if (checkarg$$(bnb, enb))
             copy(bnb, enb, cmds[i].args[j].value);
           else

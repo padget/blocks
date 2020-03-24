@@ -5,6 +5,9 @@ shared:
   - name: 'experimental library argument'
     target: argument.o
     source: experimental/argument.c
+  - name: 'experimental library blocks-std'
+    target: blocks-std.o
+    source: experimental/blocks-std.c
 
 programs:
   - name: 'blocks program'
@@ -37,6 +40,7 @@ programs:
         source: main.c
     shared:
       - argument.o
+      - blocks-std.o
   
   - name: 'blocks-execute program'
     sources: blexe
@@ -57,6 +61,7 @@ programs:
         source: main.c
     shared:
       - argument.o
+      - blocks-std.o
 
 purge:
   - '*.o'
