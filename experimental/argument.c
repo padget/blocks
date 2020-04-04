@@ -7,74 +7,99 @@
 
 #define NOT_FOUND -1
 
-bool args_exists(int argc, char** argv, const char* name)
+syscall sys;
+
+void args_init(int argc, char** argv)
 {
-  return args_find(argc, argv, name) != NULL;
+  sys.argc = argc; 
+  sys.argv = argv;
 }
 
-bool args_exists_at(int argc, char** argv, const char* name, int index)
+bool args_exists(const char* name)
 {
-  if (argc >= index || 
+  return args_find(name) != NULL;
+}
+
+bool args_exists_at(const char* name, int index)
+{
+  if (sys.argc <= index || 
       name == NULL || 
-      argv == NULL)
+      sys.argv == NULL)
     return false;
 
-  char* arg = argv[index];
+  char* arg = sys.argv[index];
   return strcmp(name, arg) == 0;
 }
 
-char* args_find(int argc, char** argv, const char* name)
+char* args_find(const char* name)
 {
-  if (argc == 0 || 
+  if (sys.argc == 0 || 
       name == NULL || 
-      argv == NULL)
+      sys.argv == NULL)
     return false;
 
-  int i = args_ifind(argc, argv, name);
+  int i = args_ifind(name);
 
   if (i!=-1)
-    return argv[i];
+    return sys.argv[i];
 
   return NULL;
 }
 
-char* args_value(int argc, char** argv, const char* name)
+char* args_value(const char* name)
 {
-  if (argc == 0 || 
-      argv == NULL ||
+  if (sys.argc == 0 ||
+      sys.argv == NULL ||
+      name == NULL)
+    return NULL;
+
+  int i = args_ifind(name);
+
+  if (i!=-1 && i+1<sys.argc)
+    return sys.argv[i+1];
+
+  return NULL;
+}
+
+bool args_has_value(const char* name)
+{
+  if (sys.argc == 0 || 
+      sys.argv == NULL ||
       name == NULL) 
-    return NULL;
+    return false;
 
-  int i = args_ifind(argc, argv, name);
+  char* value = args_value(name);
+  
+  if (value != NULL)
+    if (strlen(value)>=2)
+      if (value[0] != '-' && value[1] != '-')
+        return true;
 
-  if (i!=-1 && i+1<argc)
-    return argv[i+1];
-
-  return NULL;
+  return false;
 }
 
-char** args_subrange(int argc, char** argv, int index)
+char** args_subrange(int index)
 {
-  if (argv == NULL ||
-      argc == 0 ||
-      index >= argc)
+  if (sys.argv == NULL ||
+      sys.argc == 0 ||
+      index >= sys.argc)
     return NULL;
 
-  return argv + index;
+  return sys.argv + index;
 }
 
 
-int args_ifind(int argc, char** argv, const char* name)
+int args_ifind(const char* name)
 {
-  if (argv == NULL ||
-      argc == 0 ||
+  if (sys.argv == NULL ||
+      sys.argc == 0 ||
       name == NULL)
     return NOT_FOUND;
 
   int i=0;
 
-  while (i<argc)
-    if (strcmp(name, argv[i])==0)
+  while (i<sys.argc)
+    if (strcmp(name, sys.argv[i])==0)
       return i;
     else 
       ++i;
@@ -82,9 +107,10 @@ int args_ifind(int argc, char** argv, const char* name)
   return NOT_FOUND;
 }
 
-int args_as_num(int argc, char** argv, const char* name)
+int args_as_num(const char* name)
 {
-  char* value=args_value(argc, argv, name);
+  char* value=args_value(name);
+  // FIXME the returne value can be NULL
   char* prev=value;
 
   while ('0'<=*value&&*value<='9')
@@ -97,6 +123,14 @@ int args_as_num(int argc, char** argv, const char* name)
   }
 
   return atoi(prev);
+}
+
+  char* args_verb()
+{
+  if (sys.argc >= 1)
+    return sys.argv[1];
+  else 
+    return NULL;
 }
 
 #undef NOT_FOUND

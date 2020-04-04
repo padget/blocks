@@ -5,9 +5,14 @@ shared:
   - name: 'experimental library argument'
     target: argument.o
     source: experimental/argument.c
+
   - name: 'experimental library blocks-std'
     target: blocks-std.o
     source: experimental/blocks-std.c
+  
+  - name: 'experimental library log'
+    target: log.o
+    source: experimental/log.c
 
 programs:
   - name: 'blocks program'
@@ -18,50 +23,8 @@ programs:
         target: blocks.o
         source: main.c
     shared:
+      - log.o
       - argument.o
    
-  - name: 'blocks-help program'
-    sources: blh
-    target: blocks-help.exe
-    libs:
-      - name: 'main library'
-        target: blocks-help.o
-        source: main.c
-   
-  - name: 'blocks-compile program'
-    sources: blc
-    target: blocks-compile.exe
-    libs:
-      - name: 'build_commands library'
-        target: command_builder.o
-        source: command_builder.c
-      - name: 'main library'
-        target: blocks-compile.o
-        source: main.c
-    shared:
-      - argument.o
-      - blocks-std.o
-  
-  - name: 'blocks-execute program'
-    sources: blexe
-    target: blocks-execute.exe
-    libs:
-      - name: 'main library'
-        target: blocks-execute.o
-        source: main.c
-    shared:
-      - argument.o
-  
-  - name: 'blocks-prepare program'
-    sources: blp
-    target: blocks-prepare.exe
-    libs:
-      - name: 'main library'
-        target: blocks-prepare.o
-        source: main.c
-    shared:
-      - argument.o
-      - blocks-std.o
-
 purge:
   - '*.o'

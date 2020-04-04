@@ -2,6 +2,16 @@
 #include <stdlib.h>
 
 /**
+ * Define the EOS (end of string) symbol
+ */
+#define EOS '\0'
+
+/**
+ * Define the EOL (end of line) symbol
+ */
+#define EOL '\n'
+
+/**
  * Read all content of file fname and
  * transfer it into a new char* string
  * @param fname name of the file

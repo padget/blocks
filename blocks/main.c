@@ -2,81 +2,63 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "../experimental/log.h"
 #include "../experimental/argument.h"
 
-#define HELP "blocks-help.exe"
-#define COMPILE "blocks-compile.exe"
-#define EXECUTE "blocks-execute.exe"
-#define REPORTS "blocks-reports.exe"
-#define CLEAN "blocks-clean.exe"
-
-size_t arguments_sum(int argc, char **argv);
-char *build_command_call(const char *exe, int argc, char **argv);
+void call_compile();
+void call_execute();
+void call_clean();
 
 int main(int argc, char **argv)
 {
-  const char *exe = HELP;
-  printf("main");
+  args_init(argc, argv);
+  char *verb = args_verb();
 
-  if (args_exists_at(argc, argv, "compile", 1))
-    exe = COMPILE;
-  else if (args_exists_at(argc, argv, "execute", 1))
-    exe = EXECUTE;
-  else if (args_exists_at(argc, argv, "reports", 1))
-    exe = REPORTS;
-  else if (args_exists_at(argc, argv, "clean", 1))
-    exe = CLEAN;
+  if (strcmp(verb, "compile") == 0)
+    call_compile();
+  else if (strcmp(verb, "execute") == 0)
+    call_execute();
+  else if (strcmp(verb, "clean") == 0)
+    call_clean();
   else
   {
-    printf("une soucis d'arguemnt");
-    exit(EXIT_FAILURE);
+    log_error("pas de verbe valide");
+    return EXIT_FAILURE;
   }
 
-  printf("%s", exe);
-  char **exearg = args_subrange(argc, argv, 2);
-  char *cmd = build_command_call(exe, argc - 2, exearg);
-
-  system(cmd);
-
-  free(cmd);
   return EXIT_SUCCESS;
 }
 
-char *build_command_call(const char *exe, int argc, char **argv)
+void call_compile()
 {
-  size_t sum = arguments_sum(argc, argv);
-  size_t s_char = sizeof(char);
-  size_t s_exe = strlen(exe);
-  size_t s_cmd = s_char * (s_exe + argc + sum + 1);
-  char *cmd = malloc(s_cmd);
+  log_info("call %s function", "compile");
 
-  cmd[0] = '\0';
+  char *file_to_compile = NULL;
+  char *build_directory = NULL;
 
-  strcat(cmd, exe);
-  int i = 0;
+  if (args_exists("--file") && args_has_value("--file"))
+    file_to_compile = args_value("--file");
 
-  while (i < argc)
+  if (args_exists("--builddir") && args_has_value("--builddir"))
+    build_directory = args_value("--builddir");
+
+  if (file_to_compile == NULL)
   {
-    strcat(cmd, " ");
-    strcat(cmd, argv[i]);
-    ++i;
+    // FIXME there is an error :
+    // file not indicated
+    // call_compile_help()
   }
 
-  return cmd;
+  if (build_directory == NULL)
+    build_directory = ".";
 }
 
-size_t arguments_sum(int argc, char **argv)
+void call_execute()
 {
-  size_t sum = 0;
-  int i = 0;
+  printf("call execute");
+}
 
-  while (i < argc)
-  {
-    char *arg = argv[i];
-    size_t sarg = strlen(arg);
-    sum += sarg;
-    ++i;
-  }
-
-  return sum;
+void call_clean()
+{
+  printf("call clean");
 }

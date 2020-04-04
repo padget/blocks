@@ -8,8 +8,6 @@
 
 #include "command_builder.h"
 
-char *freadall(const char *);
-size_t fsize(FILE *file);
 void printcmds(int nb, blc_command *cmds);
 
 int main(int argc, char **argv)
