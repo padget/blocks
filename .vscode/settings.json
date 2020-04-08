@@ -1,5 +1,7 @@
 {
   "files.associations": {
-    "command_builder.h": "c"
+    "command_builder.h": "c",
+    "argument.h": "c",
+    "clean.h": "c"
   }
 }

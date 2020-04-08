@@ -22,6 +22,15 @@ programs:
       - name: 'main library'
         target: blocks.o
         source: main.c
+      - name: 'compile lib'
+        target: compile.o
+        source: compile.c
+      - name: 'execute lib'
+        target: execute.o
+        source: execute.c
+      - name: 'clean lib'
+        target: clean.o
+        source: clean.c
     shared:
       - log.o
       - argument.o
