@@ -55,6 +55,11 @@ size_t strcount(const char *s, char c)
         ++count;
       ++s;
     }
-  
+
   return count;
+}
+
+bool strempty(const char *s)
+{
+  return s == NULL || s[0] == '\0';
 }

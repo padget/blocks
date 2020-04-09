@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 
 
 /**
@@ -41,3 +42,12 @@ size_t fsize(FILE *f);
  * then returns 0.
  */
 size_t strcount(const char* s, char c);
+
+/**
+ * Tell if s is an empty string or not
+ * 
+ * @param s string that can be empty
+ * @return true if s is empty or NULL, 
+ * else false
+ */
+bool strempty(const char* s);
