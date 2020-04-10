@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "../experimental/version.h"
 #include "../experimental/log.h"
 #include "../experimental/argument.h"
 
@@ -21,6 +22,8 @@ int main(int argc, char **argv)
     bl_execute();
   else if (strcmp(verb, "clean") == 0)
     bl_clean();
+  else if (strcmp(verb, "version") == 0)
+    printf("Blocks version : %s\n", BLOCKS_VERSION); 
   else
   {
     log_error("pas de verbe valide");

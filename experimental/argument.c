@@ -1,4 +1,6 @@
 #include "argument.h"
+#include "log.h"
+#include "i18n.h"
 
 #include <string.h>
 #include <stdlib.h>
@@ -118,7 +120,7 @@ int args_as_num(const char* name)
 
   if (*value !='\0')
   {
-    fprintf(stderr, "the argument %s : %s must be a number", name, prev);
+    log_error(blocks_log_argument_must_be_number, name, prev);
     exit(EXIT_FAILURE);
   }
 

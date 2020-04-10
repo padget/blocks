@@ -2,7 +2,9 @@
 #include <stdio.h>
 #include <time.h>
 
-bool log_print(llevel lvl, const char *format, va_list args)
+#define log_print2(lvl, format, ...)
+
+void log_print(llevel lvl, const char *format, va_list args)
 {
     time_t now = time(NULL);
     char buf[50];
@@ -10,50 +12,54 @@ bool log_print(llevel lvl, const char *format, va_list args)
     printf("[%s] [%s] ", lvl, buf);
     vprintf(format, args);
     printf("\n");
-    return true;
 }
 
-bool log_info(const char *format, ...)
+void log_debug(__attribute__((unused)) const char *format, ...)
 {
+#if BLOCKS_LOG_LEVEL <= 0
     va_list args;
     va_start(args, format);
-    bool r = log_print("INFO", format, args);
+    log_print("DEBUG", format, args);
     va_end(args);
-    return r;
+#endif
 }
 
-bool log_debug(const char *format, ...)
+void log_info(__attribute__((unused)) const char *format, ...)
 {
+#if BLOCKS_LOG_LEVEL <= 1
     va_list args;
     va_start(args, format);
-    bool r = log_print("DEBUG", format, args);
+    log_print("INFO", format, args);
     va_end(args);
-    return r;
+#endif
 }
 
-bool log_warn(const char *format, ...)
+void log_warn(__attribute__((unused)) const char *format, ...)
 {
+#if BLOCKS_LOG_LEVEL <= 2
     va_list args;
     va_start(args, format);
-    bool r = log_print("WARN", format, args);
+    log_print("WARN", format, args);
     va_end(args);
-    return r;
+#endif
 }
 
-bool log_error(const char *format, ...)
+void log_error(__attribute__((unused)) const char *format, ...)
 {
+#if BLOCKS_LOG_LEVEL <= 3
     va_list args;
     va_start(args, format);
-    bool r = log_print("ERROR", format, args);
+    log_print("ERROR", format, args);
     va_end(args);
-    return r;
+#endif
 }
 
-bool log_fatal(const char *format, ...)
+void log_fatal(__attribute__((unused)) const char *format, ...)
 {
+#if BLOCKS_LOG_LEVEL <= 4
     va_list args;
     va_start(args, format);
-    bool r = log_print("FATAL", format, args);
+    log_print("FATAL", format, args);
     va_end(args);
-    return r;
+#endif
 }

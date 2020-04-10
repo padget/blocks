@@ -1,4 +1,5 @@
 #include "compile.h"
+
 #include <stdbool.h>
 #include <stdlib.h>
 #include <assert.h>
@@ -6,6 +7,7 @@
 #include "../experimental/blocks-std.h"
 #include "../experimental/argument.h"
 #include "../experimental/log.h"
+#include "../experimental/i18n.h"
 
 #define EOS '\0'
 #define EOL '\n'
@@ -188,7 +190,6 @@ bool checkarg$$(char *b, char *e)
 void cmds_fill(bl_command *cmds, size_t nb, char *src)
 {
   size_t i = 0;
-  log_debug("before while %s", src);
   // Commandes
   while (cisnoteos(*src) && i < nb)
   {
@@ -202,7 +203,6 @@ void cmds_fill(bl_command *cmds, size_t nb, char *src)
 
     ename = overcmdname(ename);
 
-    log_debug("t1");
     if (checkcmdname(bname, ename))
       copy(bname, ename, cmds[i].name);
     else
@@ -211,7 +211,6 @@ void cmds_fill(bl_command *cmds, size_t nb, char *src)
 
     bol = ename;
     bol = overblank(bol);
-    log_debug("t2");
     size_t j = 0;
     char *bargs = bol;
     char *eargs = eol;
@@ -243,7 +242,6 @@ void cmds_fill(bl_command *cmds, size_t nb, char *src)
       }
 
       enb = overblank(enb);
-      log_debug("t3");
       ++j;
       bargs = enb;
     }
@@ -259,8 +257,6 @@ void cmds_fill(bl_command *cmds, size_t nb, char *src)
     else
       src = eol + 1;
   }
-
-  log_debug("after while");
 
   if (i == nb && cisnoteos(*src))
     // TODO ERROR
@@ -284,9 +280,25 @@ void on_cmds_filled(bl_command *cmds, size_t nb)
   }
 }
 
+// pour une commande, il faut :
+// - un int pour identifier la commande
+// - un int pour indiquer le nombre d'arguments
+// - un int pour chaque argument pour enoncer sa valeur et un int pour son type
+
+size_t size_of_commands_int(bl_command*cmds, size_t nb)
+{
+  size_t nb_total = 0;
+  
+  size_t cmd_i=0;
+  while(cmd_i < nb)
+  {
+    
+    ++cmd_i;
+  }
+}
+
 void bl_compile()
 {
-  log_debug("start compile function");
   char *src = NULL;
   size_t nb = 0;
   bl_command *cmds = NULL;
@@ -295,33 +307,30 @@ void bl_compile()
   if (args_has_value("--file"))
     fname = args_value("--file");
   else if (args_exists("--file"))
-    log_error("--file must have a value");
+    log_error(blocks_log_argument_file_no_value);
   else
-    log_error("--file is mandatory");
+    log_error(blocks_log_argument_file_mandatory);
 
-  log_debug("readall from %s", fname);
   src = freadall(fname);
 
   if (src == NULL || strlen(src) == 0)
   {
-    log_warn("the content is NULL or empty");
+    log_warn(blocks_log_no_content_in_file, fname);
     goto free_mem;
   }
 
-  log_debug("strcount from src");
   nb = strcount(src, '\n');
-  log_debug("after strcount");
   if (nb == 0)
   {
-    log_warn("no command to read in the content");
+    log_warn(blocks_log_no_command);
     goto free_mem;
   }
 
   cmds = blc_cmds_init(nb);
   cmds_fill(cmds, nb, src);
-  log_debug("after cmds fill");
   on_cmds_filled(cmds, nb);
-  log_debug("end compile function");
+  size_t nbint = size_of_commands_int(cmds, nb);
+
 free_mem:
   free(src);
   free(cmds);

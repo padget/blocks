@@ -1,18 +1,19 @@
 #include "blocks-std.h"
 #include "log.h"
+#include "i18n.h"
 
 char *freadall(const char *fname)
 {
   if (fname == NULL)
   {
-    log_error("filename could not be NULL to read its content !");
+    log_error(blocks_log_null_filename);
     return NULL;
   }
   FILE *file = fopen(fname, "r");
 
   if (file == NULL)
   {
-    log_error("file not found");
+    log_error(blocks_log_file_not_found, fname);
     return NULL;
   }
 
