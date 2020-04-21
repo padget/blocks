@@ -51,3 +51,12 @@ size_t strcount(const char* s, char c);
  * else false
  */
 bool strempty(const char* s);
+
+/**
+ * Process the hash value of a string 
+ * (null-terminating string).
+ * 
+ * @param str string to hash
+ * @return hash value of str
+ */
+size_t hash(const char* str);

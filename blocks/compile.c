@@ -2,6 +2,7 @@
 
 #include <stdbool.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <assert.h>
 
 #include "../experimental/blocks-std.h"
@@ -12,32 +13,32 @@
 #define EOS '\0'
 #define EOL '\n'
 
-bool cisnoteos(char c)
+bool cisnoteos(const char c)
 {
   return c != EOS;
 }
 
-bool cisnoteol(char c)
+bool cisnoteol(const char c)
 {
   return c != EOL;
 }
 
-bool cisblank(char c)
+bool cisblank(const char c)
 {
   return c == ' ' || c == '\t';
 }
 
-bool cisdigit(char c)
+bool cisdigit(const char c)
 {
   return '0' <= c && c <= '9';
 }
 
-bool cislower(char c)
+bool cislower(const char c)
 {
   return 'a' <= c && c <= 'z';
 }
 
-void blc_cmds_init_cstr(int nb, bl_command *cmds)
+void bl_cmds_init_cstr(int nb, bl_command *cmds)
 {
   int i = 0;
 
@@ -58,13 +59,13 @@ void blc_cmds_init_cstr(int nb, bl_command *cmds)
 }
 
 bl_command *
-blc_cmds_init(size_t nb)
+bl_cmds_init(size_t nb)
 {
   size_t s_cmd = sizeof(bl_command);
   size_t s_cmds = nb * s_cmd;
 
   bl_command *cmds = malloc(s_cmds);
-  blc_cmds_init_cstr(nb, cmds);
+  bl_cmds_init_cstr(nb, cmds);
 
   return cmds;
 }
@@ -115,7 +116,7 @@ char *untileol(char *c)
   return c;
 }
 
-bool isblankline(char *b, char *e)
+bool isblankline(const char *b, const char *e)
 {
   while (b != e)
   {
@@ -285,16 +286,70 @@ void on_cmds_filled(bl_command *cmds, size_t nb)
 // - un int pour indiquer le nombre d'arguments
 // - un int pour chaque argument pour enoncer sa valeur et un int pour son type
 
-size_t size_of_commands_int(bl_command*cmds, size_t nb)
+size_t size_of_args_int(bl_argument *args)
 {
   size_t nb_total = 0;
-  
-  size_t cmd_i=0;
-  while(cmd_i < nb)
+  for (size_t arg_i = 0; arg_i < BLOCKS_ARGS_MAXSIZE; arg_i++)
+    if (strempty(args[arg_i].value))
+      break;
+    else
+      nb_total += 1;
+  return nb_total;
+}
+
+size_t size_of_command_int(bl_command *cmd)
+{
+  size_t nb_total = 0;
+  nb_total += 1;
+  nb_total += size_of_args_int(cmd->args);
+  return nb_total;
+}
+
+size_t size_of_commands_int(bl_command *cmds, size_t nb)
+{
+  size_t nb_total = 0;
+  for (size_t cmd_i = 0; cmd_i < nb; cmd_i++)
+    nb_total += size_of_command_int(cmds + cmd_i);
+  return nb_total;
+}
+
+size_t nb_not_blank_lines(const char *src)
+{
+  size_t nb = 0;
+  const char *c = src;
+  while (cisnoteos(*src))
   {
-    
-    ++cmd_i;
+    while (cisnoteol(*src))
+      src += 1;
+
+    if (!isblankline(c, src))
+      nb += 1;
+
+    c = src += 1;
   }
+
+  return nb;
+}
+
+void id_of_cmd(bl_command* cmd){
+  (void)cmd->args;
+}
+
+int fill_bytecodes_for_cmd(int *bytecodes, bl_command *cmd)
+{
+  size_t id = 0; 
+  id_of_cmd(cmd);
+  *bytecodes = id;
+  return 1;
+}
+
+void fill_bytecodes(int *bytecodes, size_t bcnb, bl_command *cmds, size_t nb)
+{
+  *bytecodes = bcnb;
+  bytecodes += 1;
+
+  for (size_t i = 0; i < nb; i++)
+    bytecodes += fill_bytecodes_for_cmd(bytecodes, cmds + i);
 }
 
 void bl_compile()
@@ -306,10 +361,14 @@ void bl_compile()
 
   if (args_has_value("--file"))
     fname = args_value("--file");
-  else if (args_exists("--file"))
-    log_error(blocks_log_argument_file_no_value);
   else
-    log_error(blocks_log_argument_file_mandatory);
+  {
+    if (args_exists("--file"))
+      log_error(blocks_log_argument_file_no_value);
+    else
+      log_error(blocks_log_argument_file_mandatory);
+    goto free_mem;
+  }
 
   src = freadall(fname);
 
@@ -319,19 +378,31 @@ void bl_compile()
     goto free_mem;
   }
 
-  nb = strcount(src, '\n');
+  nb = nb_not_blank_lines(src);
+
   if (nb == 0)
   {
     log_warn(blocks_log_no_command);
     goto free_mem;
   }
 
-  cmds = blc_cmds_init(nb);
+  cmds = bl_cmds_init(nb);
   cmds_fill(cmds, nb, src);
-  on_cmds_filled(cmds, nb);
-  size_t nbint = size_of_commands_int(cmds, nb);
+
+  size_t nbbytes = size_of_commands_int(cmds, nb);
+  nbbytes += 1;
+  int *bytecodes = calloc(nbbytes, sizeof(int));
+
+  if (bytecodes == NULL)
+  {
+    log_error(blocks_log_memory_allocation);
+    goto free_mem;
+  }
+
+  fill_bytecodes(bytecodes, cmds);
 
 free_mem:
+  free(bytecodes);
   free(src);
   free(cmds);
 }

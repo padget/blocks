@@ -5,7 +5,6 @@
 
 #include "config.h"
 
-
 #define BLOCKS_LOG_LEVEL_DEBUG 0
 #define BLOCKS_LOG_LEVEL_INFO 1
 #define BLOCKS_LOG_LEVEL_WARN 2
