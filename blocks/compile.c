@@ -5,7 +5,6 @@
 #include <stdio.h>
 #include <assert.h>
 
-#include "../experimental/blocks-std.h"
 #include "../experimental/argument.h"
 #include "../experimental/log.h"
 #include "../experimental/i18n.h"
@@ -38,26 +37,6 @@ bool cislower(const char c)
   return 'a' <= c && c <= 'z';
 }
 
-void bl_cmds_init_cstr(int nb, bl_command *cmds)
-{
-  int i = 0;
-
-  while (i < nb)
-  {
-    cmds[i].name[0] = EOS;
-
-    int j = 0;
-    while (j < BLOCKS_ARGS_MAXSIZE)
-    {
-      cmds[i].args[j].type[0] = EOS;
-      cmds[i].args[j].value[0] = EOS;
-      ++j;
-    }
-
-    i++;
-  }
-}
-
 bl_command *
 bl_cmds_init(size_t nb)
 {
@@ -65,7 +44,6 @@ bl_cmds_init(size_t nb)
   size_t s_cmds = nb * s_cmd;
 
   bl_command *cmds = malloc(s_cmds);
-  bl_cmds_init_cstr(nb, cmds);
 
   return cmds;
 }
@@ -205,7 +183,12 @@ void cmds_fill(bl_command *cmds, size_t nb, char *src)
     ename = overcmdname(ename);
 
     if (checkcmdname(bname, ename))
-      copy(bname, ename, cmds[i].name);
+    {
+      size_t len = ename - bname;
+      char *data = bname;
+      cmds[i].name.data = data;
+      cmds[i].name.len = len;
+    }
     else
       // TODO error
       return;
@@ -223,19 +206,34 @@ void cmds_fill(bl_command *cmds, size_t nb, char *src)
       char *enb = overargnumber(bargs);
 
       if (checkargnumber(bnb, enb))
-        copy(bnb, enb, cmds[i].args[j].value);
+      {
+        size_t len = enb - bnb;
+        char *data = bnb;
+        cmds[i].args[j].value.data = data;
+        cmds[i].args[j].value.len = len;
+      }
       else
       {
         enb = overargname(bargs);
 
         if (checkargname(bnb, enb))
-          copy(bnb, enb, cmds[i].args[j].value);
+        {
+          size_t len = enb - bnb;
+          char *data = bnb;
+          cmds[i].args[j].value.data = data;
+          cmds[i].args[j].value.len = len;
+        }
         else
         {
           enb = overarg$$(bargs);
 
           if (checkarg$$(bnb, enb))
-            copy(bnb, enb, cmds[i].args[j].value);
+          {
+            size_t len = enb - bnb;
+            char *data = bnb;
+            cmds[i].args[j].value.data = data;
+            cmds[i].args[j].value.len = len;
+          }
           else
             // TODO erreur
             return;
@@ -273,7 +271,7 @@ void on_cmds_filled(bl_command *cmds, size_t nb)
     int j = 0;
     while (j < BLOCKS_ARGS_MAXSIZE)
     {
-      if (!strempty(cmds[i].args[j].value))
+      if (!strvempty(&cmds[i].args[j].value))
         log_debug("-- arg %s:%s", cmds[i].args[j].value, cmds[i].args[j].type);
       j++;
     }
@@ -290,7 +288,7 @@ size_t size_of_args_int(bl_argument *args)
 {
   size_t nb_total = 0;
   for (size_t arg_i = 0; arg_i < BLOCKS_ARGS_MAXSIZE; arg_i++)
-    if (strempty(args[arg_i].value))
+    if (strvempty(&args[arg_i].value))
       break;
     else
       nb_total += 1;
@@ -331,19 +329,24 @@ size_t nb_not_blank_lines(const char *src)
   return nb;
 }
 
-void id_of_cmd(bl_command* cmd){
+void id_of_cmd(bl_command *cmd)
+{
   (void)cmd->args;
 }
 
 int fill_bytecodes_for_cmd(int *bytecodes, bl_command *cmd)
 {
-  size_t id = 0; 
+  size_t id = 0;
   id_of_cmd(cmd);
   *bytecodes = id;
   return 1;
 }
 
-void fill_bytecodes(int *bytecodes, size_t bcnb, bl_command *cmds, size_t nb)
+void fill_bytecodes(
+  int *bytecodes, 
+  size_t bcnb, 
+  bl_command *cmds, 
+  size_t nb)
 {
   *bytecodes = bcnb;
   bytecodes += 1;
@@ -399,7 +402,9 @@ void bl_compile()
     goto free_mem;
   }
 
-  fill_bytecodes(bytecodes, cmds);
+  on_cmds_filled(cmds, nb);
+
+  //fill_bytecodes(bytecodes, cmds);
 
 free_mem:
   free(bytecodes);

@@ -2,6 +2,17 @@
 #include "log.h"
 #include "i18n.h"
 
+typearrayimpl(short)
+typearrayimpl(ushort)
+typearrayimpl(char)
+typearrayimpl(uchar)
+typearrayimpl(int)
+typearrayimpl(uint)
+typearrayimpl(ulong)
+typearrayimpl(ulonglong)
+
+
+
 char *freadall(const char *fname)
 {
   if (fname == NULL)

@@ -3,6 +3,7 @@
 #include <string.h>
 #include <stdbool.h>
 
+#include "typearray.h"
 
 /**
  * Define the EOS (end of string) symbol
@@ -13,6 +14,33 @@
  * Define the EOL (end of line) symbol
  */
 #define EOL '\n'
+
+
+typedef unsigned short ushort;
+typedef unsigned char uchar;
+typedef unsigned int uint;
+typedef unsigned long ulong;
+typedef unsigned long long ulonglong;
+
+
+typeref(short)
+typeref(ushort)
+typeref(char)
+typeref(uchar)
+typeref(int)
+typeref(uint)
+typeref(ulong)
+typeref(ulonglong)
+
+
+typearray(short)
+typearray(ushort)
+typearray(char)
+typearray(uchar)
+typearray(int)
+typearray(uint)
+typearray(ulong)
+typearray(ulonglong)
 
 /**
  * Read all content of file fname and
@@ -41,7 +69,7 @@ size_t fsize(FILE *f);
  * of c inside s. If s is NULL or empty
  * then returns 0.
  */
-size_t strcount(const char* s, char c);
+size_t strcount(const char *s, char c);
 
 /**
  * Tell if s is an empty string or not
@@ -50,7 +78,7 @@ size_t strcount(const char* s, char c);
  * @return true if s is empty or NULL, 
  * else false
  */
-bool strempty(const char* s);
+bool strempty(const char *s);
 
 /**
  * Process the hash value of a string 
@@ -59,4 +87,4 @@ bool strempty(const char* s);
  * @param str string to hash
  * @return hash value of str
  */
-size_t hash(const char* str);
+size_t hash(const char *str);

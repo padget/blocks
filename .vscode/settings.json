@@ -2,6 +2,20 @@
   "files.associations": {
     "command_builder.h": "c",
     "argument.h": "c",
-    "clean.h": "c"
+    "clean.h": "c",
+    "string_view": "cpp",
+    "*.tcc": "cpp",
+    "array": "cpp",
+    "numeric": "cpp",
+    "functional": "cpp",
+    "new": "cpp",
+    "stdexcept": "cpp",
+    "streambuf": "cpp",
+    "istream": "cpp",
+    "ostream": "cpp",
+    "tuple": "cpp",
+    "type_traits": "cpp",
+    "utility": "cpp",
+    "string": "cpp"
   }
 }
