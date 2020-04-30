@@ -1,27 +1,47 @@
 #ifndef __blocks_compile_h__
 #define __blocks_compile_h__
+
 #include "../experimental/config.h"
 #include "../experimental/blocks-std.h"
 
-
-#ifndef BLOCKS_ARGS_MAXSIZE
-#define BLOCKS_ARGS_MAXSIZE 10
-#endif
-
 typedef int error_code;
 
-typedef struct
+struct bl_type_attribute
+{
+  chararray name;
+  chararray type;
+};
+
+typedef struct bl_type_attribute bl_type_attribute;
+
+typeref(bl_type_attribute)
+typearray(bl_type_attribute)
+
+struct bl_type
+{
+  chararray name;
+  bl_type_attributearray attributes;
+};
+
+struct bl_argument
 {
   chararray type;
   chararray value;
-} bl_argument;
+};
 
-typedef struct
+typedef struct bl_argument bl_argument;
+
+typeref(bl_argument)
+typearray(bl_argument)
+
+struct bl_command
 {
   chararray name;
-  bl_argument args[BLOCKS_ARGS_MAXSIZE];
+  bl_argumentarray args;
   error_code errcode;
-} bl_command;
+};
+
+typedef struct bl_command bl_command;
 
 void bl_compile();
 

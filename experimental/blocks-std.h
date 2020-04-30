@@ -50,7 +50,7 @@ typearray(ulonglong)
  * @return the content of the file or NULL
  * if the content could not be reached
  */
-char *freadall(const char *fname);
+chararray freadall(const char *fname);
 
 /**
  * Determine the size of a file in bytes

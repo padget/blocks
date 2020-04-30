@@ -34,10 +34,6 @@ bool args_exists_at(const char *name, int index)
 
 char *args_find(const char *name)
 {
-  if (sys.argc == 0 ||
-      name == NULL ||
-      sys.argv == NULL)
-    return false;
 
   int i = args_ifind(name);
 
@@ -47,27 +43,24 @@ char *args_find(const char *name)
   return NULL;
 }
 
+#include "algorithm.h"
+
+void *nextarg(void *arg)
+{
+  return (char **)arg + 1;
+}
+
 char *args_value(const char *name)
 {
-  if (sys.argc == 0 ||
-      sys.argv == NULL ||
-      name == NULL)
-    return NULL;
-
-  int i = args_ifind(name);
-
-  if (i != -1 && i + 1 < sys.argc)
-    return sys.argv[i + 1];
-
-  return NULL;
+  char **arr = sys.argv;
+  char **begin = arr;
+  char **end = arr + sys.argc;
+  char **found = find(begin, end, name, (alctxt_t){.next = nextarg});
+  return found + 1 != end ? *(found + 1) : NULL;
 }
 
 bool args_has_value(const char *name)
 {
-  if (sys.argc == 0 ||
-      sys.argv == NULL ||
-      name == NULL)
-    return false;
 
   char *value = args_value(name);
 

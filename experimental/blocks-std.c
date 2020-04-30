@@ -11,22 +11,25 @@ typearrayimpl(uint)
 typearrayimpl(ulong)
 typearrayimpl(ulonglong)
 
-
-
-char *freadall(const char *fname)
+chararray freadall(const char *fname)
 {
+  chararray content;
+  content.data = NULL;
+  content.len = 0;
+  FILE *file = NULL;
+
   if (fname == NULL)
   {
     log_error(blocks_log_null_filename);
-    return NULL;
+    goto finally;
   }
 
-  FILE *file = fopen(fname, "r");
+  file = fopen(fname, "r");
 
   if (file == NULL)
   {
     log_error(blocks_log_file_not_found, fname);
-    return NULL;
+    goto finally;
   }
 
   size_t s = fsize(file);
@@ -34,7 +37,7 @@ char *freadall(const char *fname)
   if (s == 0)
   {
     log_error(blocks_log_no_content_in_file, fname);
-    return NULL;
+    goto finally;
   }
 
   size_t schar = sizeof(char);
@@ -43,7 +46,7 @@ char *freadall(const char *fname)
   if (buf == NULL)
   {
     log_error(blocks_log_memory_allocation);
-    return NULL;
+    goto finally;
   }
 
   char *buft = buf;
@@ -60,9 +63,15 @@ char *freadall(const char *fname)
   if (cnt < s)
     *buft = '\0';
 
-  fclose(file);
+  content.data = buf;
+  content.len = s;
+  
+finally:
 
-  return buf;
+  if (file != NULL)
+    fclose(file);
+
+  return content;
 }
 
 size_t __fsize(FILE *f)

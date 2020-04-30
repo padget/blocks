@@ -16,6 +16,14 @@
     "tuple": "cpp",
     "type_traits": "cpp",
     "utility": "cpp",
-    "string": "cpp"
+    "string": "cpp",
+    "compile.h": "c",
+    "blocks-std.h": "c",
+    "typearray.h": "c",
+    "algorithm.h": "c",
+    "stdbool.h": "c",
+    "algorithm": "c",
+    "random": "c",
+    "unordered_map": "c"
   }
 }

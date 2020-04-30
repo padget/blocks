@@ -4,7 +4,4 @@
 #define BLOCKS_LOG_LEVEL 0
 #define BLOCKS_LOG_DATE_FORMAT "%d-%m-%Y %H:%M"
 
-#define BLOCKS_ARGS_MAXSIZE 10
-
-
 #endif

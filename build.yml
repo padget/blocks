@@ -14,6 +14,11 @@ shared:
     target: log.o
     source: experimental/log.c
 
+  - name: 'experimental library algorithm'
+    target: algorithm.o
+    source: experimental/algorithm.c
+
+
 programs:
   - name: 'blocks program'
     sources: blocks
@@ -22,9 +27,9 @@ programs:
       - name: 'main library'
         target: blocks.o
         source: main.c
-      - name: 'compile lib'
-        target: compile.o
-        source: compile.c
+      # - name: 'compile lib'
+      #   target: compile.o
+      #   source: compile.c
       - name: 'execute lib'
         target: execute.o
         source: execute.c
@@ -34,7 +39,8 @@ programs:
     shared:
       - log.o
       - argument.o
-      - blocks-std.o
+      # - blocks-std.o
+      - algorithm.o
    
 purge:
   - '*.o'
