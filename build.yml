@@ -18,6 +18,9 @@ shared:
     target: algorithm.o
     source: experimental/algorithm.c
 
+  - name: 'experimental library array'
+    target: array.o
+    source: experimental/array.c
 
 programs:
   - name: 'blocks program'
@@ -41,6 +44,6 @@ programs:
       - argument.o
       # - blocks-std.o
       - algorithm.o
-   
+      - array.o
 purge:
   - '*.o'
