@@ -14,18 +14,30 @@
 // including argument.h
 syscall sys;
 
+static const char* extract_arg_name(const char* arg);
+static const char* extract_arg_value(const char* arg);
 
 void register_args(int argc, char** argv)
 {
-	static bool registered = false;
-	
-	if (!registered)
+  static bool registered = false;
+  
+  if (!registered)
+    {
+      sys.args = malloc(argc*sizeof(sysarg));
+      
+      if(sys.args == NULL)
 	{
-		sys.argc = argc;
-		sys.argv = argv;
+	  log_fatal("problème d'allocation de la mémoire");
+	  return registered;
 	}
+      
+      for (int i=0; i<argc; ++i)
+	sys.args[i] = (sysarg){.arg = argv[i]};
 
-	registered = true;
+      
+    }
+  
+  registered = true;
 }
 
 void* next(void* cursor)
