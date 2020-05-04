@@ -6,30 +6,32 @@
 #include "../experimental/log.h"
 #include "../experimental/argument.h"
 #include "../experimental/algorithm.h"
+#include "../experimental/string.h"
 
 #include "clean.h"
 #include "execute.h"
 #include "compile.h"
 
+
+
 int main(int argc, char **argv)
 {
-  	register_args(argc, argv);
+  register_args(argc, argv);
+  // log_error("%d", sys.len);
+  
+  // if (args_exists("--file"))
+  // {
+  //   log_info("file arg found");
 
-	if (args_exists("--file"))
-	{
-		log_info("file arg found");
+  //   sysarg *value = args_value("--file");
 
-		char** value = args_value("--file");
+  //   if (value != NULL)
+  //     log_info("found %s", (*value).arg);
+  //   else
+  //     log_error("no value found");
+  // }
 
-		if (value != NULL)
-			log_info("found %s", *value);
-		else 
-			log_error("no value found");
-	}
-
-
-	
-	// args_init(argc, argv);
+  // args_init(argc, argv);
   // char *verb = args_verb();
 
   // if (strcmp(verb, "compile") == 0)
@@ -45,6 +47,6 @@ int main(int argc, char **argv)
   //   log_error("pas de verbe valide");
   //   return EXIT_FAILURE;
   // }
-
+  clear_args();
   return EXIT_SUCCESS;
 }

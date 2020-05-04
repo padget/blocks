@@ -1,15 +1,22 @@
 #ifndef __blocks_argument_h__
-# define __blocks_argument_h__
+#define __blocks_argument_h__
 
-# include <stdbool.h>
+#include <stdbool.h>
+#include <stdlib.h>
+
+#include "string.h"
+
+
 
 struct system_argument_rule
 {
-	bool mandatory;
-	const char* description;
+  bool mandatory;
+  const char *description;
 };
 
 typedef struct system_argument_rule sysargrule;
+
+
 
 struct system_argument
 {
@@ -19,13 +26,17 @@ struct system_argument
 
 typedef struct system_argument sysarg;
 
+
+
 struct system_call
 {
-  system_argument *args;
+  sysarg* args;
   size_t len;
 };
 
 typedef struct system_call syscall;
+
+
 
 // an instance of syscall to have
 // access to syscall args everywhere
@@ -33,11 +44,15 @@ typedef struct system_call syscall;
 extern syscall sys;
 
 
-void register_args(int argc, char** argv);
-void register_arg_rule(const char* name, sysargrule);
 
-bool args_exists(const char* name);
-char** args_value(const char* name);
+bool register_args(int argc, char **argv);
+bool register_arg_rule(const char *name, sysargrule rule);
+bool clear_args();
+
+
+bool args_exists(const char *name);
+sysarg *args_value(const char *name);
+
 
 
 #endif

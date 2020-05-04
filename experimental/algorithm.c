@@ -2,102 +2,184 @@
 #include <stdlib.h>
 #include <assert.h>
 #include "algorithm.h"
-#define and &&
-#define or ||
-#define eq ==
-#define not_eq !=
-#define not !
+#include "keyword.h"
 
-void *find(void* b, void *e, const void *value, alctxt_t ctxt)
+gpred make_params_predicate(
+    bool (*apply)(iterator i, void *params),
+    void *params)
 {
-  assert(ctxt.next not_eq NULL);
-  assert(ctxt.equals not_eq NULL);
+  gpred pred;
+  pred.simple = false;
+  pred.ppred.apply = apply;
+  pred.ppred.params = params;
+  return pred;
+}
 
-  while (b not_eq e and not ctxt.equals(b, value))
-    b = ctxt.next(b);
+gpred make_simple_predicate(
+    bool (*apply)(iterator i))
+{
+  gpred pred;
+  pred.simple = true;
+  pred.spred.apply = apply;
+  return pred;
+}
+
+ivalue_equals make_ivalue_equals(
+  bool(*apply)(iterator, iterator))
+{
+  ivalue_equals ive;
+  ive.apply = apply;
+  return ive;
+}
+
+private
+iterator __find_if_simple_predicate(
+    iterator b, iterator e,
+    simple_predicate pred)
+{
+  while (not same(b, e) and not pred.apply(b))
+    b = next(b);
 
   return b;
 }
 
-void *find_if(void *b, void *e, bool (*pred)(void *), alctxt_t ctxt)
+private
+iterator __find_if_params_predicate(
+    iterator b, iterator e,
+    params_predicate pred)
 {
-  assert(ctxt.next not_eq NULL);
-  assert(pred not_eq NULL);
-
-  while (b not_eq e and not pred(b))
-    b = ctxt.next(b);
+  while (not same(b, e) and not pred.apply(b, pred.params))
+    b = next(b);
 
   return b;
 }
 
-void *find_if_not(void *b, void *e, bool (*pred)(void *), alctxt_t ctxt)
+iterator find_if(iterator b, iterator e, gpred pred)
 {
-  assert(pred not_eq NULL);
-  assert(ctxt.next not_eq NULL);
+  if (pred.simple)
+    return __find_if_simple_predicate(b, e, pred.spred);
+  else
+    return __find_if_params_predicate(b, e, pred.ppred);
+}
 
-  while (b not_eq e and pred(b))
-    b = ctxt.next(b);
+private
+iterator __find_if_not_simple_predicate(
+    iterator b, iterator e,
+    simple_predicate pred)
+{
+  while (not same(b, e) and pred.apply(b))
+    b = next(b);
 
   return b;
 }
 
-bool all_of(void *b, void *e, bool (*pred)(void *), alctxt_t ctxt)
+private
+iterator __find_if_not_params_predicate(
+    iterator b, iterator e,
+    params_predicate pred)
 {
-  assert(pred not_eq NULL);
-  assert(ctxt.next not_eq NULL);
+  while (not same(b, e) and pred.apply(b, pred.params))
+    b = next(b);
 
-  return find_if_not(b, e, pred, ctxt) eq e;
+  return b;
 }
 
-bool any_of(void *b, void *e, bool (*pred)(void *), alctxt_t ctxt)
+iterator find_if_not(iterator b, iterator e, gpred pred)
 {
-  assert(pred not_eq NULL);
-  assert(ctxt.next not_eq NULL);
-
-  return find_if_not(b, e, pred, ctxt) not_eq e;
+  if (pred.simple)
+    return __find_if_not_simple_predicate(b, e, pred.spred);
+  else
+    return __find_if_not_params_predicate(b, e, pred.ppred);
 }
 
-bool none_of(void *b, void *e, bool (*pred)(void *), alctxt_t ctxt)
+bool all_of(iterator b, iterator e, gpred pred)
 {
-  assert(pred not_eq NULL);
-  assert(ctxt.next not_eq NULL);
 
-  return find_if(b, e, pred, ctxt) eq e;
+  return same(find_if_not(b, e, pred), e);
 }
 
-size_t count_if(void *b, void *e, bool (*pred)(void *), alctxt_t ctxt)
+bool any_of(iterator b, iterator e, gpred pred)
 {
-  assert(pred not_eq NULL);
-  assert(ctxt.next not_eq NULL);
+  return not all_of(b, e, pred);
+}
 
+bool none_of(iterator b, iterator e, gpred pred)
+{
+  return same(find_if(b, e, pred), e);
+}
+
+private
+size_t __count_if_simple_predicate(
+    iterator b, iterator e,
+    simple_predicate pred)
+{
   size_t c = 0;
 
-  while (b not_eq e)
+  while (not same(b, e))
   {
-    if (pred(b))
+    if (pred.apply(b))
       c++;
-    b = ctxt.next(b);
+    b = next(b);
   }
 
   return c;
 }
 
-bool start_with(void *b, void *e, void *b2, void *e2, alctxt_t ctxt)
+private
+size_t __count_if_params_predicate(
+    iterator b, iterator e,
+    params_predicate pred)
 {
-  assert(ctxt.equals not_eq NULL);
-  assert(ctxt.next not_eq NULL);
+  size_t c = 0;
 
-  while (b not_eq e and b2 not_eq e2 and ctxt.equals(b, b2))
+  while (not same(b, e))
   {
-    b = ctxt.next(b);
-    b2 = ctxt.next(b2);
+    if (pred.apply(b, pred.params))
+      c++;
+    b = next(b);
   }
 
-  return b2 eq e2;
+  return c;
 }
 
-#undef and
-#undef or
-#undef eq
-#undef not_eq 
-#undef not
+size_t count_if(iterator b, iterator e, gpred pred)
+{
+  if (pred.simple)
+    return __count_if_simple_predicate(b, e, pred.spred);
+  else
+    return __count_if_params_predicate(b, e, pred.ppred);
+}
+
+bool start_with(
+    iterator b, iterator e,
+    iterator b2, iterator e2,
+    iterator_value_equals sequals)
+{
+  while (
+      not same(b, e) and
+      not same(b2, e2) and
+      sequals.apply(b, b2))
+  {
+    b = next(b);
+    b2 = next(b2);
+  }
+
+  return same(b2, e2);
+}
+
+bool equals(
+    iterator b, iterator e,
+    iterator b2, iterator e2,
+    iterator_value_equals sequals)
+{
+  while (
+      not same(b, e) and
+      not same(b2, e2) and
+      sequals.apply(b, b2))
+  {
+    b = next(b);
+    b2 = next(b2);
+  }
+
+  return same(b, e) and same(b2, e2);
+}

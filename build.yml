@@ -22,6 +22,10 @@ shared:
     target: array.o
     source: experimental/array.c
 
+  - name: 'experimental library string'
+    target: string.o
+    source: experimental/string.c
+
 programs:
   - name: 'blocks program'
     sources: blocks
@@ -45,5 +49,7 @@ programs:
       # - blocks-std.o
       - algorithm.o
       - array.o
+      - string.o
+      
 purge:
   - '*.o'

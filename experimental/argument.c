@@ -2,86 +2,127 @@
 #include "log.h"
 #include "i18n.h"
 #include "algorithm.h"
+#include "keyword.h"
 
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
 
-
 // definition of the instance
 // syscall that will be accessible
-// everywher in source code by 
+// everywher in source code by
 // including argument.h
 syscall sys;
 
-static const char* extract_arg_name(const char* arg);
-static const char* extract_arg_value(const char* arg);
+// private const char *extract_arg_name(const char *arg);
+// private const char *extract_arg_value(const char *arg);
 
-void register_args(int argc, char** argv)
+private
+sysarg init(const char *arg)
 {
-  static bool registered = false;
-  
-  if (!registered)
-    {
-      sys.args = malloc(argc*sizeof(sysarg));
-      
-      if(sys.args == NULL)
+	return (sysarg){.arg = arg};
+}
+
+private
+array args_proxy(sysarg *args, size_t len)
+{
+	return build_array(args, len, sizeof(sysarg));
+}
+
+bool register_args(int argc, char **argv)
+{
+	static bool registered = false;
+
+	if (not registered)
 	{
-	  log_fatal("problème d'allocation de la mémoire");
-	  return registered;
+		sysarg *mem = malloc(argc * sizeof(sysarg));
+
+		if (mem eq NULL)
+		{
+			log_fatal("problème d'allocation de la mémoire");
+			return registered;
+		}
+
+		array pargv = strarr_proxy(argv, argc);
+		iterator b = begin(pargv);
+		iterator e = end(pargv);
+
+		array pargs = args_proxy(mem, argc);
+		iterator bmem = begin(pargs);
+		iterator emem = end(pargs);
+
+		sysarg* ptr = NULL;
+
+		while (b not_eq e)
+		{
+			ptr = bmem;
+			ptr->arg = *(char**)b;
+			++bmem;
+			++b;
+		}
+		
+		sys.args = mem;
+		sys.len = argc;
+
+		registered = true;
+		return registered;
 	}
-      
-      for (int i=0; i<argc; ++i)
-	sys.args[i] = (sysarg){.arg = argv[i]};
 
-      
-    }
-  
-  registered = true;
+	return registered;
 }
 
-void* next(void* cursor)
+bool register_arg_rule(const char *name, sysargrule rule)
 {
-	return ((char**)cursor)+1;
+
+
+	return false;
 }
 
-bool equals(
-		const void* l,
-	       	const void* r)
+bool clear_args()
 {
-	return strcmp(
-		(*(const char**)l), 
-		(const char*)r) == 0;
+	if (sys.len not_eq 0)
+	{
+		free(sys.args);
+		sys.args = NULL;
+		sys.len = 0;
+		return true;
+	}
+
+	return false;
 }
 
-bool args_exists(const char* name)
+static bool localequals(
+		const void *l,
+		const void *r)
 {
-	char** begin = sys.argv;
-	char** end   = begin + sys.argc;
+	const char *lc = (*(const sysarg *)l).arg;
+	const char *rc = (const char *)r;
+
+	return strcmp(lc, rc) eq 0;
+}
+
+bool args_exists(const char *name)
+{
+	array proxy = args_proxy(sys.args, sys.len);
+
 	alctxt_t ctxt;
-	ctxt.next = next;
-	ctxt.equals = equals;
+	ctxt.equals = localequals;
 
-	return find(begin, end, name, ctxt) != end;
+	return find(begin(proxy), end(proxy), name, ctxt) not_eq end;
 }
 
-char** args_value(const char* name)
+sysarg *args_value(const char *name)
 {
-	char** begin = sys.argv;
-	char** end   = begin + sys.argc;
-	
+	sysarg *begin = sys.args;
+	sysarg *end = begin + sys.len;
+
 	alctxt_t ctxt;
-	
-	ctxt.next = next;
-	ctxt.equals = equals;
-	
-	char** arg = find(begin, end, name, ctxt);
-	char** value = next(arg);
-	
-	if  (value != end)
-		return value;
-	else 
+	ctxt.equals = localequals;
+
+	sysarg *arg = find(begin, end, name, ctxt);
+
+	if (arg not_eq end)
+		return arg;
+	else
 		return NULL;
 }
-
-
