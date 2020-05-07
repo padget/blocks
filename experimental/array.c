@@ -18,8 +18,8 @@ iterator make_iterator(const void *item, size_t tsize)
 
 size_t len(array a)
 {
-	char *b = a.b;
-	char *e = a.e;
+	const char *b = a.b;
+	const char *e = a.e;
 	return (e - b) / a.tsize;
 }
 

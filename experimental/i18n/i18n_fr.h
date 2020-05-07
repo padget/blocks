@@ -5,6 +5,7 @@
 
 #define blocks_log_memory_allocation "la mémoire ne peut pas être allouée : %s"
 
+#define blocks_log_argument_already_defined "the arguments has already been defined"
 #define blocks_log_argument_must_be_number "l'argument %s : %s doit être un nombre"
 #define blocks_log_argument_file_no_value "--file doit avoir une valeur"
 #define blocks_log_argument_file_mandatory "--file est obligatoire"

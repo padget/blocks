@@ -42,4 +42,6 @@ typedef struct char_transform char_transform;
 char_transform make_char_transform (char(*apply)(const char));
 
 void str_transform(char* s, char_transform cht);
+void str_remove_if(char* s, char_predicate pred);
+
 #endif

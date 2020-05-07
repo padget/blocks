@@ -12,13 +12,17 @@
 #include "execute.h"
 #include "compile.h"
 
-
-
 int main(int argc, char **argv)
 {
-  register_args(argc, argv);
+  sysarg args[] = {
+      make_sysarg("compile", make_sysargrule(true, 1, "verbe compilation")),
+      make_sysarg("clean", make_sysargrule(true, 1, "verbe compilation")),
+      make_sysarg("execute", make_sysargrule(true, 1, "verbe compilation"))};
+  define_sysargs(args, 3);
+
+  check_args(argc, argv);
   // log_error("%d", sys.len);
-  
+
   // if (args_exists("--file"))
   // {
   //   log_info("file arg found");
@@ -47,6 +51,5 @@ int main(int argc, char **argv)
   //   log_error("pas de verbe valide");
   //   return EXIT_FAILURE;
   // }
-  clear_args();
   return EXIT_SUCCESS;
 }

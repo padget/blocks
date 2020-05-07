@@ -47,7 +47,7 @@ bool str_any_of(const char *s, char_predicate pred)
 
 bool str_none_of(const char *s, char_predicate pred)
 {
-  return str_find_if(s, pred) eq '\0';
+  return *str_find_if(s, pred) eq '\0';
 }
 
 size_t str_count_if(const char *s, char_predicate pred)
@@ -74,7 +74,7 @@ bool str_equals(
     r++;
   }
 
-  return *l eq * r and l eq '\0';
+  return *l eq * r and *l eq '\0';
 }
 
 bool str_start_with(
@@ -127,4 +127,5 @@ void str_transform(char *s, char_transform cht)
   while (*s not_eq '\0')
     *s = cht.apply(*s);
 }
+
 

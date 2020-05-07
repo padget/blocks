@@ -24,6 +24,12 @@
     "stdbool.h": "c",
     "algorithm": "c",
     "random": "c",
-    "unordered_map": "c"
+    "unordered_map": "c",
+    "log.h": "c",
+    "string.h": "c",
+    "array.h": "c",
+    "i18n.h": "c",
+    "i18n_en.h": "c",
+    "i18n_fr.h": "c"
   }
 }

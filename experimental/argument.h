@@ -6,53 +6,47 @@
 
 #include "string.h"
 
-
+#define NOWHERE -1
 
 struct system_argument_rule
 {
   bool mandatory;
+  int position;
+  const char *dependency;
   const char *description;
 };
 
 typedef struct system_argument_rule sysargrule;
 
-
-
 struct system_argument
 {
-  const char* arg;
+  const char *arg;
   sysargrule rule;
 };
 
 typedef struct system_argument sysarg;
 
-
-
 struct system_call
 {
-  sysarg* args;
+  sysarg *args;
   size_t len;
 };
 
 typedef struct system_call syscall;
-
-
 
 // an instance of syscall to have
 // access to syscall args everywhere
 // in the source code.
 extern syscall sys;
 
+sysarg make_sysarg(const char *arg, sysargrule rule);
+sysargrule make_sysargrule(bool mandatory, int position, const char *description);
 
+bool define_sysargs(sysarg *args, size_t nbargs);
 
-bool register_args(int argc, char **argv);
-bool register_arg_rule(const char *name, sysargrule rule);
-bool clear_args();
-
+bool check_args(int argc, char **argv);
 
 bool args_exists(const char *name);
 sysarg *args_value(const char *name);
-
-
 
 #endif
