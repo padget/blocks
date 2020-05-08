@@ -17,7 +17,9 @@ syscall sys;
 // private const char *extract_arg_name(const char *arg);
 // private const char *extract_arg_value(const char *arg);
 
-sysarg make_sysarg(const char *arg, sysargrule rule)
+sysarg make_sysarg(
+	const char *arg, 
+	sysargrule rule)
 {
 	sysarg sarg;
 	sarg.arg = arg;

@@ -12,8 +12,7 @@ struct system_argument_rule
 {
   bool mandatory;
   int position;
-  const char *dependency;
-  const char *description;
+  const char *dependencies;
 };
 
 typedef struct system_argument_rule sysargrule;
@@ -40,13 +39,12 @@ typedef struct system_call syscall;
 extern syscall sys;
 
 sysarg make_sysarg(const char *arg, sysargrule rule);
-sysargrule make_sysargrule(bool mandatory, int position, const char *description);
+sysargrule make_sysargrule(bool mandatory, int position, const char *dependencies);
 
 bool define_sysargs(sysarg *args, size_t nbargs);
 
 bool check_args(int argc, char **argv);
 
-bool args_exists(const char *name);
 sysarg *args_value(const char *name);
 
 #endif

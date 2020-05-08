@@ -15,9 +15,11 @@
 int main(int argc, char **argv)
 {
   sysarg args[] = {
-      make_sysarg("compile", make_sysargrule(true, 1, "verbe compilation")),
-      make_sysarg("clean", make_sysargrule(true, 1, "verbe compilation")),
-      make_sysarg("execute", make_sysargrule(true, 1, "verbe compilation"))};
+      make_sysarg("compile", make_sysargrule(true, 1, NULL)),
+      make_sysarg("clean", make_sysargrule(true, 1, NULL)),
+      make_sysarg("execute", make_sysargrule(true, 1, NULL)),
+      make_sysarg("file", make_sysargrule(true, 2, "compile|execute"))};
+
   define_sysargs(args, 3);
 
   check_args(argc, argv);
