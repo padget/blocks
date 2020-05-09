@@ -6,21 +6,12 @@
 
 #include "string.h"
 
-#define NOWHERE -1
-
-struct system_argument_rule
-{
-  bool mandatory;
-  int position;
-  const char *dependencies;
-};
-
 typedef struct system_argument_rule sysargrule;
 
 struct system_argument
 {
   const char *arg;
-  sysargrule rule;
+  const char *rule;
 };
 
 typedef struct system_argument sysarg;
@@ -38,8 +29,7 @@ typedef struct system_call syscall;
 // in the source code.
 extern syscall sys;
 
-sysarg make_sysarg(const char *arg, sysargrule rule);
-sysargrule make_sysargrule(bool mandatory, int position, const char *dependencies);
+sysarg make_sysarg(const char *arg, const char *rule);
 
 bool define_sysargs(sysarg *args, size_t nbargs);
 
