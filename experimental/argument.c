@@ -19,7 +19,7 @@ syscall sys;
 
 sysarg make_sysarg(
 	const char *arg, 
-	sysargrule rule)
+	const char *rule)
 {
 	sysarg sarg;
 	sarg.arg = arg;
@@ -27,20 +27,8 @@ sysarg make_sysarg(
 	return sarg;
 }
 
-sysargrule make_sysargrule(
-		bool mandatory,
-		int position,
-		const char *description)
-{
-	sysargrule srule;
-	srule.mandatory = mandatory;
-	srule.position = position;
-	srule.description = description;
-	return srule;
-}
-
 private
-syscall make_syscall(sysarg *args, size_t len)
+syscall __make_syscall(sysarg *args, size_t len)
 {
 	syscall scall;
 	scall.args = args;
@@ -54,7 +42,7 @@ bool define_sysargs(sysarg *args, size_t nbargs)
 
 	if (not defined)
 	{
-		sys = make_syscall(args, nbargs);
+		sys = __make_syscall(args, nbargs);
 		defined = true;
 	}
 	else
