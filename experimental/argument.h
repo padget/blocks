@@ -10,8 +10,8 @@ typedef struct system_argument_rule sysargrule;
 
 struct system_argument
 {
-  const char *arg;
-  const char *rule;
+  char *arg;
+  char *rules[3];
 };
 
 typedef struct system_argument sysarg;
@@ -29,7 +29,7 @@ typedef struct system_call syscall;
 // in the source code.
 extern syscall sys;
 
-sysarg make_sysarg(const char *arg, const char *rule);
+sysarg make_sysarg(char *arg, char *rule);
 
 bool define_sysargs(sysarg *args, size_t nbargs);
 

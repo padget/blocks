@@ -7,6 +7,7 @@
 #include "../experimental/argument.h"
 #include "../experimental/algorithm.h"
 #include "../experimental/string.h"
+#include "../experimental/keyword.h"
 
 #include "clean.h"
 #include "execute.h"
@@ -14,15 +15,24 @@
 
 int main(int argc, char **argv)
 {
-  sysarg args[] = {
-      make_sysarg("compile", "true;1;"),
-      make_sysarg("clean", "true;1;"),
-      make_sysarg("exécute", "true;1;"),
-      make_sysarg("file", "true;1;compile|execute"))};
+  (void) argc;
+  (void) argv;
+ // char* compile = "compile";
+  char* compile_deps = "true;;qsd";
+  char* s = compile_deps;
 
-  define_sysargs(args, 3);
+  while (*s!='\0')
+  {
+    if (*s == ';')
+      *s = 'c';
+    ++s;
+  }
 
-  check_args(argc, argv);
+  
+  //make_sysarg(compile, compile_deps);
+
+
+
   // log_error("%d", sys.len);
 
   // if (args_exists("--file"))
