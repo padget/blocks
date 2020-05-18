@@ -26,6 +26,10 @@ shared:
     target: string.o
     source: experimental/string.c
 
+  - name: 'experimental library cstring'
+    target: cstring.o
+    source: experimental/cstring.c
+
 programs:
   - name: 'blocks program'
     sources: blocks
@@ -50,6 +54,7 @@ programs:
       - algorithm.o
       - array.o
       - string.o
+      - cstring.o
       
 purge:
   - '*.o'

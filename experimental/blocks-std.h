@@ -3,8 +3,6 @@
 #include <string.h>
 #include <stdbool.h>
 
-#include "typearray.h"
-
 /**
  * Define the EOS (end of string) symbol
  */
@@ -23,25 +21,6 @@ typedef unsigned long ulong;
 typedef unsigned long long ulonglong;
 
 
-typeref(short)
-typeref(ushort)
-typeref(char)
-typeref(uchar)
-typeref(int)
-typeref(uint)
-typeref(ulong)
-typeref(ulonglong)
-
-
-typearray(short)
-typearray(ushort)
-typearray(char)
-typearray(uchar)
-typearray(int)
-typearray(uint)
-typearray(ulong)
-typearray(ulonglong)
-
 /**
  * Read all content of file fname and
  * transfer it into a new char* string
@@ -50,7 +29,7 @@ typearray(ulonglong)
  * @return the content of the file or NULL
  * if the content could not be reached
  */
-chararray freadall(const char *fname);
+char* freadall(const char *fname);
 
 /**
  * Determine the size of a file in bytes

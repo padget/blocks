@@ -2,6 +2,7 @@
 #include "log.h"
 #include "i18n.h"
 #include "string.h"
+#include "cstring.h"
 #include "keyword.h"
 
 #include <stdlib.h>
@@ -14,7 +15,7 @@ void __check_nb_semicolon(
 		char *rules,
 		size_t nb_to_have)
 {
-	size_t nb = str_count(rules, ';');
+	size_t nb = cstr_count(rules, ';');
 
 	if (nb not_eq nb_to_have)
 	{
@@ -26,8 +27,8 @@ void __check_nb_semicolon(
 private
 void __check_mandatory(char *mandatory)
 {
-	if (not str_equals(mandatory, "true") and
-			not str_equals(mandatory, "false"))
+	if (not cstr_equals(mandatory, "true") and
+			not cstr_equals(mandatory, "false"))
 	{
 		log_fatal("mandatory rule must be equal to true or false");
 		exit(EXIT_FAILURE);
@@ -37,7 +38,7 @@ void __check_mandatory(char *mandatory)
 private
 void __check_index(char *index)
 {
-	if (not str_contains_only(index, "0123456789"))
+	if (not cstr_contains_only(index, "0123456789"))
 	{
 		log_fatal("index must be a parsable positive integer");
 		exit(EXIT_FAILURE);
@@ -47,8 +48,8 @@ void __check_index(char *index)
 private
 void __check_dependencies(char *dependencies)
 {
-	bool has_or = str_in(dependencies, '|');
-	bool has_and = str_in(dependencies, '&');
+	bool has_or = cstr_in(dependencies, '|');
+	bool has_and = cstr_in(dependencies, '&');
 
 	if (has_and and has_or)
 	{
@@ -73,6 +74,7 @@ sysarg make_sysarg(
 		sarg.rules[i] = cursor;
 		cursor = str_find(rules, ';') + 1;
 	}
+
 	log_debug("2bis");
 	str_replace(rules, ';', '\0');
 	log_debug("3");

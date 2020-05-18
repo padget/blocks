@@ -8,14 +8,12 @@ typedef int error_code;
 
 struct bl_type_attribute
 {
-  chararray name;
-  chararray type;
+  char* name;
+  char* type;
 };
 
 typedef struct bl_type_attribute bl_type_attribute;
 
-typeref(bl_type_attribute)
-typearray(bl_type_attribute)
 
 struct bl_type
 {

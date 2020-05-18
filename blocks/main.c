@@ -11,7 +11,7 @@
 
 #include "clean.h"
 #include "execute.h"
-#include "compile.h"
+//#include "compile.h"
 
 int main(int argc, char **argv)
 {

@@ -2,20 +2,10 @@
 #include "log.h"
 #include "i18n.h"
 
-typearrayimpl(short)
-typearrayimpl(ushort)
-typearrayimpl(char)
-typearrayimpl(uchar)
-typearrayimpl(int)
-typearrayimpl(uint)
-typearrayimpl(ulong)
-typearrayimpl(ulonglong)
-
-chararray freadall(const char *fname)
+char* freadall(const char *fname)
 {
-  chararray content;
-  content.data = NULL;
-  content.len = 0;
+  char* content=NULL;
+
   FILE *file = NULL;
 
   if (fname == NULL)
@@ -62,9 +52,7 @@ chararray freadall(const char *fname)
 
   if (cnt < s)
     *buft = '\0';
-
-  content.data = buf;
-  content.len = s;
+content = buft;
   
 finally:
 
