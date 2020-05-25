@@ -59,31 +59,16 @@ void __check_dependencies(char *dependencies)
 }
 
 sysarg make_sysarg(
-		char *arg,
-		char *rules)
+		const char *arg,
+		bool mandatory, 
+		int index, 
+		const char* dependencies)
 {
-	log_debug("1");
-	__check_nb_semicolon(rules, 2);
-	log_debug("2");
 	sysarg sarg;
 	sarg.arg = arg;
-	char *cursor = rules;
-
-	for (int i = 0; i < 3; ++i)
-	{
-		sarg.rules[i] = cursor;
-		cursor = str_find(rules, ';') + 1;
-	}
-
-	log_debug("2bis");
-	str_replace(rules, ';', '\0');
-	log_debug("3");
-	__check_mandatory(sarg.rules[0]);
-	log_debug("4");
-	__check_index(sarg.rules[1]);
-	log_debug("5");
-	__check_dependencies(sarg.rules[2]);
-
+	sarg.mandatory = mandatory;
+	sarg.index = index;
+	sarg.dependencies = dependencies;
 	return sarg;
 }
 

@@ -15,18 +15,9 @@
 
 int main(int argc, char **argv)
 {
-  (void) argc;
-  (void) argv;
- // char* compile = "compile";
-  char* compile_deps = "true;;qsd";
-  char* s = compile_deps;
-
-  while (*s!='\0')
-  {
-    if (*s == ';')
-      *s = 'c';
-    ++s;
-  }
+  unused(argc);
+  unused(argv);
+ 
 
   
   //make_sysarg(compile, compile_deps);
