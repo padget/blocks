@@ -53,6 +53,13 @@ def build_program(compiler, cflags, prog):
   subprocess.run(args)
   print('---------------------------')
 
+def run_test(test):
+  args = [test]
+  print('---------------------------')
+  print('run test {}'.format(test))
+  subprocess.run(args)
+  print('---------------------------')
+
 if __name__=='__main__':
 
   yamld = ''
@@ -67,6 +74,7 @@ if __name__=='__main__':
   cflags   = str(obj.get('cflags', ''))
   shared   = list(obj.get('shared', []))
   programs = list(obj.get('programs', []))
+  tests    = list(obj.get('tests', []))
   purge    = list(obj.get('purge', []))
 
   if not compiler:
@@ -97,6 +105,10 @@ if __name__=='__main__':
         verify_lib(libname)
 
       build_program(compiler, cflags, prog)
+
+  if (len(tests) > 0):
+    for t in tests:
+      run_test(t);
 
   if len(purge) > 0:
     for p in purge:

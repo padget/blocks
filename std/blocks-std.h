@@ -4,24 +4,6 @@
 #include <stdbool.h>
 
 /**
- * Define the EOS (end of string) symbol
- */
-#define EOS '\0'
-
-/**
- * Define the EOL (end of line) symbol
- */
-#define EOL '\n'
-
-
-typedef unsigned short ushort;
-typedef unsigned char uchar;
-typedef unsigned int uint;
-typedef unsigned long ulong;
-typedef unsigned long long ulonglong;
-
-
-/**
  * Read all content of file fname and
  * transfer it into a new char* string
  * 

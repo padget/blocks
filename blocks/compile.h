@@ -1,8 +1,8 @@
 #ifndef __blocks_compile_h__
 #define __blocks_compile_h__
 
-#include "../experimental/config.h"
-#include "../experimental/blocks-std.h"
+#include "../std/config.h"
+#include "../std/blocks-std.h"
 
 typedef int error_code;
 

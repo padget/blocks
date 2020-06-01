@@ -3,7 +3,21 @@
 
 #include <stdbool.h>
 #include <stdlib.h>
-#include "array.h"
+
+
+struct iterator
+{
+	void *item;
+	size_t tsize;
+};
+
+typedef struct iterator iterator; 
+
+iterator iter_new(void* item, size_t tsize);
+
+iterator iter_next(iterator i);
+size_t iter_distance(iterator i1, iterator i2);
+bool iter_same(iterator i1, iterator i2);
 
 struct params_predicate
 {
@@ -36,16 +50,6 @@ typedef generic_predicate gpred;
 gpred make_params_predicate(bool (*apply)(iterator, void *), void * param);
 gpred make_simple_predicate(bool (*apply)(iterator));
 
-struct iterator_value_equals
-{
-    bool (*apply)(iterator i, iterator value);
-};
-
-typedef struct iterator_value_equals iterator_value_equals;
-typedef iterator_value_equals ivalue_equals;
-
-ivalue_equals make_ivalue_equals(bool(*apply)(iterator, iterator));
-
 iterator find_if(iterator b, iterator e, gpred pred);
 iterator find_if_not(iterator b, iterator e, gpred pred);
 
@@ -55,7 +59,7 @@ bool none_of(iterator b, iterator e, gpred pred);
 
 size_t count_if(iterator b, iterator e, gpred pred);
 
-bool start_with(iterator b, iterator e, iterator b2, iterator e2, iterator_value_equals sequals);
-bool equals(iterator b, iterator e, iterator b2, iterator e2, iterator_value_equals sequals);
+bool start_with(iterator b, iterator e, iterator b2, iterator e2);
+bool equals(iterator b, iterator e, iterator b2, iterator e2);
 
 #endif

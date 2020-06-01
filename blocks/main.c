@@ -2,24 +2,43 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "../experimental/version.h"
-#include "../experimental/log.h"
-#include "../experimental/argument.h"
-#include "../experimental/algorithm.h"
-#include "../experimental/string.h"
-#include "../experimental/keyword.h"
 
-#include "clean.h"
-#include "execute.h"
-//#include "compile.h"
+#include "../std/string.h"
+#include "../std/keyword.h"
+
+#define MANDATORY true
 
 int main(int argc, char **argv)
 {
   unused(argc);
   unused(argv);
- 
+  string_r strr = strr_from("hello world !");
+  strr_iterator cfound = strr_find(strr, 'h');
+  printf("%c", *cfound);
 
-  
+  // sysarg compile_arg = make_sysarg("compile", MANDATORY, 1, "");
+  // sysarg execute_arg = make_sysarg("execute", MANDATORY, 1, "");
+  // sysarg file_arg = make_sysarg("file", MANDATORY, 2, "compile|execute");
+  // sysarg args[] = {compile_arg, execute_arg, file_arg}; 
+ 
+  // if (define_sysargs(args, 3))
+  // {
+  //   if (not check_args(argc, argv))
+  //   {
+  //     log_error("des erreurs d'argument detecté");
+  //   }
+  //   else 
+  //   {
+  //     log_info("tout va bien");
+  //   }
+  // }
+  // else 
+  // {
+  //   log_error("un soucis ");
+  // }
+
+
+
   //make_sysarg(compile, compile_deps);
 
 

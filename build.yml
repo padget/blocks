@@ -1,60 +1,40 @@
 compiler: gcc
 cflags: -Wall -W -pedantic -Werror -std=c11
 
-shared:
-  - name: 'experimental library argument'
-    target: argument.o
-    source: experimental/argument.c
-
-  - name: 'experimental library blocks-std'
-    target: blocks-std.o
-    source: experimental/blocks-std.c
-  
-  - name: 'experimental library log'
-    target: log.o
-    source: experimental/log.c
-
-  - name: 'experimental library algorithm'
+shared:  
+  - name: 'std library algorithm'
     target: algorithm.o
-    source: experimental/algorithm.c
+    source: std/algorithm.c
 
-  - name: 'experimental library array'
-    target: array.o
-    source: experimental/array.c
-
-  - name: 'experimental library string'
+  - name: 'std library string'
     target: string.o
-    source: experimental/string.c
-
-  - name: 'experimental library cstring'
-    target: cstring.o
-    source: experimental/cstring.c
+    source: std/string.c
 
 programs:
-  - name: 'blocks program'
-    sources: blocks
-    target: blocks.exe
+  # - name: 'blocks program'
+  #   sources: blocks
+  #   target: blocks.exe
+  #   libs:
+  #     - name: 'main library'
+  #       target: blocks.o
+  #       source: main.c
+  #   shared:
+  #     - algorithm.o
+  #     - string.o
+
+  - name: 'string test program'
+    sources: 'std/__tests__'
+    target: stringtest.exe
     libs:
       - name: 'main library'
-        target: blocks.o
-        source: main.c
-      # - name: 'compile lib'
-      #   target: compile.o
-      #   source: compile.c
-      - name: 'execute lib'
-        target: execute.o
-        source: execute.c
-      - name: 'clean lib'
-        target: clean.o
-        source: clean.c
+        target: stringtest.o
+        source: stringtest.c
     shared:
-      - log.o
-      - argument.o
-      # - blocks-std.o
       - algorithm.o
-      - array.o
       - string.o
-      - cstring.o
-      
+
+# tests:
+  # - stringtest.exe
+
 purge:
   - '*.o'
