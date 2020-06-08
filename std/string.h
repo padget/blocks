@@ -15,9 +15,14 @@
 
 typedef bool(*char_predicate)(iterator);
 
-/// //////////////// ///
-/// STRING READ ONLY ///
-/// //////////////// ///
+struct string_rw
+{
+  char* begin; 
+  char* end;
+};
+
+typedef struct string_rw string_rw;
+typedef char* strrw_iterator;
 
 struct string_r
 {
@@ -28,9 +33,14 @@ struct string_r
 typedef struct string_r string_r;
 typedef const char *strr_iterator;
 
+/// //////////////// ///
+/// STRING READ ONLY ///
+/// //////////////// ///
+
 string_r strr_new(const char *beg, const char *end);
 string_r strr_copy(string_r strr);
 string_r strr_from(const char* str);
+string_r strr_fromrw(string_rw strrw);
 
 size_t strr_len(string_r strr);
 
@@ -47,6 +57,7 @@ bool strr_none_of(string_r strr, char_predicate pred);
 
 bool strr_equals(string_r l, string_r r);
 bool strr_start_with(string_r l, string_r r);
+bool strr_end_with(string_r l,string_r r);
 bool strr_in(string_r s, const char c);
 bool strr_contains_only(string_r s, string_r onlys);
 
@@ -54,19 +65,10 @@ bool strr_contains_only(string_r s, string_r onlys);
 /// STRING READ WRITE ///
 /// ///////////////// ///
 
-struct string_rw
-{
-  char* begin; 
-  char* end;
-};
-
-typedef struct string_rw string_rw;
-typedef char* strrw_iterator;
-
-string_rw strrw_new(char *beg, char *end);
+string_rw strrw_new(const char *beg, const char *end);
 string_rw strrw_copy(string_rw strr);
-string_rw strrw_from(char* str);
-void strr_del(string_rw strr);
+string_rw strrw_from(const char* str);
+void strrw_del(string_rw* strr);
 
 size_t strrw_len(string_rw strr);
 
@@ -83,9 +85,11 @@ bool strrw_none_of(string_rw strr, char_predicate pred);
 
 bool strrw_equals(string_rw l, string_r r);
 bool strrw_start_with(string_rw l, string_r r);
+bool strrw_end_with(string_rw l, string_r r);
 bool strrw_in(string_rw s, const char c);
 bool strrw_contains_only(string_rw s, string_r onlys);
 
-
+void strrw_replace(string_rw s, const char old, const char neo);
+void strrw_trim(string_rw s);
 
 #endif

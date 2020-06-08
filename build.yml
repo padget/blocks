@@ -10,6 +10,10 @@ shared:
     target: string.o
     source: std/string.c
 
+  - name: 'std library memory'
+    target: memory.o
+    source: std/memory.c
+
 programs:
   # - name: 'blocks program'
   #   sources: blocks
@@ -32,6 +36,17 @@ programs:
     shared:
       - algorithm.o
       - string.o
+
+  - name: 'memory test program'
+    sources: 'std/__tests__'
+    target: memorytest.exe
+    libs:
+      - name: 'main library'
+        target: memorytest.o
+        source: memorytest.c
+    shared:
+      - algorithm.o
+      - memory.o
 
 # tests:
   # - stringtest.exe

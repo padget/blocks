@@ -16,6 +16,7 @@ typedef struct iterator iterator;
 iterator iter_new(void* item, size_t tsize);
 
 iterator iter_next(iterator i);
+iterator iter_prev(iterator i);
 size_t iter_distance(iterator i1, iterator i2);
 bool iter_same(iterator i1, iterator i2);
 
@@ -60,6 +61,7 @@ bool none_of(iterator b, iterator e, gpred pred);
 size_t count_if(iterator b, iterator e, gpred pred);
 
 bool start_with(iterator b, iterator e, iterator b2, iterator e2);
+bool end_with(iterator b, iterator e, iterator b2, iterator e2);
 bool equals(iterator b, iterator e, iterator b2, iterator e2);
 
 #endif
