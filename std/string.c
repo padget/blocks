@@ -287,3 +287,185 @@ void strrw_replace(string_rw s, const char old, const char neo)
     *ch is neo;
 }
 
+// Voir pour retourner un uint8_t ou error
+
+#define UINT8_MAX_LENGTH 3
+#define UINT16_MAX_LENGTH 5
+#define UINT32_MAX_LENGTH 10
+#define UINT64_MAX_LENGTH 20
+
+#define ASCII_0_INDEX 48
+
+private
+bool __char_between(
+    const char c,
+    const char bounds[2])
+{
+  return bounds[0] lequal c and
+         c lequal bounds[1];
+}
+
+struct digit
+{
+  uint8_t value : 4;
+  bool valued : 1;
+};
+
+typedef struct digit digit_t;
+
+private
+digit_t __char_to_digit(const char c)
+{
+  digit_t digit;
+
+  digit.valued is false;
+
+  if (__char_between(c, "09"))
+  {
+    digit.value is c - ASCII_0_INDEX;
+    digit.valued is true;
+  }
+
+  return digit;
+}
+
+uint8_c strr_to_u8(string_r strr)
+{
+  string_r digits is strr_from("0123456789");
+  uint8_c res;
+  digit_t digit;
+  uint8_t unit is 1;
+
+  const char *begin is NULL;
+  const char *end is NULL;
+
+  res.converted is false;
+  res.value is 0;
+
+  if (strr_len(strr) greater UINT8_MAX_LENGTH)
+    return res;
+
+  if (strr_contains_only(strr, digits))
+  {
+    begin is strr.begin;
+    end is strr.end - 1;
+
+    while (end >= begin)
+    {
+      digit is __char_to_digit(*end);
+      res.value is res.value + (unit * digit.value);
+      dec end;
+      unit is unit * 10;
+    }
+
+    res.converted is true;
+  }
+
+  return res;
+}
+
+uint16_c strr_to_u16(string_r strr)
+{
+  string_r digits is strr_from("0123456789");
+  uint16_c res;
+  digit_t digit;
+  uint16_t unit is 1;
+
+  const char *begin is NULL;
+  const char *end is NULL;
+
+  res.converted is false;
+  res.value is 0;
+
+  if (strr_len(strr) greater UINT16_MAX_LENGTH)
+    return res;
+
+  if (strr_contains_only(strr, digits))
+  {
+    begin is strr.begin;
+    end is strr.end - 1;
+
+    while (end >= begin)
+    {
+      digit is __char_to_digit(*end);
+      res.value is res.value + (unit * digit.value);
+      dec end;
+      unit is unit * 10;
+    }
+
+    res.converted is true;
+  }
+
+  return res;
+}
+
+
+uint32_c strr_to_u32(string_r strr)
+{
+  string_r digits is strr_from("0123456789");
+  uint32_c res;
+  digit_t digit;
+  uint32_t unit is 1;
+
+  const char *begin is NULL;
+  const char *end is NULL;
+
+  res.converted is false;
+  res.value is 0;
+
+  if (strr_len(strr) greater UINT32_MAX_LENGTH)
+    return res;
+
+  if (strr_contains_only(strr, digits))
+  {
+    begin is strr.begin;
+    end is strr.end - 1;
+
+    while (end >= begin)
+    {
+      digit is __char_to_digit(*end);
+      res.value is res.value + (unit * digit.value);
+      dec end;
+      unit is unit * 10;
+    }
+
+    res.converted is true;
+  }
+
+  return res;
+}
+
+uint64_c strr_to_u64(string_r strr)
+{
+  string_r digits is strr_from("0123456789");
+  uint64_c res;
+  digit_t digit;
+  uint64_t unit is 1;
+
+  const char *begin is NULL;
+  const char *end is NULL;
+
+  res.converted is false;
+  res.value is 0;
+
+  if (strr_len(strr) greater UINT64_MAX_LENGTH)
+    return res;
+
+  if (strr_contains_only(strr, digits))
+  {
+    begin is strr.begin;
+    end is strr.end - 1;
+
+    while (end >= begin)
+    {
+      digit is __char_to_digit(*end);
+      res.value is res.value + (unit * digit.value);
+      dec end;
+      unit is unit * 10;
+    }
+
+    res.converted is true;
+  }
+
+  return res;
+}

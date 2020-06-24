@@ -80,23 +80,3 @@ size_t fsize(FILE *f)
   else
     return __fsize(f);
 }
-
-size_t strcount(const char *s, char c)
-{
-  size_t count = 0;
-
-  if (s != NULL)
-    while (*s != '\0')
-    {
-      if (*s == c)
-        ++count;
-      ++s;
-    }
-
-  return count;
-}
-
-bool strempty(const char *s)
-{
-  return s == NULL || s[0] == '\0';
-}

@@ -45,11 +45,11 @@ programs:
         target: memorytest.o
         source: memorytest.c
     shared:
-      - algorithm.o
       - memory.o
 
-# tests:
-  # - stringtest.exe
+tests:
+  - stringtest.exe
+  - memorytest.exe
 
 purge:
   - '*.o'

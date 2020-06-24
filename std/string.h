@@ -3,6 +3,7 @@
 
 #include <stdlib.h>
 #include <stdbool.h>
+#include <stdint.h>
 
 #include "algorithm.h"
 
@@ -90,6 +91,46 @@ bool strrw_in(string_rw s, const char c);
 bool strrw_contains_only(string_rw s, string_r onlys);
 
 void strrw_replace(string_rw s, const char old, const char neo);
+// TODO TO IMPLEMENT
 void strrw_trim(string_rw s);
+
+
+struct uint8_convertion
+{
+  uint8_t value;
+  bool converted;
+};
+
+typedef struct uint8_convertion uint8_c;
+
+struct uint16_conversion
+{
+  uint16_t value;
+  bool converted;
+};
+
+typedef struct uint16_conversion uint16_c;
+
+struct uint32_conversion
+{
+  uint32_t value;
+  bool converted;
+};
+
+typedef struct uint32_conversion uint32_c;
+
+struct uint64_conversion
+{
+  uint64_t value;
+  bool converted;
+};
+
+typedef struct uint64_conversion uint64_c;
+
+
+uint8_c strr_to_u8(string_r strr);
+uint16_c strr_to_u16(string_r strr);
+uint32_c strr_to_u32(string_r strr);
+uint64_c strr_to_u64(string_r strr);
 
 #endif

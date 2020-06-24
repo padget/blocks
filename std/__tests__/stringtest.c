@@ -129,6 +129,38 @@ bool test_strr_contains_only()
   return strr_contains_only(strr, digits);
 }
 
+bool test_strr_to_u8() 
+{
+  string_r age = strr_from("31");
+  uint8_c agec = strr_to_u8(age);
+  
+  return agec.converted and agec.value eq 31;
+}
+
+bool test_strr_to_u16() 
+{
+  string_r age = strr_from("30000");
+  uint16_c agec = strr_to_u16(age);
+  
+  return agec.converted and agec.value eq 30000;
+}
+
+bool test_strr_to_u32() 
+{
+  string_r age = strr_from("2000000000");
+  uint32_c agec = strr_to_u32(age);
+  
+  return agec.converted and agec.value eq 2000000000;
+}
+
+bool test_strr_to_u64() 
+{
+  string_r age = strr_from("1000000000000000000");
+  uint64_c agec = strr_to_u64(age);
+  
+  return agec.converted and agec.value eq 1000000000000000000;
+}
+
 ///////////////////////////////////////
 
 bool test_strrw_new()
@@ -295,6 +327,8 @@ bool test_strrw_replace()
   return res;
 }
 
+
+
 int main()
 {
   bool res = true;
@@ -316,6 +350,11 @@ int main()
   res = res and test_strr_in();
   res = res and test_strr_contains_only();
 
+  res = res and test_strr_to_u8();
+  res = res and test_strr_to_u16();
+  res = res and test_strr_to_u32();
+  res = res and test_strr_to_u64();
+
   res = res and test_strrw_new();
   res = res and test_strrw_copy();
   res = res and test_strrw_from();
@@ -336,10 +375,14 @@ int main()
   res = res and test_strrw_contains_only();
   res = res and test_strrw_replace();
 
+
+
   if (res)
     printf("no error");
   else
     printf("error found");
+
+  
 
   return EXIT_SUCCESS;
 }

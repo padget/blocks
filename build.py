@@ -108,7 +108,7 @@ if __name__=='__main__':
 
   if (len(tests) > 0):
     for t in tests:
-      run_test(t);
+      run_test(t)
 
   if len(purge) > 0:
     for p in purge:
