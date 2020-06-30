@@ -61,9 +61,9 @@ int main()
   res is res and test_smem_register();
 
   if (res)
-    printf("no error");
+    printf("no error\n");
   else
-    printf("error found");
+    printf("error found\n");
 
   return EXIT_SUCCESS;
 }

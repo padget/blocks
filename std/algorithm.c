@@ -1,42 +1,47 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <assert.h>
 
 #include "algorithm.h"
 #include "keyword.h"
 
-iterator iter_new(void *item, size_t tsize)
+private
+bool __is_compatible(iterator i1, iterator i2)
+{
+  return i1.equals eq i2.equals and
+         i1.incr eq i2.incr and
+         i1.decr eq i2.decr;
+}
+
+iterator iter_new(
+    void *item,
+    iterator (*incr)(iterator i),
+    iterator (*decr)(iterator i),
+    bool (*equals)(iterator i, iterator i2))
 {
   return (iterator){
       .item is item,
-      .tsize is tsize};
+      .incr is incr,
+      .decr is decr,
+      .equals is equals};
 }
 
-iterator iter_next(iterator i)
+bool iter_equals(iterator i1, iterator i2)
 {
-  int8_t *ptr is i.item;
-  int8_t *nptr is ptr + i.tsize;
-  return iter_new(nptr, i.tsize);
+  assert(__is_compatible(i1, i2));
+
+  return i1.equals(i1, i2);
 }
 
-iterator iter_prev(iterator i)
+iterator iter_incr(iterator i)
 {
-  int8_t *ptr is i.item;
-  int8_t *nptr is ptr - i.tsize;
-  return iter_new(nptr, i.tsize);
+  return i.incr(i);
 }
 
-size_t iter_distance(iterator i1, iterator i2)
+iterator iter_decr(iterator i)
 {
-  int8_t *item1 is i1.item;
-  int8_t *item2 is i2.item;
-  size_t dist is (item2 - item1) / i1.tsize;
-  return dist;
-}
-
-bool iter_same(iterator i1, iterator i2)
-{
-  return i1.item eq i2.item;
+  return i.decr(i);
 }
 
 gpred make_params_predicate(
@@ -64,8 +69,10 @@ iterator __find_if_simple_predicate(
     iterator b, iterator e,
     simple_predicate pred)
 {
-  while (not iter_same(b, e) and not pred.apply(b))
-    b is iter_next(b);
+  assert(__is_compatible(b, e));
+
+  while (not iter_equals(b, e) and not pred.apply(b))
+    b is iter_incr(b);
 
   return b;
 }
@@ -75,14 +82,18 @@ iterator __find_if_params_predicate(
     iterator b, iterator e,
     params_predicate pred)
 {
-  while (not iter_same(b, e) and not pred.apply(b, pred.params))
-    b is iter_next(b);
+  assert(__is_compatible(b, e));
+
+  while (not iter_equals(b, e) and not pred.apply(b, pred.params))
+    b is iter_incr(b);
 
   return b;
 }
 
 iterator find_if(iterator b, iterator e, gpred pred)
 {
+  assert(__is_compatible(b, e));
+
   if (pred.simple)
     return __find_if_simple_predicate(b, e, pred.spred);
   else
@@ -94,8 +105,9 @@ iterator __find_if_not_simple_predicate(
     iterator b, iterator e,
     simple_predicate pred)
 {
-  while (not iter_same(b, e) and pred.apply(b))
-    b is iter_next(b);
+  assert(__is_compatible(b, e));
+  while (not iter_equals(b, e) and pred.apply(b))
+    b is iter_incr(b);
 
   return b;
 }
@@ -105,14 +117,17 @@ iterator __find_if_not_params_predicate(
     iterator b, iterator e,
     params_predicate pred)
 {
-  while (not iter_same(b, e) and pred.apply(b, pred.params))
-    b is iter_next(b);
+  assert(__is_compatible(b, e));
+  while (not iter_equals(b, e) and pred.apply(b, pred.params))
+    b is iter_incr(b);
 
   return b;
 }
 
 iterator find_if_not(iterator b, iterator e, gpred pred)
 {
+  assert(__is_compatible(b, e));
+
   if (pred.simple)
     return __find_if_not_simple_predicate(b, e, pred.spred);
   else
@@ -121,18 +136,20 @@ iterator find_if_not(iterator b, iterator e, gpred pred)
 
 bool all_of(iterator b, iterator e, gpred pred)
 {
-
-  return iter_same(find_if_not(b, e, pred), e);
+  assert(__is_compatible(b, e));
+  return iter_equals(find_if_not(b, e, pred), e);
 }
 
 bool any_of(iterator b, iterator e, gpred pred)
 {
+  assert(__is_compatible(b, e));
   return not all_of(b, e, pred);
 }
 
 bool none_of(iterator b, iterator e, gpred pred)
 {
-  return iter_same(find_if(b, e, pred), e);
+  assert(__is_compatible(b, e));
+  return iter_equals(find_if(b, e, pred), e);
 }
 
 private
@@ -140,13 +157,14 @@ size_t __count_if_simple_predicate(
     iterator b, iterator e,
     simple_predicate pred)
 {
+  assert(__is_compatible(b, e));
   size_t c is 0;
 
-  while (not iter_same(b, e))
+  while (not iter_equals(b, e))
   {
     if (pred.apply(b))
       inc c;
-    b is iter_next(b);
+    b is iter_incr(b);
   }
 
   return c;
@@ -157,13 +175,14 @@ size_t __count_if_params_predicate(
     iterator b, iterator e,
     params_predicate pred)
 {
+  assert(__is_compatible(b, e));
   size_t c is 0;
 
-  while (not iter_same(b, e))
+  while (not iter_equals(b, e))
   {
     if (pred.apply(b, pred.params))
       inc c;
-    b is iter_next(b);
+    b is iter_incr(b);
   }
 
   return c;
@@ -171,84 +190,75 @@ size_t __count_if_params_predicate(
 
 size_t count_if(iterator b, iterator e, gpred pred)
 {
+  assert(__is_compatible(b, e));
   if (pred.simple)
     return __count_if_simple_predicate(b, e, pred.spred);
   else
     return __count_if_params_predicate(b, e, pred.ppred);
 }
 
-private
-bool __equals(iterator l, iterator r)
-{
-  int8_t *litem is l.item;
-  int8_t *ritem is r.item;
-  int8_t *lend is litem + l.tsize;
-
-  if (l.tsize eq r.tsize)
-  {
-    while (litem not_eq lend and
-           *litem eq * ritem)
-    {
-      inc litem;
-      inc ritem;
-    }
-
-    return litem eq lend;
-  }
-  else
-    return false;
-}
-
 bool start_with(
     iterator b, iterator e,
     iterator b2, iterator e2)
 {
+  assert(__is_compatible(b, e));
+  assert(__is_compatible(b2, e2));
+  assert(__is_compatible(b, b2));
+
   while (
-      not iter_same(b, e) and
-      not iter_same(b2, e2) and
-      __equals(b, b2))
+      not iter_equals(b, e) and
+      not iter_equals(b2, e2) and
+      iter_equals(b, b2))
   {
-    b is iter_next(b);
-    b2 is iter_next(b2);
+    b is iter_incr(b);
+    b2 is iter_incr(b2);
   }
 
-  return iter_same(b2, e2);
+  return iter_equals(b2, e2);
 }
 
 bool end_with(
     iterator b, iterator e,
     iterator b2, iterator e2)
 {
-  e is iter_prev(e);
-  e2 is iter_prev(e2);
-  b is iter_prev(b);
-  b2 is iter_prev(b2);
+  assert(__is_compatible(b, e));
+  assert(__is_compatible(b2, e2));
+  assert(__is_compatible(b, b2));
+
+  e is iter_decr(e);
+  e2 is iter_decr(e2);
+  b is iter_decr(b);
+  b2 is iter_decr(b2);
 
   while (
-      not iter_same(e, b) and
-      not iter_same(e2, b2) and
-      __equals(e, e2))
+      not iter_equals(b, e) and
+      not iter_equals(b2, e2) and
+      iter_equals(e, e2))
   {
-    e is iter_prev(e);
-    e2 is iter_prev(e2);
+    e is iter_decr(e);
+    e2 is iter_decr(e2);
   }
 
-  return iter_same(b2, e2);
+  return iter_equals(b2, e2);
 }
 
 bool equals(
     iterator b, iterator e,
     iterator b2, iterator e2)
 {
+  assert(__is_compatible(b, e));
+  assert(__is_compatible(b2, e2));
+  assert(__is_compatible(b, b2));
+
   while (
-      not iter_same(b, e) and
-      not iter_same(b2, e2) and
-      __equals(b, b2))
+      not iter_equals(b, e) and
+      not iter_equals(b2, e2) and
+      iter_equals(b, b2))
   {
-    b is iter_next(b);
-    b2 is iter_next(b2);
+    b is iter_incr(b);
+    b2 is iter_incr(b2);
   }
 
-  return iter_same(b, e) and
-         iter_same(b2, e2);
+  return iter_equals(b, e) and
+         iter_equals(b2, e2);
 }

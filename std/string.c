@@ -2,6 +2,24 @@
 #include "algorithm.h"
 #include "keyword.h"
 
+private
+char *__char_ptr(void *ptr)
+{
+  return (char *)ptr;
+}
+
+private
+const char *__const_char_ptr(void *ptr)
+{
+  return (const char *)ptr;
+}
+
+private
+void *__void_ptr(const void *ptr)
+{
+  return (void *)ptr;
+}
+
 string_r strr_new(strr_iterator beg, strr_iterator end)
 {
   return (string_r){
@@ -36,30 +54,54 @@ size_t strr_len(string_r strr)
 }
 
 private
-iterator __strr_begin(string_r strr)
+iterator __strr_iterator_incr(iterator i)
 {
-  return iter_new((void *)strr.begin, sizeof(char));
+  i.item is __void_ptr(__const_char_ptr(i.item) + 1);
+  return i;
 }
 
 private
-iterator __strr_end(string_r strr)
+iterator __strr_iterator_decr(iterator i)
 {
-  return iter_new((void *)strr.end, sizeof(char));
+  i.item is __void_ptr(__const_char_ptr(i.item) - 1);
+  return i;
+}
+
+private
+bool __strr_iterator_equals(iterator i1, iterator i2)
+{
+  return *__const_char_ptr(i1.item) eq * __const_char_ptr(i2.item);
+}
+
+iterator strr_begin(string_r strr)
+{
+  return iter_new(__void_ptr(strr.begin),
+                  &__strr_iterator_incr,
+                  &__strr_iterator_decr,
+                  &__strr_iterator_equals);
+}
+
+iterator strr_end(string_r strr)
+{
+  return iter_new(__void_ptr(strr.end),
+                  &__strr_iterator_incr,
+                  &__strr_iterator_decr,
+                  &__strr_iterator_equals);
 }
 
 private
 bool __strr_charequals(iterator i, void *params)
 {
-  const char c is *((const char *)i.item);
-  const char o is *((const char *)params);
+  const char c is *__const_char_ptr(i.item);
+  const char o is *__const_char_ptr(params);
   return c eq o;
 }
 
 strr_iterator strr_find(string_r strr, char c)
 {
   gpred pred is make_params_predicate(__strr_charequals, &c);
-  iterator beg is __strr_begin(strr);
-  iterator end is __strr_end(strr);
+  iterator beg is strr_begin(strr);
+  iterator end is strr_end(strr);
   iterator res is find_if(beg, end, pred);
   return (strr_iterator)res.item;
 }
@@ -67,8 +109,8 @@ strr_iterator strr_find(string_r strr, char c)
 strr_iterator strr_find_if(string_r strr, char_predicate pred)
 {
   gpred predb is make_simple_predicate(pred);
-  iterator beg is __strr_begin(strr);
-  iterator end is __strr_end(strr);
+  iterator beg is strr_begin(strr);
+  iterator end is strr_end(strr);
   iterator res is find_if(beg, end, predb);
   return (strr_iterator)res.item;
 }
@@ -76,8 +118,8 @@ strr_iterator strr_find_if(string_r strr, char_predicate pred)
 strr_iterator strr_find_if_not(string_r strr, char_predicate pred)
 {
   gpred predb is make_simple_predicate(pred);
-  iterator beg is __strr_begin(strr);
-  iterator end is __strr_end(strr);
+  iterator beg is strr_begin(strr);
+  iterator end is strr_end(strr);
   iterator res is find_if_not(beg, end, predb);
   return (strr_iterator)res.item;
 }
@@ -85,40 +127,40 @@ strr_iterator strr_find_if_not(string_r strr, char_predicate pred)
 size_t strr_count(string_r strr, char c)
 {
   gpred pred is make_params_predicate(__strr_charequals, &c);
-  iterator beg is __strr_begin(strr);
-  iterator end is __strr_end(strr);
+  iterator beg is strr_begin(strr);
+  iterator end is strr_end(strr);
   return count_if(beg, end, pred);
 }
 
 size_t strr_count_if(string_r strr, char_predicate pred)
 {
   gpred predb is make_simple_predicate(pred);
-  iterator beg is __strr_begin(strr);
-  iterator end is __strr_end(strr);
+  iterator beg is strr_begin(strr);
+  iterator end is strr_end(strr);
   return count_if(beg, end, predb);
 }
 
 bool strr_all_of(string_r strr, char_predicate pred)
 {
   gpred predb is make_simple_predicate(pred);
-  iterator beg is __strr_begin(strr);
-  iterator end is __strr_end(strr);
+  iterator beg is strr_begin(strr);
+  iterator end is strr_end(strr);
   return all_of(beg, end, predb);
 }
 
 bool strr_any_of(string_r strr, char_predicate pred)
 {
   gpred predb is make_simple_predicate(pred);
-  iterator beg is __strr_begin(strr);
-  iterator end is __strr_end(strr);
+  iterator beg is strr_begin(strr);
+  iterator end is strr_end(strr);
   return any_of(beg, end, predb);
 }
 
 bool strr_none_of(string_r strr, char_predicate pred)
 {
   gpred predb is make_simple_predicate(pred);
-  iterator beg is __strr_begin(strr);
-  iterator end is __strr_end(strr);
+  iterator beg is strr_begin(strr);
+  iterator end is strr_end(strr);
 
   return none_of(beg, end, predb);
 }
@@ -126,22 +168,22 @@ bool strr_none_of(string_r strr, char_predicate pred)
 bool strr_equals(string_r l, string_r r)
 {
   return equals(
-      __strr_begin(l), __strr_end(l),
-      __strr_begin(r), __strr_end(r));
+      strr_begin(l), strr_end(l),
+      strr_begin(r), strr_end(r));
 }
 
 bool strr_start_with(string_r l, string_r r)
 {
   return start_with(
-      __strr_begin(l), __strr_end(l),
-      __strr_begin(r), __strr_end(r));
+      strr_begin(l), strr_end(l),
+      strr_begin(r), strr_end(r));
 }
 
 bool strr_end_with(string_r l, string_r r)
 {
   return end_with(
-      __strr_begin(l), __strr_end(l),
-      __strr_begin(r), __strr_end(r));
+      strr_begin(l), strr_end(l),
+      strr_begin(r), strr_end(r));
 }
 
 bool strr_in(string_r strr, const char c)
@@ -151,16 +193,52 @@ bool strr_in(string_r strr, const char c)
 
 bool strr_contains_only(string_r s, string_r onlys)
 {
-  iterator beg is __strr_begin(s);
-  iterator end is __strr_end(s);
+  iterator beg is strr_begin(s);
+  iterator end is strr_end(s);
 
-  while (not iter_same(beg, end) and strr_in(onlys, *(char *)beg.item))
-    beg is iter_next(beg);
+  while (not iter_equals(beg, end) and strr_in(onlys, *__char_ptr(beg.item)))
+    beg is iter_incr(beg);
 
-  return iter_same(beg, end);
+  return iter_equals(beg, end);
 }
 
-///////////////////////////////:
+///////////////////////////////
+
+private
+iterator __strrw_iterator_incr(iterator i)
+{
+  i.item is __void_ptr(__char_ptr(i.item) + 1);
+  return i;
+}
+
+private
+iterator __strrw_iterator_decr(iterator i)
+{
+  i.item is __void_ptr(__char_ptr(i.item) - 1);
+  return i;
+}
+
+private
+bool __strrw_iterator_equals(iterator i1, iterator i2)
+{
+  return *__char_ptr(i1.item) eq * __char_ptr(i2.item);
+}
+
+iterator strrw_begin(string_rw strr)
+{
+  return iter_new(__void_ptr(strr.begin),
+                  &__strrw_iterator_incr,
+                  &__strrw_iterator_decr,
+                  &__strrw_iterator_equals);
+}
+
+iterator strrw_end(string_rw strr)
+{
+  return iter_new(__void_ptr(strr.end),
+                  &__strrw_iterator_incr,
+                  &__strrw_iterator_decr,
+                  &__strrw_iterator_equals);
+}
 
 string_rw strrw_new(const char *beg, const char *end)
 {
@@ -398,7 +476,6 @@ uint16_c strr_to_u16(string_r strr)
 
   return res;
 }
-
 
 uint32_c strr_to_u32(string_r strr)
 {

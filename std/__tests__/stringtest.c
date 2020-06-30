@@ -378,9 +378,9 @@ int main()
 
 
   if (res)
-    printf("no error");
+    printf("no error\n");
   else
-    printf("error found");
+    printf("error found\n");
 
   
 

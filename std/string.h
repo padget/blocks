@@ -37,6 +37,8 @@ typedef const char *strr_iterator;
 /// //////////////// ///
 /// STRING READ ONLY ///
 /// //////////////// ///
+iterator strr_begin(string_r strr);
+iterator strr_end(string_r strr);
 
 string_r strr_new(const char *beg, const char *end);
 string_r strr_copy(string_r strr);
@@ -65,6 +67,8 @@ bool strr_contains_only(string_r s, string_r onlys);
 /// ///////////////// ///
 /// STRING READ WRITE ///
 /// ///////////////// ///
+iterator strrw_begin(string_rw strr);
+iterator strrw_end(string_rw strr);
 
 string_rw strrw_new(const char *beg, const char *end);
 string_rw strrw_copy(string_rw strr);

@@ -4,21 +4,27 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
-
 struct iterator
 {
-	void *item;
-	size_t tsize;
+    void *item;
+    struct iterator (*incr)(struct iterator i);
+    struct iterator (*decr)(struct iterator i);
+    bool (*equals)(struct iterator i, struct iterator i2);
 };
 
-typedef struct iterator iterator; 
+typedef struct iterator iterator;
 
-iterator iter_new(void* item, size_t tsize);
 
-iterator iter_next(iterator i);
-iterator iter_prev(iterator i);
-size_t iter_distance(iterator i1, iterator i2);
-bool iter_same(iterator i1, iterator i2);
+iterator iter_incr(iterator i);
+iterator iter_decr(iterator i);
+bool iter_equals(iterator i1, iterator i2);
+
+
+iterator iter_new(
+    void *item,
+    iterator (*incr)(iterator i),
+    iterator (*decr)(iterator i),
+    bool (*equals)(iterator i, iterator i2));
 
 struct params_predicate
 {
@@ -48,7 +54,7 @@ struct generic_predicate
 typedef struct generic_predicate generic_predicate;
 typedef generic_predicate gpred;
 
-gpred make_params_predicate(bool (*apply)(iterator, void *), void * param);
+gpred make_params_predicate(bool (*apply)(iterator, void *), void *param);
 gpred make_simple_predicate(bool (*apply)(iterator));
 
 iterator find_if(iterator b, iterator e, gpred pred);

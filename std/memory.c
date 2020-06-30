@@ -5,7 +5,7 @@
 private
 sysmemorypage *__smempage_new()
 {
-  sysmemorypage *page = NULL;
+  sysmemorypage *page is NULL;
 
   page is malloc(sizeof(sysmemorypage));
 

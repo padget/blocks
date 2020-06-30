@@ -37,6 +37,17 @@ programs:
       - algorithm.o
       - string.o
 
+  - name: 'algorithm test program'
+    sources: 'std/__tests__'
+    target: algorithmtest.exe
+    libs:
+      - name: 'main library'
+        target: algorithmtest.o
+        source: algorithmtest.c
+    shared:
+      - algorithm.o
+      - string.o
+
   - name: 'memory test program'
     sources: 'std/__tests__'
     target: memorytest.exe
@@ -49,6 +60,7 @@ programs:
 
 tests:
   - stringtest.exe
+  - algorithmtest.exe
   - memorytest.exe
 
 purge:
