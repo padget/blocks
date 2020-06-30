@@ -97,72 +97,78 @@ bool __strr_charequals(iterator i, void *params)
   return c eq o;
 }
 
+private
+gpred __is_char_pred(char c)
+{
+  return make_params_predicate(__strr_charequals, &c);
+}
+
 strr_iterator strr_find(string_r strr, char c)
 {
-  gpred pred is make_params_predicate(__strr_charequals, &c);
-  iterator beg is strr_begin(strr);
-  iterator end is strr_end(strr);
-  iterator res is find_if(beg, end, pred);
-  return (strr_iterator)res.item;
+  return find_if(
+             strr_begin(strr),
+             strr_end(strr),
+             __is_char_pred(c))
+      .item;
 }
 
 strr_iterator strr_find_if(string_r strr, char_predicate pred)
 {
-  gpred predb is make_simple_predicate(pred);
-  iterator beg is strr_begin(strr);
-  iterator end is strr_end(strr);
-  iterator res is find_if(beg, end, predb);
-  return (strr_iterator)res.item;
+
+  return find_if(
+             strr_begin(strr),
+             strr_end(strr),
+             make_simple_predicate(pred))
+      .item;
 }
 
 strr_iterator strr_find_if_not(string_r strr, char_predicate pred)
 {
-  gpred predb is make_simple_predicate(pred);
-  iterator beg is strr_begin(strr);
-  iterator end is strr_end(strr);
-  iterator res is find_if_not(beg, end, predb);
-  return (strr_iterator)res.item;
+  return find_if_not(
+             strr_begin(strr),
+             strr_end(strr),
+             make_simple_predicate(pred))
+      .item;
 }
 
 size_t strr_count(string_r strr, char c)
 {
-  gpred pred is make_params_predicate(__strr_charequals, &c);
-  iterator beg is strr_begin(strr);
-  iterator end is strr_end(strr);
-  return count_if(beg, end, pred);
+  return count_if(
+      strr_begin(strr),
+      strr_end(strr),
+      __is_char_pred(c));
 }
 
 size_t strr_count_if(string_r strr, char_predicate pred)
 {
-  gpred predb is make_simple_predicate(pred);
-  iterator beg is strr_begin(strr);
-  iterator end is strr_end(strr);
-  return count_if(beg, end, predb);
+  return count_if(
+      strr_begin(strr),
+      strr_end(strr),
+      make_simple_predicate(pred));
 }
 
 bool strr_all_of(string_r strr, char_predicate pred)
 {
-  gpred predb is make_simple_predicate(pred);
-  iterator beg is strr_begin(strr);
-  iterator end is strr_end(strr);
-  return all_of(beg, end, predb);
+  return all_of(
+      strr_begin(strr),
+      strr_end(strr),
+      make_simple_predicate(pred));
 }
 
 bool strr_any_of(string_r strr, char_predicate pred)
 {
-  gpred predb is make_simple_predicate(pred);
-  iterator beg is strr_begin(strr);
-  iterator end is strr_end(strr);
-  return any_of(beg, end, predb);
+  return any_of(
+      strr_begin(strr),
+      strr_end(strr),
+      make_simple_predicate(pred));
 }
 
 bool strr_none_of(string_r strr, char_predicate pred)
 {
-  gpred predb is make_simple_predicate(pred);
-  iterator beg is strr_begin(strr);
-  iterator end is strr_end(strr);
-
-  return none_of(beg, end, predb);
+  return none_of(
+      strr_begin(strr),
+      strr_end(strr),
+      make_simple_predicate(pred));
 }
 
 bool strr_equals(string_r l, string_r r)
