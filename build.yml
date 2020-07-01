@@ -10,6 +10,10 @@ shared:
     target: string.o
     source: std/string.c
 
+  - name: 'std library string algorithm'
+    target: string_algo.o
+    source: std/string_algo.c
+
   - name: 'std library memory'
     target: memory.o
     source: std/memory.c
@@ -37,6 +41,18 @@ programs:
       - algorithm.o
       - string.o
 
+  - name: 'string algorithm test program'
+    sources: 'std/__tests__'
+    target: string_algotest.exe
+    libs:
+      - name: 'main library'
+        target: string_algotest.o
+        source: string_algotest.c
+    shared:
+      - algorithm.o
+      - string.o
+      - string_algo.o
+
   - name: 'algorithm test program'
     sources: 'std/__tests__'
     target: algorithmtest.exe
@@ -60,6 +76,7 @@ programs:
 
 tests:
   - stringtest.exe
+  - string_algotest.exe
   - algorithmtest.exe
   - memorytest.exe
 

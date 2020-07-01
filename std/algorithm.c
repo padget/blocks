@@ -9,7 +9,10 @@
 private
 bool __is_compatible(iterator i1, iterator i2)
 {
-  return i1.equals eq i2.equals and
+  return i1.equals not_null and
+         i1.decr not_null and
+         i1.incr not_null and
+         i1.equals eq i2.equals and
          i1.incr eq i2.incr and
          i1.decr eq i2.decr;
 }
@@ -106,6 +109,7 @@ iterator __find_if_not_simple_predicate(
     simple_predicate pred)
 {
   assert(__is_compatible(b, e));
+
   while (not iter_equals(b, e) and pred.apply(b))
     b is iter_incr(b);
 
@@ -118,6 +122,7 @@ iterator __find_if_not_params_predicate(
     params_predicate pred)
 {
   assert(__is_compatible(b, e));
+
   while (not iter_equals(b, e) and pred.apply(b, pred.params))
     b is iter_incr(b);
 
