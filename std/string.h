@@ -54,6 +54,7 @@ size_t strr_len(string_r strr);
 iterator strrw_begin(string_rw strr);
 iterator strrw_end(string_rw strr);
 
+string_rw strrw_prepare(size_t len);
 string_rw strrw_new(const char *beg, const char *end);
 string_rw strrw_copy(string_rw strr);
 string_rw strrw_from(const char *str);

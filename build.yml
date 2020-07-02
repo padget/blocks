@@ -6,6 +6,10 @@ shared:
     target: algorithm.o
     source: std/algorithm.c
 
+  - name: 'std library log'
+    target: log.o
+    source: std/log.c
+
   - name: 'std library string'
     target: string.o
     source: std/string.c
@@ -17,6 +21,11 @@ shared:
   - name: 'std library memory'
     target: memory.o
     source: std/memory.c
+
+  - name: 'std library io'
+    target: io.o
+    source: std/io.c
+
 
 programs:
   # - name: 'blocks program'
@@ -74,11 +83,25 @@ programs:
     shared:
       - memory.o
 
+  - name: 'io test program'
+    sources: 'std/__tests__'
+    target: iotest.exe
+    libs:
+      - name: 'main library'
+        target: iotest.o
+        source: iotest.c
+    shared:
+      - io.o
+      - log.o
+      - string.o
+      - algorithm.o
+
 tests:
   - stringtest.exe
   - string_algotest.exe
   - algorithmtest.exe
   - memorytest.exe
+  - iotest.exe
 
 purge:
   - '*.o'

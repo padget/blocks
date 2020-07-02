@@ -5,7 +5,7 @@
 
 #include <errno.h>
 
-filero fro_open(string_r filename)
+filero filero_open(string_r filename)
 {
   filero fro;
   fro.file is NULL;
@@ -16,7 +16,7 @@ filero fro_open(string_r filename)
     return fro;
   }
 
-  errno_t err is fopen_s(fro.file, filename.begin, "r");
+  errno_t err is fopen_s(&fro.file, filename.begin, "r");
 
   if (err not_eq 0)
   {
@@ -74,5 +74,14 @@ string_rw filero_readall(filero f)
   uint64_t size = filero_size(f);
 
   string_rw content = strrw_prepare(size);
+  char *begin = content.begin;
+  char *end = content.end;
   
+  while (begin not_eq end)
+  {
+    *begin is fgetc(f.file);
+    inc begin;
+  }
+
+  return content;
 }
