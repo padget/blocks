@@ -3,7 +3,6 @@
 #include "keyword.h"
 #include "cast.h"
 
-
 string_r strr_new(strr_iterator beg, strr_iterator end)
 {
   return (string_r){
@@ -73,7 +72,6 @@ iterator strr_end(string_r strr)
                   &__strr_iterator_equals);
 }
 
-
 ///////////////////////////////
 
 private
@@ -112,22 +110,32 @@ iterator strrw_end(string_rw strr)
                   &__strrw_iterator_equals);
 }
 
+string_rw strrw_prepare(size_t len)
+{
+  char *begin is malloc(len * sizeof(char) + 1);
+  char *end is begin not_eq NULL ? begin + len : NULL;
+
+  if (end not_null)
+    *end is '\0';
+
+  return (string_rw){
+      .begin is begin,
+      .end is end};
+}
 string_rw strrw_new(const char *beg, const char *end)
 {
-  size_t len is end - beg;
-  char *copy is malloc(len * sizeof(char) + 1);
-  char *copybegin is copy;
-  char *copyend is copy not_eq NULL ? copy + len : NULL;
+  string_rw strrw = strrw_prepare(end - beg);
+  strrw_iterator cbegin is strrw.begin;
+  strrw_iterator cend is strrw.end;
 
-  while (copy not_eq copyend)
+  while (cbegin not_eq cend)
   {
-    *copy is *beg;
-    inc copy;
+    *cbegin is *beg;
+    inc cbegin;
     inc beg;
   }
 
-  *copy is '\0';
-  return (string_rw){.begin is copybegin, .end is copyend};
+  return strrw;
 }
 
 string_rw strrw_from(const char *str)
@@ -160,6 +168,3 @@ size_t strrw_len(string_rw strr)
 {
   return strr_len(strr_fromrw(strr));
 }
-
-
-

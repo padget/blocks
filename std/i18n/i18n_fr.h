@@ -10,7 +10,7 @@
 #define blocks_log_argument_file_no_value "--file doit avoir une valeur"
 #define blocks_log_argument_file_mandatory "--file est obligatoire"
 
-#define blocks_log_null_filename "le nom du fichier ne doit pas être NULL"
+#define blocks_log_empty_filename "le nom du fichier ne doit pas être vide"
 #define blocks_log_file_not_found "fichier non trouvé : %s"
 #define blocks_log_no_content_in_file "rien à lire dans le fichier : %s"
 #define blocks_log_file_null_pointer "pointeur de fichier NULL"

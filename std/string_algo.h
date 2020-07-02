@@ -1,6 +1,7 @@
 #ifndef __blocks_std_string_algo_h__
 #define __blocks_std_string_algo_h__
 
+#include <stdint.h>
 #include "string.h"
 
 /// //////////////// ///

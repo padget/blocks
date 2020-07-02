@@ -10,7 +10,7 @@ char* freadall(const char *fname)
 
   if (fname == NULL)
   {
-    log_error(blocks_log_null_filename);
+    log_error(blocks_log_empty_filename);
     goto finally;
   }
 
