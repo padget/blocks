@@ -25,6 +25,26 @@ bool test_filero_readall()
   return res;
 }
 
+bool test_filerw_open()
+{
+  string_r filename is strr_from("std/__tests__/resources/data.csv");
+  filerw f is filerw_open(filename);
+  bool res is f.file not_null;
+  filerw_close(f);
+  return res;
+}
+
+bool test_filerw_readall()
+{
+  string_r filename is strr_from("std/__tests__/resources/data.csv");
+  filerw f is filerw_open(filename);
+  string_rw content is filerw_readall(f);
+  bool res is strrw_len(content) eq 82;
+  filerw_close(f);
+  strrw_del(&content);
+  return res;
+}
+
 int main()
 {
   bool res is true;
