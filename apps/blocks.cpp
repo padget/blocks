@@ -5,26 +5,34 @@
 
 namespace cmdl = blocks::cmdl;
 
+int main2(int argc, char **argv)
+{
+  namespace cmdl2 = blocks::cmdl2;
+
+  auto spec =
+      cmdl2::specify(
+          cmdl2::arg<bool>(
+              cmdl2::longname_t("version"),
+              cmdl2::shortname_t("v"),
+              cmdl2::doc_t("display version"),
+              cmdl2::required_t(false),
+              cmdl2::default_val_t<bool>(true)),
+          cmdl2::arg<bool>(
+              cmdl2::longname_t("version"),
+              cmdl2::shortname_t("v"),
+              cmdl2::doc_t("display version"),
+              cmdl2::required_t(false),
+              cmdl2::default_val_t<bool>(true)));
+
+  std::cout << spec.arguments.size() << std::endl;
+  return EXIT_SUCCESS;
+}
+
 int main(int argc, char **argv)
 {
   try
   {
-
-    cmdl::specification spec =
-        cmdl::specify()
-            .arg(cmdl::abool("execute", "e")
-                     .documentation("run compilation command")
-                     .required(true)
-                     .build())
-            .arg(cmdl::astring("file", "f")
-                     .documentation("file to execute")
-                     .build())
-            .build();
-
-    cmdl::command_line_params toto;
-    cmdl::from(spec).parse(argc, argv).fill(toto);
-
-    cmdl::parser_results().extract<bool>("version");
+    return main2(argc, argv);
   }
   catch (std::exception &err)
   {
