@@ -3,28 +3,26 @@
 
 #include "../include/blocks/command_line.hpp"
 
-namespace cmdl = blocks::cmdl;
-
 int main2(int argc, char **argv)
 {
-  namespace cmdl2 = blocks::cmdl2;
+  namespace cmdl = blocks::cmdl;
+  namespace raw = cmdl::raw;
+  namespace spec = cmdl::specification;
+  namespace parsed = cmdl::parsed;
 
-  auto spec =
-      cmdl2::specify(
-          cmdl2::arg<bool>(
-              cmdl2::longname_t("version"),
-              cmdl2::shortname_t("v"),
-              cmdl2::doc_t("display version"),
-              cmdl2::required_t(false),
-              cmdl2::default_val_t<bool>(true)),
-          cmdl2::arg<bool>(
-              cmdl2::longname_t("version"),
-              cmdl2::shortname_t("v"),
-              cmdl2::doc_t("display version"),
-              cmdl2::required_t(false),
-              cmdl2::default_val_t<bool>(true)));
+  auto specs =
+      spec::specify(
+          "--",
+          spec::optional_arg<bool>("version", "display version", false),
+          spec::optional_arg<bool>("help", "display help page", false));
 
-  std::cout << spec.arguments.size() << std::endl;
+  auto &&report =
+      parsed::parse_command_line(
+          specs, raw::from_cmdl(argc, argv));
+
+  std::cout << report.not_presents.empty() << std::endl;
+  std::cout << specs.arguments.size() << std::endl;
+
   return EXIT_SUCCESS;
 }
 

@@ -4,7 +4,28 @@
 #include <string>
 #include <map>
 #include <vector>
-#include <any>
+#include <functional>
+#include <type_traits>
+
+#include "named_type.hpp"
+#include "type_checker.hpp"
+
+namespace blocks::cmdl
+{
+  using str_t = std::string;
+
+  template <typename... args_t>
+  using vec_t = std::vector<args_t...>;
+
+  template <typename... args_t>
+  using dict_t = std::map<args_t...>;
+
+  template <typename... args_t>
+  using sdict_t = dict_t<str_t, args_t...>;
+
+  using strs_t = vec_t<str_t>;
+
+} // namespace blocks::cmdl
 
 namespace blocks::cmdl
 {
@@ -36,28 +57,35 @@ namespace blocks::cmdl
 
 } // namespace blocks::cmdl
 
-#include "named_type.hpp"
-#include <type_traits>
-
-namespace blocks::cmdl2
+namespace blocks::cmdl::raw
 {
-  using longname_t = named_type<std::string, struct longname_tag>;
-  using shortname_t = named_type<std::string, struct shortname_tag>;
-  using doc_t = named_type<std::string, struct doc_tag>;
-  using required_t = named_type<bool, struct required_tag>;
-  using valuable_t = named_type<bool, struct valuable_tag>;
+  struct argument
+  {
+    str_t raw;
+  };
 
-  template <typename type_t>
-  using default_val_t = named_type<type_t, struct default_val_tag>;
+  using line = vec_t<argument>;
+
+  line from_cmdl(int argc, char **argv);
+
+  bool is_argument(const argument &raw);
+  bool is_value(const argument &raw);
+
+} // namespace blocks::cmdl::raw
+
+namespace blocks::cmdl::specification
+{
+  using type_checker_f_t = bool(const std::string &);
+  using type_checker_t = std::function<type_checker_f_t>;
 
   struct argument
   {
-    longname_t longname;
-    shortname_t shortname;
-    doc_t doc;
-    required_t required;
-    valuable_t valuable;
-    default_val_t<std::string> default_value;
+    std::string longname;
+    std::string doc;
+    bool required;
+    bool valuable;
+    std::string default_value;
+    type_checker_t type_check;
   };
 
   template <typename type_t>
@@ -68,45 +96,93 @@ namespace blocks::cmdl2
 
   template <typename type_t>
   typed_argument<type_t> arg(
-      const longname_t &lng,
-      const shortname_t &sht,
-      const doc_t &doc,
-      const required_t &req,
-      const default_val_t<type_t> &def = {})
+      const str_t &lng,
+      const str_t &doc,
+      bool required,
+      const type_t &def = {})
   {
-    return {
-        lng, sht, doc, req,
-        valuable_t(!std::is_same_v<bool, type_t>),
-        default_val_t<std::string>(
-            std::to_string(def.get()))};
+    constexpr bool valuable = !std::is_same_v<bool, type_t>;
+    constexpr type_checker<type_t> tc;
+
+    str_t &&dval = std::to_string(def);
+
+    return {lng, doc, true, valuable, dval, tc};
   }
 
-  struct specification
+  template <typename type_t>
+  typed_argument<type_t>
+  optional_arg(
+      const str_t &lng,
+      const str_t &doc,
+      const type_t &def = {})
   {
-    std::map<std::string, argument> arguments;
-    std::map<std::string, argument&> shortarguments;
+    return arg(lng, doc, false, def);
+  }
+
+  template <typename type_t>
+  typed_argument<type_t>
+  required_arg(
+      const str_t &lng,
+      const str_t &doc,
+      const type_t &def = {})
+  {
+    return arg(lng, doc, true, def);
+  }
+
+  using sdict_arg_t = sdict_t<argument>;
+
+  struct line
+  {
+    sdict_arg_t arguments;
   };
 
   template <typename... types_t>
-  specification specify(
+  line specify(
+      const std::string &prefix,
       const typed_argument<types_t> &... arg)
   {
-    specification spec;
-    (spec.arguments.insert({arg.arg.longname.get(), arg.arg}), ...);
-    (spec.shortarguments.insert({arg.arg.shortname.get(), spec.arguments.at(arg.arg.longname.get())}), ...);
+    line spec;
+    (spec.arguments.insert({prefix + arg.arg.longname, arg.arg}), ...);
     return spec;
   }
 
-  struct parser_results
+} // namespace blocks::cmdl::specification
+
+namespace blocks::cmdl::parsed
+{
+  struct argument
   {
-    std::map<std::string, std::string> vm;
+    str_t name;
+    str_t value;
   };
 
-  using length_t = named_type<int, struct length_tag>;
-  using args_t = named_type<char**, struct args_tag>;
+  struct report
+  {
+    sdict_t<argument> avs;
+    strs_t not_presents;
+    strs_t bad_value_types;
+  };
 
-  parser_results parse_command_line(const specification &spec, length_t argc, args_t argv);
+  report init_report(
+      const raw::line &rline);
 
-} // namespace blocks::cmdl2
+  void init_defaults(
+      const specification::line &spec,
+      report &rep);
+
+  void check_required(
+      const specification::line &spec,
+      report &rep);
+
+  void check_types(
+      const specification::line &spec,
+      report &rep);
+
+  report
+  parse_command_line(
+      const specification::line &spec,
+      const raw::line &args);
+
+} // namespace blocks::cmdl::parsed
 
 #endif

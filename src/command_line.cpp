@@ -1,142 +1,101 @@
 #include "../include/blocks/command_line.hpp"
-#include <algorithm>
 #include <optional>
+#include <algorithm>
 
-namespace cmdl2 = blocks::cmdl2;
+namespace cmdl = blocks::cmdl;
 
-bool is_argument(const std::string &str)
+namespace raw = cmdl::raw;
+
+bool raw::is_argument(
+    const raw::argument &arg)
 {
-  return str.rfind("--", 0) == 0;
+  return arg.raw.rfind("--", 0) == 0;
 }
 
-bool is_value(const std::string &str)
+bool raw::is_value(
+    const raw::argument &arg)
 {
-  return !is_argument(str);
+  return not is_argument(arg);
 }
 
-std::string
-extract_arg(
-    const std::string &str)
+raw::line
+raw::from_cmdl(
+    int argc, char **argv)
 {
-  return str.substr(2);
-}
+  raw::line args;
 
-std::vector<std::string>
-to_vector(
-    cmdl2::length_t argc,
-    cmdl2::args_t argv)
-{
-  std::vector<std::string> args;
-
-  for (int i = 0; i < argc.get(); i++)
-    args.push_back(argv.get()[i]);
+  for (int i = 0; i < argc; ++i)
+    args.push_back(raw::argument{argv[i]});
 
   return args;
 }
 
-cmdl2::parser_results
-init_parser_results(
-    cmdl2::length_t len,
-    cmdl2::args_t args)
+namespace parsed = cmdl::parsed;
+namespace spec = cmdl::specification;
+
+parsed::report parsed::init_report(
+    const raw::line &rline)
 {
-  cmdl2::parser_results res;
+  parsed::report rep;
+  parsed::argument* last = nullptr;
 
-  auto argsv = to_vector(len, args);
-  std::string lastarg;
-
-  for (auto &&arg : argsv)
+  for (auto&& arg : rline)
   {
-    if (is_argument(arg))
+    if (raw::is_argument(arg))
     {
-      lastarg = extract_arg(arg);
-      res.vm[lastarg] = "";
+      parsed::argument parg;
+      parg.name = arg.raw;
+      rep.avs.insert({parg.name, parg});
+      last = &rep.avs.at(parg.name);
     }
-    else
+    else if (raw::is_value(arg))
     {
-      res.vm[lastarg] = arg;
-      lastarg = "";
-    }
-  }
-
-  return res;
-}
-
-bool inspec(
-    const cmdl2::specification &spec,
-    const std::string &arg)
-{
-  return spec.arguments.count(arg) == 1 or
-         spec.shortarguments.count(arg) == 1;
-}
-
-const cmdl2::argument &
-arg_from_spec(
-    const cmdl2::specification &spec,
-    const std::string &argname)
-{
-  return spec.arguments.count(argname) == 1
-             ? spec.arguments.at(argname)
-             : spec.shortarguments.at(argname);
-}
-
-const std::string &
-default_from_spec(
-    const cmdl2::specification &spec,
-    const std::string &argname)
-{
-  return arg_from_spec(spec, argname)
-      .default_value.get();
-}
-
-bool check_no_unknown_arg(
-    const cmdl2::specification &spec,
-    const cmdl2::parser_results &res)
-{
-  bool no_unknown_arg = true;
-
-  for (auto &&argres : res.vm)
-  {
-    if (no_unknown_arg)
-      no_unknown_arg = no_unknown_arg and
-                       inspec(spec, argres.first);
-    else
-      break;
-  }
-
-  return no_unknown_arg;
-}
-
-void fill_default_value_if_needed(
-    const cmdl2::specification &spec,
-    cmdl2::parser_results &res)
-{
-  for (auto &arg : res.vm)
-  {
-    if (arg.second.empty())
-      arg.second = default_from_spec(spec, arg.first);
-  }
-}
-
-cmdl2::parser_results
-cmdl2::parse_command_line(
-    const cmdl2::specification &spec,
-    cmdl2::length_t argc,
-    cmdl2::args_t argv)
-{
-  cmdl2::parser_results &&res =
-      init_parser_results(argc, argv);
-
-  check_no_unknown_arg(spec, res);
-  fill_default_value_if_needed(spec, res);
-  
-  for (auto &&argv : res.vm)
-  {
-    if (inspec(spec, argv.first))
-    {
-      const cmdl2::argument &arg =
-          arg_from_spec(spec, argv.first);
+      if (not (last eq nullptr))
+      {
+        (*last).value = arg.raw;
+        last = nullptr;
+      }
     }
   }
 
-  return res;
+  return rep;
+}
+
+void parsed::init_defaults(
+  const spec::line& spec,
+  parsed::report& rep)
+{
+  for (auto&& [name, arg]: rep.avs)
+  {
+    if (spec.arguments.count(name) == 1)
+      if (arg.value.empty())
+        arg.value = spec.arguments.at(name).default_value;
+  }
+}
+
+void parsed::check_required(
+    const spec::line &spec,
+    report &rep)
+{
+
+}
+
+void parsed::check_types(
+    const spec::line &spec,
+    report &rep)
+{
+}
+
+parsed::report
+parsed::parse_command_line(
+    const spec::line &spec,
+    const raw::line &args)
+{
+  parsed::report rep =
+      parsed::init_report(spec);
+
+  parsed::check_required(spec, rep);
+  parsed::check_types(spec, rep);
+
+  return rep;
 }
