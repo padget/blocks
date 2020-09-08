@@ -37,9 +37,9 @@ parsed::report parsed::init_report(
     const raw::line &rline)
 {
   parsed::report rep;
-  parsed::argument* last = nullptr;
+  parsed::argument *last = nullptr;
 
-  for (auto&& arg : rline)
+  for (auto &&arg : rline)
   {
     if (raw::is_argument(arg))
     {
@@ -50,7 +50,7 @@ parsed::report parsed::init_report(
     }
     else if (raw::is_value(arg))
     {
-      if (not (last eq nullptr))
+      if (not(last == nullptr))
       {
         (*last).value = arg.raw;
         last = nullptr;
@@ -62,10 +62,10 @@ parsed::report parsed::init_report(
 }
 
 void parsed::init_defaults(
-  const spec::line& spec,
-  parsed::report& rep)
+    const spec::line &spec,
+    parsed::report &rep)
 {
-  for (auto&& [name, arg]: rep.avs)
+  for (auto &&[name, arg] : rep.avs)
   {
     if (spec.arguments.count(name) == 1)
       if (arg.value.empty())
@@ -73,17 +73,32 @@ void parsed::init_defaults(
   }
 }
 
+#include <iostream>
+
 void parsed::check_required(
     const spec::line &spec,
     report &rep)
 {
-
+  for (auto &&[name, arg] : spec.arguments)
+    if (arg.required)
+    {
+      std::cout << name << " required \n";
+      if (rep.avs.count(name) == 0)
+      {
+        std::cout << name << "not found\n";
+        rep.not_presents.push_back(name);
+      }
+    }
 }
 
 void parsed::check_types(
     const spec::line &spec,
     report &rep)
 {
+  for (auto &&[name, arg] : rep.avs)
+    if (spec.arguments.count(name))
+      if (not spec.arguments.at(name).type_check(arg.value))
+        rep.bad_value_types.push_back(name);
 }
 
 parsed::report
@@ -92,8 +107,9 @@ parsed::parse_command_line(
     const raw::line &args)
 {
   parsed::report rep =
-      parsed::init_report(spec);
+      parsed::init_report(args);
 
+  parsed::init_defaults(spec, rep);
   parsed::check_required(spec, rep);
   parsed::check_types(spec, rep);
 

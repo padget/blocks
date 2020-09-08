@@ -2,26 +2,40 @@
 #include <string>
 
 #include "../include/blocks/command_line.hpp"
+namespace cmdl = blocks::cmdl;
+namespace raw = cmdl::raw;
+namespace spec = cmdl::specification;
+namespace parsed = cmdl::parsed;
+
+void print_report(const parsed::report &rep)
+{
+  std::cout << "print report\n";
+  for (auto &&[name, arg] : rep.avs)
+  {
+    std::cout << name << ' ' << arg.value << '\n';
+  }
+
+  std::cout << "not presents\n";
+  for (auto &&name : rep.not_presents)
+  {
+    std::cout << name << '\n';
+  }
+}
 
 int main2(int argc, char **argv)
 {
-  namespace cmdl = blocks::cmdl;
-  namespace raw = cmdl::raw;
-  namespace spec = cmdl::specification;
-  namespace parsed = cmdl::parsed;
 
   auto specs =
       spec::specify(
           "--",
-          spec::optional_arg<bool>("version", "display version", false),
-          spec::optional_arg<bool>("help", "display help page", false));
+          spec::required_arg<bool>("version", "display version", false),
+          spec::required_arg<bool>("help", "display help page"));
 
   auto &&report =
       parsed::parse_command_line(
           specs, raw::from_cmdl(argc, argv));
 
-  std::cout << report.not_presents.empty() << std::endl;
-  std::cout << specs.arguments.size() << std::endl;
+  print_report(report);
 
   return EXIT_SUCCESS;
 }

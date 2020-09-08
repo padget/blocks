@@ -4,6 +4,7 @@
 #include <string>
 #include <map>
 #include <vector>
+#include <optional>
 #include <functional>
 #include <type_traits>
 
@@ -99,12 +100,12 @@ namespace blocks::cmdl::specification
       const str_t &lng,
       const str_t &doc,
       bool required,
-      const type_t &def = {})
+      const std::optional<type_t> &def = std::nullopt)
   {
     constexpr bool valuable = !std::is_same_v<bool, type_t>;
     constexpr type_checker<type_t> tc;
 
-    str_t &&dval = std::to_string(def);
+    str_t &&dval = std::to_string(def.value_or(""));
 
     return {lng, doc, true, valuable, dval, tc};
   }
@@ -114,7 +115,7 @@ namespace blocks::cmdl::specification
   optional_arg(
       const str_t &lng,
       const str_t &doc,
-      const type_t &def = {})
+      const std::optional<type_t> &def = std::nullopt)
   {
     return arg(lng, doc, false, def);
   }
@@ -124,7 +125,7 @@ namespace blocks::cmdl::specification
   required_arg(
       const str_t &lng,
       const str_t &doc,
-      const type_t &def = {})
+      const std::optional<type_t> &def = std::nullopt)
   {
     return arg(lng, doc, true, def);
   }
@@ -142,7 +143,9 @@ namespace blocks::cmdl::specification
       const typed_argument<types_t> &... arg)
   {
     line spec;
-    (spec.arguments.insert({prefix + arg.arg.longname, arg.arg}), ...);
+    (spec.arguments.insert(
+         {prefix + arg.arg.longname, arg.arg}),
+     ...);
     return spec;
   }
 
