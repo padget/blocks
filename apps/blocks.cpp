@@ -9,14 +9,20 @@ namespace parsed = cmdl::parsed;
 
 void print_report(const parsed::report &rep)
 {
-  std::cout << "print report\n";
+  std::cout << "---- print report\n";
   for (auto &&[name, arg] : rep.avs)
   {
     std::cout << name << ' ' << arg.value << '\n';
   }
 
-  std::cout << "not presents\n";
+  std::cout << "---- not presents\n";
   for (auto &&name : rep.not_presents)
+  {
+    std::cout << name << '\n';
+  }
+
+  std::cout << "---- bad types\n";
+  for (auto&& name : rep.bad_value_types)
   {
     std::cout << name << '\n';
   }
@@ -24,16 +30,16 @@ void print_report(const parsed::report &rep)
 
 int main2(int argc, char **argv)
 {
-
   auto specs =
       spec::specify(
           "--",
           spec::required_arg<bool>("version", "display version", false),
-          spec::required_arg<bool>("help", "display help page"));
+          spec::required_arg<bool>("help", "display help page", false), 
+          spec::required_arg<int>("depth", "depth of the compilation"), 
+          spec::required_arg<cmdl::verbosity>("verbose", "detailed verbose lvl", cmdl::verbosity::v));
 
-  auto &&report =
-      parsed::parse_command_line(
-          specs, raw::from_cmdl(argc, argv));
+  auto &&line = raw::from_cmdl(argc, argv); 
+  auto &&report = parsed::parse_command_line(specs, line);
 
   print_report(report);
 

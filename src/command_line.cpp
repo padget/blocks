@@ -65,12 +65,23 @@ void parsed::init_defaults(
     const spec::line &spec,
     parsed::report &rep)
 {
-  for (auto &&[name, arg] : rep.avs)
-  {
-    if (spec.arguments.count(name) == 1)
-      if (arg.value.empty())
-        arg.value = spec.arguments.at(name).default_value;
-  }
+  for (auto &&[name, arg] : spec.arguments)
+    if (rep.avs.count(name) == 1)
+    {
+      str_t &value = rep.avs.at(name).value;
+
+      if (not arg.default_value.empty() and value.empty())
+        value = arg.default_value;
+    }
+    else 
+    {
+      if (not arg.default_value.empty())
+      {
+        rep.avs.insert({
+          name, 
+          parsed::argument{name, arg.default_value}});
+      }
+    }
 }
 
 #include <iostream>
@@ -114,4 +125,29 @@ parsed::parse_command_line(
   parsed::check_types(spec, rep);
 
   return rep;
+}
+
+
+// Externaliser cette fonction ainsi que 
+// cmdl::params et cmdl::verbosity dans un 
+// autre fichier dans lequelle on va aussi
+// definir les specifications du programme.
+
+// Ce fichier est plutot une API !
+
+
+cmdl::params
+cmdl::convert(
+    const parsed::report &rep)
+{
+  cmdl::params parms;
+  bool no_bt = rep.bad_value_types.empty();
+  bool no_np = rep.not_presents.empty();
+
+  if (no_bt and no_np)
+  {
+    parms.compile = rep.avs.at("--compile")
+  }
+
+  return parms;
 }

@@ -26,7 +26,7 @@ namespace blocks::cmdl
     bool operator()(const std::string &value)
     {
       for (const char &c : value)
-        if ('0' <= c and c <= '9')
+        if (c < '0' and '9' < c)
           return false;
       return true;
     }

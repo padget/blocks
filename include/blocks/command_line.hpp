@@ -11,6 +11,71 @@
 #include "named_type.hpp"
 #include "type_checker.hpp"
 
+#include <iostream>
+
+namespace blocks::cmdl
+{
+  enum class verbosity
+  {
+    v,
+    vv,
+    vvv,
+    vvvv
+  };
+
+  struct params
+  {
+    bool compile = false;
+    bool execute = false;
+    bool help = false;
+    bool stats = false;
+    bool version = false;
+
+    verbosity verbose = verbosity::v;
+
+    std::string file;
+  };
+} // namespace blocks::cmdl
+
+namespace std
+{
+  namespace cmdl = blocks::cmdl;
+
+  inline string
+  to_string(const cmdl ::verbosity &v)
+  {
+    switch (v)
+    {
+    case cmdl::verbosity::v:
+      return "v";
+    case cmdl::verbosity::vv:
+      return "vv";
+    case cmdl::verbosity::vvv:
+      return "vvv";
+    case cmdl::verbosity::vvvv:
+      return "vvvv";
+    default:
+      return "";
+    }
+  }
+} // namespace std
+
+namespace blocks::cmdl
+{
+  template <>
+  struct type_checker<verbosity>
+  {
+    bool operator()(const std::string &v)
+    {
+      return v == "v" or
+             v == "vv" or
+             v == "vvv" or
+             v == "vvvv";
+    }
+  };
+
+} // namespace blocks::cmdl
+
 namespace blocks::cmdl
 {
   using str_t = std::string;
@@ -26,35 +91,8 @@ namespace blocks::cmdl
 
   using strs_t = vec_t<str_t>;
 
-} // namespace blocks::cmdl
-
-namespace blocks::cmdl
-{
-  enum class verbosity
-  {
-    v,
-    vv,
-    vvv,
-    vvvv
-  };
-
-  struct command_line_params
-  {
-    bool compile = false;
-    bool execute = false;
-    bool help = false;
-    bool stats = false;
-    bool version = false;
-
-    verbosity verbose = verbosity::v;
-
-    std::string file;
-  };
-
-  struct command_line
-  {
-    command_line_params params;
-  };
+  template <typename type_t>
+  using opt_t = std::optional<type_t>;
 
 } // namespace blocks::cmdl
 
@@ -74,6 +112,15 @@ namespace blocks::cmdl::raw
 
 } // namespace blocks::cmdl::raw
 
+namespace std
+{
+  inline string
+  to_string(bool __val)
+  {
+    return __val ? "true" : "false";
+  }
+} // namespace std
+
 namespace blocks::cmdl::specification
 {
   using type_checker_f_t = bool(const std::string &);
@@ -84,7 +131,6 @@ namespace blocks::cmdl::specification
     std::string longname;
     std::string doc;
     bool required;
-    bool valuable;
     std::string default_value;
     type_checker_t type_check;
   };
@@ -100,14 +146,13 @@ namespace blocks::cmdl::specification
       const str_t &lng,
       const str_t &doc,
       bool required,
-      const std::optional<type_t> &def = std::nullopt)
+      const opt_t<type_t> &def = std::nullopt)
   {
-    constexpr bool valuable = !std::is_same_v<bool, type_t>;
     constexpr type_checker<type_t> tc;
 
-    str_t &&dval = std::to_string(def.value_or(""));
-
-    return {lng, doc, true, valuable, dval, tc};
+    str_t &&dval = def.has_value() ? std::to_string(def.value()) : "";
+    std::cout << "default value " << dval << std::endl;
+    return {lng, doc, true, dval, tc};
   }
 
   template <typename type_t>
@@ -115,7 +160,7 @@ namespace blocks::cmdl::specification
   optional_arg(
       const str_t &lng,
       const str_t &doc,
-      const std::optional<type_t> &def = std::nullopt)
+      const opt_t<type_t> &def = std::nullopt)
   {
     return arg(lng, doc, false, def);
   }
@@ -125,7 +170,7 @@ namespace blocks::cmdl::specification
   required_arg(
       const str_t &lng,
       const str_t &doc,
-      const std::optional<type_t> &def = std::nullopt)
+      const opt_t<type_t> &def = std::nullopt)
   {
     return arg(lng, doc, true, def);
   }
@@ -187,5 +232,12 @@ namespace blocks::cmdl::parsed
       const raw::line &args);
 
 } // namespace blocks::cmdl::parsed
+
+namespace blocks::cmdl
+{
+  cmdl::params
+  convert(
+      const parsed::report &rep);
+}
 
 #endif
