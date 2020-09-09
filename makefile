@@ -5,6 +5,8 @@ CXX_FLAGS = -std=${CXX_STANDARD} -Wall -Werror -pedantic -Wunused
 
 build: blocks.exe
 
+scratch: clean build
+
 
 command_line.o: src/command_line.cpp include/blocks/command_line.hpp
 	${CXX} ${CXX_FLAGS} -o command_line.o -c src/command_line.cpp

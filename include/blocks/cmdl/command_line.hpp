@@ -1,17 +1,11 @@
 #ifndef __command_line_hpp__
 #define __command_line_hpp__
 
-#include <string>
-#include <map>
-#include <vector>
-#include <optional>
-#include <functional>
-#include <type_traits>
-
-#include "named_type.hpp"
-#include "type_checker.hpp"
-
 #include <iostream>
+#include <functional>
+
+#include "std.hpp"
+#include "basic_types.hpp"
 
 namespace blocks::cmdl
 {
@@ -60,41 +54,6 @@ namespace std
   }
 } // namespace std
 
-namespace blocks::cmdl
-{
-  template <>
-  struct type_checker<verbosity>
-  {
-    bool operator()(const std::string &v)
-    {
-      return v == "v" or
-             v == "vv" or
-             v == "vvv" or
-             v == "vvvv";
-    }
-  };
-
-} // namespace blocks::cmdl
-
-namespace blocks::cmdl
-{
-  using str_t = std::string;
-
-  template <typename... args_t>
-  using vec_t = std::vector<args_t...>;
-
-  template <typename... args_t>
-  using dict_t = std::map<args_t...>;
-
-  template <typename... args_t>
-  using sdict_t = dict_t<str_t, args_t...>;
-
-  using strs_t = vec_t<str_t>;
-
-  template <typename type_t>
-  using opt_t = std::optional<type_t>;
-
-} // namespace blocks::cmdl
 
 namespace blocks::cmdl::raw
 {
@@ -123,15 +82,16 @@ namespace std
 
 namespace blocks::cmdl::specification
 {
+
   using type_checker_f_t = bool(const std::string &);
   using type_checker_t = std::function<type_checker_f_t>;
 
   struct argument
   {
-    std::string longname;
-    std::string doc;
+    str_t longname;
+    str_t doc;
     bool required;
-    std::string default_value;
+    str_t default_value;
     type_checker_t type_check;
   };
 
@@ -148,7 +108,7 @@ namespace blocks::cmdl::specification
       bool required,
       const opt_t<type_t> &def = std::nullopt)
   {
-    constexpr type_checker<type_t> tc;
+    constexpr type_wrapper<type_t> tc;
 
     str_t &&dval = def.has_value() ? std::to_string(def.value()) : "";
     std::cout << "default value " << dval << std::endl;

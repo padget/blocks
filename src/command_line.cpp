@@ -1,4 +1,4 @@
-#include "../include/blocks/command_line.hpp"
+#include "../include/blocks/cmdl/command_line.hpp"
 #include <optional>
 #include <algorithm>
 
@@ -73,13 +73,12 @@ void parsed::init_defaults(
       if (not arg.default_value.empty() and value.empty())
         value = arg.default_value;
     }
-    else 
+    else
     {
       if (not arg.default_value.empty())
       {
-        rep.avs.insert({
-          name, 
-          parsed::argument{name, arg.default_value}});
+        rep.avs.insert({name,
+                        parsed::argument{name, arg.default_value}});
       }
     }
 }
@@ -127,14 +126,12 @@ parsed::parse_command_line(
   return rep;
 }
 
-
-// Externaliser cette fonction ainsi que 
-// cmdl::params et cmdl::verbosity dans un 
+// Externaliser cette fonction ainsi que
+// cmdl::params et cmdl::verbosity dans un
 // autre fichier dans lequelle on va aussi
 // definir les specifications du programme.
 
 // Ce fichier est plutot une API !
-
 
 cmdl::params
 cmdl::convert(
@@ -146,7 +143,7 @@ cmdl::convert(
 
   if (no_bt and no_np)
   {
-    parms.compile = rep.avs.at("--compile")
+    parms.compile = rep.avs.at("--compile").value == "true";
   }
 
   return parms;
