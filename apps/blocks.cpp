@@ -1,7 +1,10 @@
 #include <iostream>
 #include <string>
 
-#include "../include/blocks/command_line.hpp"
+
+#include "../include/blocks/cmdl/my_types.hpp"
+#include "../include/blocks/cmdl/command_line.hpp"
+
 namespace cmdl = blocks::cmdl;
 namespace raw = cmdl::raw;
 namespace spec = cmdl::specification;
@@ -22,7 +25,7 @@ void print_report(const parsed::report &rep)
   }
 
   std::cout << "---- bad types\n";
-  for (auto&& name : rep.bad_value_types)
+  for (auto &&name : rep.bad_value_types)
   {
     std::cout << name << '\n';
   }
@@ -34,11 +37,11 @@ int main2(int argc, char **argv)
       spec::specify(
           "--",
           spec::required_arg<bool>("version", "display version", false),
-          spec::required_arg<bool>("help", "display help page", false), 
-          spec::required_arg<int>("depth", "depth of the compilation"), 
+          spec::required_arg<bool>("help", "display help page", false),
+          spec::required_arg<int>("depth", "depth of the compilation"),
           spec::required_arg<cmdl::verbosity>("verbose", "detailed verbose lvl", cmdl::verbosity::v));
 
-  auto &&line = raw::from_cmdl(argc, argv); 
+  auto &&line = raw::from_cmdl(argc, argv);
   auto &&report = parsed::parse_command_line(specs, line);
 
   print_report(report);

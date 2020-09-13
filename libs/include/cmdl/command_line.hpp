@@ -4,115 +4,67 @@
 #include <iostream>
 #include <functional>
 
-#include "std.hpp"
+#include "../std.hpp"
 #include "basic_types.hpp"
-
-namespace blocks::cmdl
-{
-  enum class verbosity
-  {
-    v,
-    vv,
-    vvv,
-    vvvv
-  };
-
-  struct params
-  {
-    bool compile = false;
-    bool execute = false;
-    bool help = false;
-    bool stats = false;
-    bool version = false;
-
-    verbosity verbose = verbosity::v;
-
-    std::string file;
-  };
-} // namespace blocks::cmdl
-
-namespace std
-{
-  namespace cmdl = blocks::cmdl;
-
-  inline string
-  to_string(const cmdl ::verbosity &v)
-  {
-    switch (v)
-    {
-    case cmdl::verbosity::v:
-      return "v";
-    case cmdl::verbosity::vv:
-      return "vv";
-    case cmdl::verbosity::vvv:
-      return "vvv";
-    case cmdl::verbosity::vvvv:
-      return "vvvv";
-    default:
-      return "";
-    }
-  }
-} // namespace std
-
 
 namespace blocks::cmdl::raw
 {
+  template <typename string_t>
   struct argument
   {
-    str_t raw;
+    string_t raw;
   };
 
-  using line = vec_t<argument>;
+  template <typename string_t>
+  using line = vec_t<argument<string_t>>;
 
-  line from_cmdl(int argc, char **argv);
+  template <typename string_t>
+  line<string_t> from_cmdl(int argc, char **argv);
 
-  bool is_argument(const argument &raw);
-  bool is_value(const argument &raw);
+  template <typename string_t>
+  bool is_argument(const argument<string_t> &raw);
 
+  template <typename string_t>
+  bool is_value(const argument<string_t> &raw);
 } // namespace blocks::cmdl::raw
-
-namespace std
-{
-  inline string
-  to_string(bool __val)
-  {
-    return __val ? "true" : "false";
-  }
-} // namespace std
 
 namespace blocks::cmdl::specification
 {
+  template <typename string_t>
+  using type_checker_f_t = bool(const string_t &);
 
-  using type_checker_f_t = bool(const std::string &);
-  using type_checker_t = std::function<type_checker_f_t>;
+  template <typename string_t>
+  using type_checker_t = std::function<type_checker_f_t<string_t>>;
 
+  template <typename string_t>
   struct argument
   {
-    str_t longname;
-    str_t doc;
+    string_t longname;
+    string_t doc;
     bool required;
-    str_t default_value;
-    type_checker_t type_check;
+    string_t default_value;
+    type_checker_t<string_t> type_check;
   };
 
-  template <typename type_t>
+  template <
+      typename type_t,
+      typename string_t>
   struct typed_argument
   {
-    argument arg;
+    argument<string_t> arg;
   };
 
-  template <typename type_t>
-  typed_argument<type_t> arg(
-      const str_t &lng,
-      const str_t &doc,
+  template <
+      typename type_t,
+      typename string_t>
+  typed_argument<type_t, string_t> arg(
+      const string_t &lng,
+      const string_t &doc,
       bool required,
       const opt_t<type_t> &def = std::nullopt)
   {
-    constexpr type_wrapper<type_t> tc;
-
-    str_t &&dval = def.has_value() ? std::to_string(def.value()) : "";
-    std::cout << "default value " << dval << std::endl;
-    return {lng, doc, true, dval, tc};
+    string_t &&dval = def.has_value() ? to_string(def.value()) : "";
+    return {lng, doc, true, dval, &str_convertible<type_t>};
   }
 
   template <typename type_t>
@@ -195,9 +147,8 @@ namespace blocks::cmdl::parsed
 
 namespace blocks::cmdl
 {
-  cmdl::params
-  convert(
-      const parsed::report &rep);
+  template <typename target_t>
+  target_t convert(const parsed::report &rep);
 }
 
 #endif

@@ -8,8 +8,8 @@ build: blocks.exe
 scratch: clean build
 
 
-command_line.o: src/command_line.cpp include/blocks/command_line.hpp
-	${CXX} ${CXX_FLAGS} -o command_line.o -c src/command_line.cpp
+command_line.o: libs/include/cmdl/command_line.cpp libs/include/cmdl/command_line.hpp
+	${CXX} ${CXX_FLAGS} -o command_line.o -c libs/include/cmdl/command_line.cpp
 
 blocks.o:	apps/blocks.cpp
 	${CXX} ${CXX_FLAGS} -o blocks.o -c apps/blocks.cpp

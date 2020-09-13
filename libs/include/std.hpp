@@ -6,7 +6,7 @@
 #include <vector>
 #include <optional>
 
-namespace blocks::cmdl
+namespace blocks
 {
   using str_t = std::string;
 
@@ -24,6 +24,6 @@ namespace blocks::cmdl
   template <typename type_t>
   using opt_t = std::optional<type_t>;
 
-} // namespace blocks::cmdl
+} // namespace blocks
 
 #endif

@@ -1,4 +1,4 @@
-#include "../include/blocks/cmdl/command_line.hpp"
+#include "command_line.hpp"
 #include <optional>
 #include <algorithm>
 
@@ -73,14 +73,9 @@ void parsed::init_defaults(
       if (not arg.default_value.empty() and value.empty())
         value = arg.default_value;
     }
-    else
-    {
-      if (not arg.default_value.empty())
-      {
-        rep.avs.insert({name,
-                        parsed::argument{name, arg.default_value}});
-      }
-    }
+    else if (not arg.default_value.empty())
+      rep.avs.insert({name,
+                      parsed::argument{name, arg.default_value}});
 }
 
 #include <iostream>
