@@ -57,24 +57,37 @@ namespace blocks::cmdl::specification
   template <
       typename type_t,
       typename string_t>
-  typed_argument<type_t, string_t> arg(
-      const string_t &lng,
-      const string_t &doc,
-      bool required,
-      const opt_t<type_t> &def = std::nullopt)
+  struct typed_argument_builder
   {
-    string_t &&dval = def.has_value() ? to_string(def.value()) : "";
-    return {lng, doc, true, dval, &str_convertible<type_t>};
-  }
+  private:
+    typed_argument<type_t, string_t> built;
+    using tab = typed_argument_builder;
 
-  template <typename type_t>
-  typed_argument<type_t>
+  public:
+    tab &name(const string_t &name);
+    tab &doc(const string &doc);
+    tab &required();
+    tab &not_required();
+    tab &default_value(const std::optional<type_t> &v);
+    typed_argument<type_t, string_t> get();
+  };
+
+  template <
+      typename type_t,
+      typename string_t>
+  typed_argument<type_t, string_t>
   optional_arg(
-      const str_t &lng,
+      const str_t &name,
       const str_t &doc,
       const opt_t<type_t> &def = std::nullopt)
   {
-    return arg(lng, doc, false, def);
+    typed_argument_builder<type_t, string_t> builder;
+    return builder
+        .name(name)
+        .doc(doc)
+        .default_value(def)
+        .not_required()
+        .get();
   }
 
   template <typename type_t>
@@ -84,22 +97,30 @@ namespace blocks::cmdl::specification
       const str_t &doc,
       const opt_t<type_t> &def = std::nullopt)
   {
-    return arg(lng, doc, true, def);
+    typed_argument_builder<type_t, string_t> builder;
+    return builder
+        .name(name)
+        .doc(doc)
+        .default_value(def)
+        .required()
+        .get();
   }
 
-  using sdict_arg_t = sdict_t<argument>;
+  template <typename string_t>
+  using sdict_arg_t = sdict_t<argument<string_t>>;
 
+  template <typename string_t>
   struct line
   {
-    sdict_arg_t arguments;
+    sdict_arg_t<string_t> arguments;
   };
 
-  template <typename... types_t>
-  line specify(
-      const std::string &prefix,
-      const typed_argument<types_t> &... arg)
+  template <typename string_t, typename... types_t>
+  line<string_t> specify(
+      const string_t &prefix,
+      const typed_argument<types_t, string_t> &... arg)
   {
-    line spec;
+    line<string_t> spec;
     (spec.arguments.insert(
          {prefix + arg.arg.longname, arg.arg}),
      ...);
@@ -110,45 +131,52 @@ namespace blocks::cmdl::specification
 
 namespace blocks::cmdl::parsed
 {
+  template <typename string_t>
   struct argument
   {
-    str_t name;
-    str_t value;
+    string_t name;
+    string_t value;
   };
 
+  template <typename string_t>
   struct report
   {
-    sdict_t<argument> avs;
+    sdict_t<argument<string_t>> avs;
     strs_t not_presents;
     strs_t bad_value_types;
   };
 
-  report init_report(
-      const raw::line &rline);
+  template <typename string_t>
+  report<string_t> init_report(
+      const raw::line<string_t> &rline);
 
+  template <typename string_t>
   void init_defaults(
-      const specification::line &spec,
-      report &rep);
+      const specification::line<string_t> &spec,
+      report<string_t> &rep);
 
+  template <typename string_t>
   void check_required(
-      const specification::line &spec,
-      report &rep);
+      const specification::line<string_t> &spec,
+      report<string_t> &rep);
 
+  template <typename string_t>
   void check_types(
-      const specification::line &spec,
-      report &rep);
+      const specification::line<string_t> &spec,
+      report<string_t> &rep);
 
-  report
+  template <typename string_t>
+  report<string_t>
   parse_command_line(
-      const specification::line &spec,
-      const raw::line &args);
+      const specification::line<string_t> &spec,
+      const raw::line<string_t> &args);
 
 } // namespace blocks::cmdl::parsed
 
 namespace blocks::cmdl
 {
-  template <typename target_t>
-  target_t convert(const parsed::report &rep);
+  template <typename target_t, typename string_t>
+  target_t convert(const parsed::report<string_t> &rep);
 }
 
 #endif
