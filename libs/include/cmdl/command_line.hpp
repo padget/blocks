@@ -7,6 +7,18 @@
 #include "../std.hpp"
 #include "basic_types.hpp"
 
+namespace cmdl::raw
+{
+  template <typename string_t>
+  struct argument
+  {
+    string_t raw;
+  };
+
+  
+
+} // namespace cmdl::raw
+
 namespace blocks::cmdl::raw
 {
   template <typename string_t>
