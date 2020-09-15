@@ -6,54 +6,103 @@
 namespace libs
 {
   template <typename char_t>
-  using string = vector<char_t>;
+  using basic_string = vector<char_t>;
+
+  using string = basic_string<char>;
+
+  template <typename char_t, size_t size>
+  basic_string<char_t>
+  nullterm(const char_t (&cs)[size]);
 
   template <typename char_t>
   bool starts_with(
-      const string<char_t> &s,
-      const string<char_t> &prefix);
+      const basic_string<char_t> &s,
+      const basic_string<char_t> &prefix);
 
   template <typename char_t>
   bool ends_with(
-      const string<char_t> &s,
-      const string<char_t> &suffix);
+      const basic_string<char_t> &s,
+      const basic_string<char_t> &suffix);
 
 } // namespace libs
 
+#include <iostream>
+
+template <typename char_t, size_t size>
+libs::basic_string<char_t>
+libs::nullterm(const char_t (&cs)[size])
+{
+  if (size >= 1)
+    return libs::basic_string<char_t>(cs, size - 1);
+  else
+    return libs::basic_string<char_t>();
+}
+
 template <typename char_t>
 bool libs::starts_with(
-    const libs::string<char_t> &s,
-    const libs::string<char_t> &prefix)
+    const libs::basic_string<char_t> &s,
+    const libs::basic_string<char_t> &prefix)
 {
+  std::cout << libs::size(s) << '\n';
+  std::cout << libs::size(prefix) << '\n';
+
   if (libs::size(s) < libs::size(prefix))
     return false;
   else
   {
-    libs::index_t i = 0;
+    auto sit = libs::begin(s);
+    auto send = libs::end(s);
+    auto pit = libs::begin(prefix);
+    auto pend = libs::end(prefix);
 
-    while (libs::get(s, i) == libs::get(prefix, i))
-      i++;
+    while (not libs::equals(pit, pend))
+    {
+      const char_t &cs = libs::get(sit);
+      const char_t &cp = libs::get(pit);
 
-    return i == libs::size(prefix);
+      if (cs == cp)
+      {
+        sit = libs::next(sit);
+        pit = libs::next(pit);
+      }
+      else
+        break;
+    }
+
+    return libs::equals(pit, pend);
   }
 }
 
 template <typename char_t>
 bool libs::ends_with(
-    const libs::string<char_t> &s,
-    const libs::string<char_t> &suffix)
+    const libs::basic_string<char_t> &s,
+    const libs::basic_string<char_t> &suffix)
 {
 
   if (libs::size(s) < libs::size(suffix))
     return false;
   else
   {
-    libs::index_t i = libs::size(s) - libs::size(suffix);
+    auto srit = libs::rbegin(s);
+    auto sufrit = libs::rbegin(suffix);
+    auto srend = libs::rend(s);
+    auto sufrend = libs::rend(suffix);
 
-    while (libs::get(s, i) == libs::get(suffix, i - libs::size(suffix)))
-      i++;
+    while (not equals(sufrit, sufrend))
+    {
+      const char_t &cs = libs::get(srit);
+      const char_t &csuf = libs::get(sufrit);
 
-    return i == libs::size(s);
+      if (cs == csuf)
+      {
+        srit = libs::pred(srit);
+        sufrit = libs::pred(sufrit);
+      }
+      else
+        break;
+    }
+
+    return libs::equals(sufrit, sufrend);
   }
 }
 

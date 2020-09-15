@@ -1,7 +1,7 @@
 #ifndef __vector_hpp__
 #define __vector_hpp__
 
-#include <stdexcept>
+#include "pointer.hpp"
 
 namespace libs
 {
@@ -15,10 +15,14 @@ namespace libs
     size_t size = 0;
 
     vector() = default;
+
+    vector(type_t *data, size_t size);
+    vector(const type_t *data, size_t size);
+
     template <size_t size_v>
     vector(type_t(&&data)[size_v]);
     template <size_t size_v>
-    vector(const type_t(&data)[size_v]);
+    vector(const type_t (&data)[size_v]);
     vector(size_t size);
     vector(const vector &o);
     vector(vector &&o);
@@ -32,14 +36,13 @@ namespace libs
   template <typename type_t>
   size_t size(const vector<type_t> &v);
 
-  // Constant getter
   template <typename type_t>
-  const type_t &get(
+  const pointer<type_t> get(
       const vector<type_t> &v, index_t idx);
 
-  // Mutable getter
   template <typename type_t>
-  type_t &get(vector<type_t> &v, index_t idx);
+  pointer<type_t> get(
+      vector<type_t> &v, index_t idx);
 
   // Setter by move
   template <typename type_t>
@@ -50,6 +53,54 @@ namespace libs
   template <typename type_t>
   void set(vector<type_t> &v,
            index_t index, const type_t &t);
+
+  template <typename type_t>
+  using vector_iterator = pointer<type_t>;
+
+  template <typename type_t>
+  vector_iterator<type_t>
+  begin(vector<type_t> &v);
+
+  template <typename type_t>
+  vector_iterator<type_t>
+  end(vector<type_t> &v);
+
+  template <typename type_t>
+  vector_iterator<const type_t>
+  begin(const vector<type_t> &v);
+
+  template <typename type_t>
+  vector_iterator<const type_t>
+  end(const vector<type_t> &v);
+
+  template <typename type_t>
+  vector_iterator<type_t>
+  rbegin(vector<type_t> &v);
+
+  template <typename type_t>
+  vector_iterator<type_t>
+  rend(vector<type_t> &v);
+
+  template <typename type_t>
+  vector_iterator<const type_t>
+  rbegin(const vector<type_t> &v);
+
+  template <typename type_t>
+  vector_iterator<const type_t>
+  rend(const vector<type_t> &v);
+
+  template <typename type_t>
+  vector_iterator<type_t>
+  next(vector_iterator<type_t> it);
+
+  template <typename type_t>
+  vector_iterator<type_t>
+  pred(vector_iterator<type_t> it);
+
+  template <typename type_t>
+  bool equals(
+      vector_iterator<type_t> l,
+      vector_iterator<type_t> r);
 
 } // namespace libs
 
@@ -62,22 +113,44 @@ libs::vector<type_t>::vector(
 }
 
 template <typename type_t>
+libs::vector<type_t>::vector(
+    type_t *data, size_t size_v)
+    : libs::vector<type_t>::vector(size_v)
+{
+  for (libs::index_t i = 0;
+       i < this->size; ++i)
+    this->data[i] = data[i];
+}
+
+template <typename type_t>
+libs::vector<type_t>::vector(
+    const type_t *data, size_t size_v)
+    : libs::vector<type_t>::vector(size_v)
+{
+  for (libs::index_t i = 0;
+       i < this->size; ++i)
+    this->data[i] = data[i];
+}
+
+template <typename type_t>
 template <libs::size_t size_v>
 libs::vector<type_t>::vector(
     type_t(&&data)[size_v])
     : libs::vector<type_t>::vector(size_v)
 {
-  for (libs::index_t i = 0; i < this->size; ++i)
+  for (libs::index_t i = 0;
+       i < this->size; ++i)
     this->data[i] = static_cast<type_t &&>(data[i]);
 }
 
 template <typename type_t>
 template <libs::size_t size_v>
 libs::vector<type_t>::vector(
-    const type_t(&data)[size_v])
+    const type_t (&data)[size_v])
     : libs::vector<type_t>::vector(size_v)
 {
-  for (libs::index_t i = 0; i < this->size; ++i)
+  for (libs::index_t i = 0;
+       i < this->size; ++i)
     this->data[i] = data[i];
 }
 
@@ -88,7 +161,8 @@ libs::vector<type_t>::vector(
   this->size = libs::size(o);
   this->data = new type_t[this->size];
 
-  for (index_t i = 0; i < this->size; ++i)
+  for (index_t i = 0;
+       i < this->size; ++i)
     this->data[i] = libs::get(o, i);
 }
 
@@ -153,28 +227,27 @@ libs::size(
 }
 
 template <typename type_t>
-const type_t &
+const libs::pointer<type_t>
 libs::get(
     const libs::vector<type_t> &v,
     libs::index_t idx)
 {
   if (idx < v.size)
-    return v.data[idx];
+    return libs::pointer<type_t>(&v.data[idx]);
   else
-    throw std::out_of_range(
-        "bad range access");
+    return libs::pointer<type_t>();
 }
 
 template <typename type_t>
-type_t &libs::get(
+libs::pointer<type_t>
+libs::get(
     libs::vector<type_t> &v,
     libs::index_t idx)
 {
   if (idx < v.size)
-    return v.data[idx];
+    return libs::pointer<type_t>(&v.data[idx]);
   else
-    throw std::out_of_range(
-        "bad range access");
+    return libs::pointer<type_t>();
 }
 
 template <typename type_t>
@@ -184,9 +257,6 @@ void libs::set(
 {
   if (index < v.size)
     v.data[index] = static_cast<type_t &&>(t);
-  else
-    throw std::out_of_range(
-        "bad range access");
 }
 
 template <typename type_t>
@@ -194,12 +264,89 @@ void libs::set(
     libs::vector<type_t> &v,
     libs::index_t index, const type_t &t)
 {
-
   if (index < v.size)
     v.data[index] = static_cast<type_t &&>(t);
-  else
-    throw std::out_of_range(
-        "bad range access");
+}
+
+template <typename type_t>
+libs::vector_iterator<type_t>
+libs::begin(libs::vector<type_t> &v)
+{
+  return libs::vector_iterator<type_t>(v.data);
+}
+
+template <typename type_t>
+libs::vector_iterator<type_t>
+libs::end(libs::vector<type_t> &v)
+{
+  return libs::vector_iterator<type_t>(v.data + v.size);
+}
+
+template <typename type_t>
+libs::vector_iterator<const type_t>
+libs::begin(const libs::vector<type_t> &v)
+{
+  return libs::vector_iterator<const type_t>(v.data);
+}
+
+template <typename type_t>
+libs::vector_iterator<const type_t>
+libs::end(const libs::vector<type_t> &v)
+{
+  return libs::vector_iterator<const type_t>(v.data + v.size);
+}
+
+template <typename type_t>
+libs::vector_iterator<type_t>
+libs::rbegin(libs::vector<type_t> &v)
+{
+  return libs::vector_iterator<type_t>(v.data + v.size - 1);
+}
+
+template <typename type_t>
+libs::vector_iterator<type_t>
+libs::rend(libs::vector<type_t> &v)
+{
+  return libs::vector_iterator<type_t>(v.data - 1);
+}
+
+template <typename type_t>
+libs::vector_iterator<const type_t>
+libs::rbegin(const libs::vector<type_t> &v)
+{
+
+  return libs::vector_iterator<const type_t>(v.data + v.size - 1);
+}
+
+template <typename type_t>
+libs::vector_iterator<const type_t>
+libs::rend(const libs::vector<type_t> &v)
+{
+  return libs::vector_iterator<const type_t>(v.data - 1);
+}
+
+template <typename type_t>
+libs::vector_iterator<type_t>
+libs::next(
+    libs::vector_iterator<type_t> it)
+{
+  return libs::vector_iterator<type_t>(it.p + 1);
+}
+
+template <typename type_t>
+libs::vector_iterator<type_t>
+libs::pred(
+    libs::vector_iterator<type_t> it)
+{
+  return libs::vector_iterator<type_t>(it.p - 1);
+}
+
+template <typename type_t>
+bool libs::equals(
+    libs::vector_iterator<type_t> l,
+    libs::vector_iterator<type_t> r)
+{
+  return l.p == r.p;
 }
 
 #endif
