@@ -61,32 +61,6 @@ namespace libs
       index_t index, const type_t &t);
 
   template <typename type_t>
-  void push_back(
-      vector<type_t> &v,
-      const type_t &t);
-
-  template <typename type_t>
-  void push_back(
-      vector<type_t> &v,
-      type_t &&t);
-
-  template <typename type_t>
-  void pop_back(vector<type_t> &v);
-
-  template <typename type_t>
-  void push_front(
-      vector<type_t> &v,
-      const type_t &t);
-
-  template <typename type_t>
-  void push_front(
-      vector<type_t> &v,
-      type_t &&t);
-
-  template <typename type_t>
-  void pop_front(vector<type_t> &v);
-
-  template <typename type_t>
   vector_iterator<type_t>
   begin(vector<type_t> &v);
 
@@ -268,9 +242,9 @@ libs::get(
     libs::index_t idx)
 {
   if (idx < v.size)
-    return libs::pointer<type_t>(&v.data[idx]);
+    return {&v.data[idx]};
   else
-    return libs::pointer<type_t>();
+    return {};
 }
 
 template <typename type_t>
@@ -280,9 +254,9 @@ libs::get(
     libs::index_t idx)
 {
   if (idx < v.size)
-    return libs::pointer<type_t>(&v.data[idx]);
+    return {&v.data[idx]};
   else
-    return libs::pointer<type_t>();
+    return {};
 }
 
 template <typename type_t>
@@ -291,7 +265,8 @@ void libs::set(
     libs::index_t index, type_t &&t)
 {
   if (index < v.size)
-    v.data[index] = static_cast<type_t &&>(t);
+    v.data[index] =
+        static_cast<type_t &&>(t);
 }
 
 template <typename type_t>
@@ -300,75 +275,51 @@ void libs::set(
     libs::index_t index, const type_t &t)
 {
   if (index < v.size)
-    v.data[index] = static_cast<type_t &&>(t);
+    v.data[index] =
+        static_cast<type_t &&>(t);
 }
 
-template <typename type_t>
-void libs::push_back(
-    libs::vector<type_t> &v,
-    const type_t &t);
-
-template <typename type_t>
-void push_back(
-    vector<type_t> &v,
-    type_t &&t);
-
-template <typename type_t>
-void pop_back(vector<type_t> &v);
-
-template <typename type_t>
-void push_front(
-    vector<type_t> &v,
-    const type_t &t);
-
-template <typename type_t>
-void push_front(
-    vector<type_t> &v,
-    type_t &&t);
-
-template <typename type_t>
-void pop_front(vector<type_t> &v);
 
 template <typename type_t>
 libs::vector_iterator<type_t>
 libs::begin(libs::vector<type_t> &v)
 {
-  return libs::vector_iterator<type_t>(v.data);
+  return {v.data};
 }
 
 template <typename type_t>
 libs::vector_iterator<type_t>
 libs::end(libs::vector<type_t> &v)
 {
-  return libs::vector_iterator<type_t>(v.data + v.size);
+  return {v.data + v.size};
 }
 
 template <typename type_t>
 libs::vector_iterator<const type_t>
 libs::begin(const libs::vector<type_t> &v)
 {
-  return libs::vector_iterator<const type_t>(v.data);
+  return {v.data};
 }
 
 template <typename type_t>
 libs::vector_iterator<const type_t>
 libs::end(const libs::vector<type_t> &v)
 {
-  return libs::vector_iterator<const type_t>(v.data + v.size);
+  return {v.data + v.size};
 }
 
 template <typename type_t>
 libs::vector_iterator<type_t>
 libs::rbegin(libs::vector<type_t> &v)
 {
-  return libs::vector_iterator<type_t>(v.data + v.size - 1);
+  return {v.data + v.size - 1};
 }
 
 template <typename type_t>
 libs::vector_iterator<type_t>
 libs::rend(libs::vector<type_t> &v)
 {
-  return libs::vector_iterator<type_t>(v.data - 1);
+  return {v.data - 1};
 }
 
 template <typename type_t>
@@ -376,14 +327,14 @@ libs::vector_iterator<const type_t>
 libs::rbegin(const libs::vector<type_t> &v)
 {
 
-  return libs::vector_iterator<const type_t>(v.data + v.size - 1);
+  return {v.data + v.size - 1};
 }
 
 template <typename type_t>
 libs::vector_iterator<const type_t>
 libs::rend(const libs::vector<type_t> &v)
 {
-  return libs::vector_iterator<const type_t>(v.data - 1);
+  return {v.data - 1};
 }
 
 template <typename type_t>
@@ -391,7 +342,7 @@ libs::vector_iterator<type_t>
 libs::next(
     libs::vector_iterator<type_t> it)
 {
-  return libs::vector_iterator<type_t>(it.p + 1);
+  return {it.p + 1};
 }
 
 template <typename type_t>
@@ -399,7 +350,7 @@ libs::vector_iterator<type_t>
 libs::pred(
     libs::vector_iterator<type_t> it)
 {
-  return libs::vector_iterator<type_t>(it.p - 1);
+  return {it.p - 1};
 }
 
 template <typename type_t>
