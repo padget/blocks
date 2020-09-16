@@ -13,6 +13,7 @@ namespace libs
   {
     type_t *data = nullptr;
     size_t size = 0;
+    size_t capacity = 0;
 
     vector() = default;
 
@@ -32,6 +33,9 @@ namespace libs
     vector &operator=(vector &&);
   };
 
+  template <typename type_t>
+  using vector_iterator = pointer<type_t>;
+
   // Size getter
   template <typename type_t>
   size_t size(const vector<type_t> &v);
@@ -46,16 +50,41 @@ namespace libs
 
   // Setter by move
   template <typename type_t>
-  void set(vector<type_t> &v,
-           index_t index, type_t &&t);
+  void set(
+      vector<type_t> &v,
+      index_t index, type_t &&t);
 
   // Setter by copie
   template <typename type_t>
-  void set(vector<type_t> &v,
-           index_t index, const type_t &t);
+  void set(
+      vector<type_t> &v,
+      index_t index, const type_t &t);
 
   template <typename type_t>
-  using vector_iterator = pointer<type_t>;
+  void push_back(
+      vector<type_t> &v,
+      const type_t &t);
+
+  template <typename type_t>
+  void push_back(
+      vector<type_t> &v,
+      type_t &&t);
+
+  template <typename type_t>
+  void pop_back(vector<type_t> &v);
+
+  template <typename type_t>
+  void push_front(
+      vector<type_t> &v,
+      const type_t &t);
+
+  template <typename type_t>
+  void push_front(
+      vector<type_t> &v,
+      type_t &&t);
+
+  template <typename type_t>
+  void pop_front(vector<type_t> &v);
 
   template <typename type_t>
   vector_iterator<type_t>
@@ -110,6 +139,7 @@ libs::vector<type_t>::vector(
 {
   this->data = new type_t[size];
   this->size = size;
+  this->capacity = size;
 }
 
 template <typename type_t>
@@ -157,23 +187,23 @@ libs::vector<type_t>::vector(
 template <typename type_t>
 libs::vector<type_t>::vector(
     const vector<type_t> &o)
+    : libs::vector<type_t>::vector(o.size)
 {
-  this->size = libs::size(o);
-  this->data = new type_t[this->size];
-
   for (index_t i = 0;
        i < this->size; ++i)
-    this->data[i] = libs::get(o, i);
+    this->data[i] = o.data[i];
 }
 
 template <typename type_t>
 libs::vector<type_t>::vector(
     vector<type_t> &&o)
 {
-  using namespace libs;
-  this->data = o.data;
   this->size = o.size;
+  this->capacity = o.capacity;
+  this->data = o.data;
+
   o.size = 0;
+  o.capacity = 0;
   o.data = nullptr;
 }
 
@@ -193,6 +223,7 @@ libs::vector<type_t>::operator=(
     delete this->data;
     libs::size_t osize = o.size;
     this->data = new type_t[osize];
+    this->capacity = o.capacity;
 
     for (index_t i = 0; i < osize; ++i)
       this->data[i] = o.data[i];
@@ -209,10 +240,14 @@ libs::vector<type_t>::operator=(
   if (this != &o)
   {
     delete this->data;
+
     this->data = o.data;
     this->size = o.size;
+    this->capacity = o.capacity;
+
     o.data = nullptr;
     o.size = 0;
+    o.capacity = 0;
   }
 
   return *this;
@@ -267,6 +302,32 @@ void libs::set(
   if (index < v.size)
     v.data[index] = static_cast<type_t &&>(t);
 }
+
+template <typename type_t>
+void libs::push_back(
+    libs::vector<type_t> &v,
+    const type_t &t);
+
+template <typename type_t>
+void push_back(
+    vector<type_t> &v,
+    type_t &&t);
+
+template <typename type_t>
+void pop_back(vector<type_t> &v);
+
+template <typename type_t>
+void push_front(
+    vector<type_t> &v,
+    const type_t &t);
+
+template <typename type_t>
+void push_front(
+    vector<type_t> &v,
+    type_t &&t);
+
+template <typename type_t>
+void pop_front(vector<type_t> &v);
 
 template <typename type_t>
 libs::vector_iterator<type_t>
