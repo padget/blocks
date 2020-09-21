@@ -16,17 +16,19 @@ namespace libs
     size_t capacity = 0;
 
     vector() = default;
+    vector(size_t cap);
 
-    vector(type_t *data, size_t size);
-    vector(const type_t *data, size_t size);
+    vector(type_t *data, size_t cap);
+    vector(const type_t *data, size_t cap);
+
+    vector(const vector &o);
+    vector(vector &&o);
 
     template <size_t size_v>
     vector(type_t(&&data)[size_v]);
     template <size_t size_v>
     vector(const type_t (&data)[size_v]);
-    vector(size_t size);
-    vector(const vector &o);
-    vector(vector &&o);
+
     ~vector();
 
     vector &operator=(const vector &o);
@@ -40,25 +42,17 @@ namespace libs
   template <typename type_t>
   size_t size(const vector<type_t> &v);
 
-  template <typename type_t>
-  const pointer<type_t> get(
-      const vector<type_t> &v, index_t idx);
-
-  template <typename type_t>
-  pointer<type_t> get(
-      vector<type_t> &v, index_t idx);
-
   // Setter by move
   template <typename type_t>
-  void set(
+  void push(
       vector<type_t> &v,
-      index_t index, type_t &&t);
+      type_t &&t);
 
   // Setter by copie
   template <typename type_t>
-  void set(
+  void push(
       vector<type_t> &v,
-      index_t index, const type_t &t);
+      const type_t &t);
 
   template <typename type_t>
   vector_iterator<type_t>
@@ -105,35 +99,40 @@ namespace libs
       vector_iterator<type_t> l,
       vector_iterator<type_t> r);
 
+  template <typename type_t>
+  size_t distance(
+      vector_iterator<type_t> l,
+      vector_iterator<type_t> r);
+
 } // namespace libs
 
 template <typename type_t>
 libs::vector<type_t>::vector(
-    libs::size_t size)
+    libs::size_t cap)
 {
-  this->data = new type_t[size];
-  this->size = size;
-  this->capacity = size;
+  this->data = new type_t[cap];
+  this->size = 0;
+  this->capacity = cap;
 }
 
 template <typename type_t>
 libs::vector<type_t>::vector(
-    type_t *data, size_t size_v)
-    : libs::vector<type_t>::vector(size_v)
+    type_t *data, size_t cap)
+    : libs::vector<type_t>::vector(cap)
 {
   for (libs::index_t i = 0;
        i < this->size; ++i)
-    this->data[i] = data[i];
+    push(*this, data[i]);
 }
 
 template <typename type_t>
 libs::vector<type_t>::vector(
-    const type_t *data, size_t size_v)
-    : libs::vector<type_t>::vector(size_v)
+    const type_t *data, size_t cap)
+    : libs::vector<type_t>::vector(cap)
 {
   for (libs::index_t i = 0;
        i < this->size; ++i)
-    this->data[i] = data[i];
+    push(*this, data[i]);
 }
 
 template <typename type_t>
@@ -144,7 +143,7 @@ libs::vector<type_t>::vector(
 {
   for (libs::index_t i = 0;
        i < this->size; ++i)
-    this->data[i] = static_cast<type_t &&>(data[i]);
+    push(*this, static_cast<type_t &&>(data[i]));
 }
 
 template <typename type_t>
@@ -165,7 +164,7 @@ libs::vector<type_t>::vector(
 {
   for (index_t i = 0;
        i < this->size; ++i)
-    this->data[i] = o.data[i];
+    push(*this, o.data[i]);
 }
 
 template <typename type_t>
@@ -200,7 +199,7 @@ libs::vector<type_t>::operator=(
     this->capacity = o.capacity;
 
     for (index_t i = 0; i < osize; ++i)
-      this->data[i] = o.data[i];
+      push(*this, o.data[i]);
   }
 
   return *this;
@@ -236,49 +235,30 @@ libs::size(
 }
 
 template <typename type_t>
-const libs::pointer<type_t>
-libs::get(
-    const libs::vector<type_t> &v,
-    libs::index_t idx)
-{
-  if (idx < v.size)
-    return {&v.data[idx]};
-  else
-    return {};
-}
-
-template <typename type_t>
-libs::pointer<type_t>
-libs::get(
+void libs::push(
     libs::vector<type_t> &v,
-    libs::index_t idx)
+    type_t &&t)
 {
-  if (idx < v.size)
-    return {&v.data[idx]};
-  else
-    return {};
-}
-
-template <typename type_t>
-void libs::set(
-    libs::vector<type_t> &v,
-    libs::index_t index, type_t &&t)
-{
-  if (index < v.size)
-    v.data[index] =
+  if (v.size < v.capacity)
+  {
+    v.data[v.size] =
         static_cast<type_t &&>(t);
+    v.size += 1;
+  }
 }
 
 template <typename type_t>
-void libs::set(
+void libs::push(
     libs::vector<type_t> &v,
-    libs::index_t index, const type_t &t)
+    const type_t &t)
 {
-  if (index < v.size)
-    v.data[index] =
+  if (v.size < v.capacity)
+  {
+    v.data[v.size] =
         static_cast<type_t &&>(t);
+    v.size += 1;
+  }
 }
-
 
 template <typename type_t>
 libs::vector_iterator<type_t>
@@ -359,6 +339,14 @@ bool libs::equals(
     libs::vector_iterator<type_t> r)
 {
   return l.p == r.p;
+}
+
+template <typename type_t>
+libs::size_t libs::distance(
+    libs::vector_iterator<type_t> b,
+    libs::vector_iterator<type_t> e)
+{
+  return e.p - b.p;  
 }
 
 #endif

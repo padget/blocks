@@ -2,7 +2,7 @@
 
 #include "../libs/vector.hpp"
 #include "../libs/string.hpp"
-
+#include <vector>
 using namespace libs;
 
 int main(int argc, char **argv)
@@ -14,28 +14,21 @@ int main(int argc, char **argv)
   vector<int> ints2(3);
 
   std::cout << size(ints2) << std::endl;
+  push(ints2, 1);
+  push(ints2, 3);
+  push(ints2, 3);
 
-  set(ints2, 0, 1);
-
-  std::cout << get(get(ints2, 0)) << std::endl;
-
-  vector<int> ints3 = static_cast<vector<int> &&>(ints2);
 
   std::cout << size(ints2) << std::endl;
-  std::cout << get(get(ints3, 0)) << std::endl;
 
-  vector<int> ints4({1, 2, 3, 4});
-
-  std::cout << size(ints4) << std::endl;
-  std::cout << get(get(ints4, 2)) << std::endl;
-
-  std::cout << "coucou" << std::endl;
-
-  string str = nullterm("hello");
-
-  std::cout << std::boolalpha << starts_with(str, nullterm("he")) << std::endl;
-  std::cout << std::boolalpha << ends_with(str, nullterm("he")) << std::endl;
-  std::cout << std::boolalpha << ends_with(str, nullterm("lo")) << std::endl;
+  auto b = begin(ints2);
+  auto e = end(ints2);
   
+  while (not equals(b, e))
+  {
+    std::cout << get(b) << std::endl;
+    b = next(b);
+  }
+
   return EXIT_SUCCESS;
 }
