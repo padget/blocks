@@ -120,8 +120,7 @@ libs::vector<type_t>::vector(
     type_t *data, size_t cap)
     : libs::vector<type_t>::vector(cap)
 {
-  for (libs::index_t i = 0;
-       i < this->size; ++i)
+  for (libs::index_t i = 0; i < cap; ++i)
     push(*this, data[i]);
 }
 
@@ -130,8 +129,7 @@ libs::vector<type_t>::vector(
     const type_t *data, size_t cap)
     : libs::vector<type_t>::vector(cap)
 {
-  for (libs::index_t i = 0;
-       i < this->size; ++i)
+  for (libs::index_t i = 0; i < cap; ++i)
     push(*this, data[i]);
 }
 
@@ -141,8 +139,7 @@ libs::vector<type_t>::vector(
     type_t(&&data)[size_v])
     : libs::vector<type_t>::vector(size_v)
 {
-  for (libs::index_t i = 0;
-       i < this->size; ++i)
+  for (libs::index_t i = 0; i < size_v; ++i)
     push(*this, static_cast<type_t &&>(data[i]));
 }
 
@@ -152,18 +149,16 @@ libs::vector<type_t>::vector(
     const type_t (&data)[size_v])
     : libs::vector<type_t>::vector(size_v)
 {
-  for (libs::index_t i = 0;
-       i < this->size; ++i)
+  for (libs::index_t i = 0; i < size_v; ++i)
     this->data[i] = data[i];
 }
 
 template <typename type_t>
 libs::vector<type_t>::vector(
     const vector<type_t> &o)
-    : libs::vector<type_t>::vector(o.size)
+    : libs::vector<type_t>::vector(o.capacity)
 {
-  for (index_t i = 0;
-       i < this->size; ++i)
+  for (index_t i = 0; i < o.size; ++i)
     push(*this, o.data[i]);
 }
 
@@ -194,11 +189,11 @@ libs::vector<type_t>::operator=(
   if (this != &o)
   {
     delete this->data;
-    libs::size_t osize = o.size;
-    this->data = new type_t[osize];
-    this->capacity = o.capacity;
+    libs::size_t ocap = o.capacity;
+    this->data = new type_t[ocap];
+    this->capacity = ocap;
 
-    for (index_t i = 0; i < osize; ++i)
+    for (index_t i = 0; i < ocap; ++i)
       push(*this, o.data[i]);
   }
 
@@ -346,7 +341,7 @@ libs::size_t libs::distance(
     libs::vector_iterator<type_t> b,
     libs::vector_iterator<type_t> e)
 {
-  return e.p - b.p;  
+  return e.p - b.p;
 }
 
 #endif
