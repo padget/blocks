@@ -1,8 +1,6 @@
 #ifndef __vector_hpp__
 #define __vector_hpp__
 
-#include "pointer.hpp"
-
 namespace libs
 {
   using index_t = unsigned long long;
@@ -36,7 +34,10 @@ namespace libs
   };
 
   template <typename type_t>
-  using vector_iterator = pointer<type_t>;
+  struct vector_iterator
+  {
+    type_t *p;
+  };
 
   // Size getter
   template <typename type_t>
@@ -87,6 +88,14 @@ namespace libs
   rend(const vector<type_t> &v);
 
   template <typename type_t>
+  type_t &get(
+      vector_iterator<type_t> it);
+
+  template <typename type_t>
+  const type_t &get(
+      vector_iterator<const type_t> it);
+
+  template <typename type_t>
   vector_iterator<type_t>
   next(vector_iterator<type_t> it);
 
@@ -120,6 +129,7 @@ libs::vector<type_t>::vector(
     type_t *data, size_t cap)
     : libs::vector<type_t>::vector(cap)
 {
+
   for (libs::index_t i = 0; i < cap; ++i)
     push(*this, data[i]);
 }
@@ -310,6 +320,20 @@ libs::vector_iterator<const type_t>
 libs::rend(const libs::vector<type_t> &v)
 {
   return {v.data - 1};
+}
+
+template <typename type_t>
+type_t &libs::get(
+    libs::vector_iterator<type_t> it)
+{
+  return *it.p;
+}
+
+template <typename type_t>
+const type_t &libs::get(
+    libs::vector_iterator<const type_t> it)
+{
+  return *it.p;
 }
 
 template <typename type_t>
