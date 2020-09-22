@@ -1,12 +1,10 @@
 #ifndef __libs_list_hpp__
 #define __libs_list_hpp__
 
-#include "pointer.hpp"
+#include "types.hpp"
 
 namespace libs
 {
-  using size_t = unsigned long long;
-
   template <typename type_t>
   struct list_node
   {
@@ -18,7 +16,7 @@ namespace libs
     list_node(type_t &&obj);
     list_node(const list_node &);
     list_node(list_node &&);
-    ~list_node();
+    ~list_node() = default;
     list_node &operator=(const list_node &);
     list_node &operator=(list_node &&);
   };
@@ -177,7 +175,7 @@ libs::list<type_t>::~list()
 {
   libs::list_node<type_t> *tmp = first;
 
-  while (tmp != nullptr)
+  while (first != nullptr)
   {
     tmp = first;
     first = tmp->next;
@@ -254,7 +252,7 @@ void libs::push(
     l.last = node;
   }
 
-  l.siz += 1;
+  l.size += 1;
 }
 
 template <typename type_t>
@@ -277,7 +275,7 @@ void libs::push(
     l.last = node;
   }
 
-  l.siz += 1;
+  l.size += 1;
 }
 
 template <typename type_t>
@@ -324,12 +322,12 @@ const type_t &libs::get(
 
 template <typename type_t>
 libs::list_iterator<type_t>
-next(libs::list_iterator<type_t> it)
+libs::next(libs::list_iterator<type_t> it)
 {
   if (it.node != nullptr)
-    return { it.node->next }
+    return {it.node->next};
   else
-    return {}
+    return {};
 }
 
 template <typename type_t>

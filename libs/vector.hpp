@@ -1,11 +1,10 @@
 #ifndef __vector_hpp__
 #define __vector_hpp__
 
+#include "types.hpp"
+
 namespace libs
 {
-  using index_t = unsigned long long;
-  using size_t = unsigned long long;
-
   template <typename type_t>
   struct vector
   {
