@@ -3,6 +3,7 @@
 #include "../libs/vector.hpp"
 #include "../libs/string.hpp"
 #include "../libs/list.hpp"
+#include "../libs/algorithm.hpp"
 
 using namespace libs;
 
@@ -33,7 +34,7 @@ int main(int argc, char **argv)
   list<int> ints3;
   push(ints3, 2);
   push(ints3, 2);
-  push(ints3, 2);
+  push(ints3, 4);
   push(ints3, 2);
   push(ints3, 2);
 
@@ -47,6 +48,18 @@ int main(int argc, char **argv)
     std::cout << get(b3) << std::endl;
     b3 = next(b3);
   }
+
+  list<int> ints4;
+  
+  push(ints4, 2);
+  push(ints4, 2);
+  push(ints4, 4);
+  push(ints4, 2);
+  push(ints4, 2);
+
+  std::cout << std::boolalpha << none(begin(ints4), end(ints4), [](const int &i) {
+    return i == 3;
+  }) << std::endl;
 
   return EXIT_SUCCESS;
 }
