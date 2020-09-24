@@ -68,6 +68,14 @@ namespace libs
         iterator_t e,
         target_t &target);
 
+    template <
+        typename iterator_t,
+        typename action_t>
+    void foreach (
+        iterator_t b,
+        iterator_t e,
+        action_t action);
+
 } // namespace libs
 
 template <
@@ -176,4 +184,18 @@ libs::initialize(
     return target;
 }
 
+template <
+    typename iterator_t,
+    typename action_t>
+void libs::foreach (
+    iterator_t b,
+    iterator_t e,
+    action_t action)
+{
+    while (not equals(b, e))
+    {
+        action(get(b));
+        b = next(b);
+    }
+}
 #endif

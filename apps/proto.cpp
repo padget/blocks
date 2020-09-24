@@ -1,20 +1,22 @@
 #include <iostream>
 
 #include "../libs/algorithm.hpp"
-#include "../libs/vector.hpp"
+#include "../libs/array.hpp"
 #include "../libs/string.hpp"
 #include "../libs/list.hpp"
+#include "../libs/log.hpp"
 
 
 using namespace libs;
-
+using namespace libs::log;
+ 
 int main(int argc, char **argv)
 {
-  vector<int> ints;
+  array<int> ints;
 
   std::cout << size(ints) << std::endl;
 
-  vector<int> ints2(3);
+  array<int> ints2(3);
 
   std::cout << size(ints2) << std::endl;
   push(ints2, 1);
@@ -68,9 +70,11 @@ int main(int argc, char **argv)
 
   std::cout << size(ints5) << std::endl;
 
-  vector<int> ints6 = vector<int>(size(ints5));
+  array<int> ints6 = array<int>(size(ints5));
   std::cout << size(ints6) << std::endl;
   initialize(begin(ints5), end(ints5), ints6);
   std::cout << size(ints6) << std::endl;
+
+  debug(nullterm("coucou"));
   return EXIT_SUCCESS;
 }

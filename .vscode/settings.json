@@ -20,7 +20,7 @@
     "map": "cpp",
     "set": "cpp",
     "unordered_map": "cpp",
-    "vector": "cpp",
+    "array": "cpp",
     "exception": "cpp",
     "algorithm": "cpp",
     "functional": "cpp",

@@ -5,6 +5,7 @@ namespace libs
 {
     using index_t = unsigned long long;
     using size_t = unsigned long long;
+    using hash_t = long long;
 } // namespace libs
 
 #endif

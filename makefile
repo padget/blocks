@@ -3,9 +3,10 @@ CXX = g++
 CXX_STANDARD = c++17
 CXX_FLAGS = -std=${CXX_STANDARD} -Wall -Werror -pedantic -Wunused
 
-build: blocks.exe
+.PHONY: build scratch clean proto
 
 scratch: clean build
+build: blocks.exe
 
 
 command_line.o: libs/include/cmdl/command_line.cpp libs/include/cmdl/command_line.hpp
@@ -30,5 +31,9 @@ proto.o: apps/proto.cpp
 
 
 
+
 clean: 
 	rm -rf *.o *.exe
+
+byline.exe: apps/byline.cpp
+	${CXX} ${CXX_FLAGS} -o byline.exe apps/byline.cpp

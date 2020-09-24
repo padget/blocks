@@ -1,12 +1,13 @@
 #ifndef __libs_string_hpp__
 #define __libs_string_hpp__
 
-#include "vector.hpp"
+#include "array.hpp"
+#include <iostream>
 
 namespace libs
 {
   template <typename char_t>
-  using basic_string = vector<char_t>;
+  using basic_string = array<char_t>;
 
   using string = basic_string<char>;
 

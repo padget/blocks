@@ -3,7 +3,7 @@
 
 #include <string>
 #include <map>
-#include <vector>
+#include <array>
 #include <optional>
 
 namespace blocks
@@ -11,7 +11,7 @@ namespace blocks
   using str_t = std::string;
 
   template <typename... args_t>
-  using vec_t = std::vector<args_t...>;
+  using vec_t = std::array<args_t...>;
 
   template <typename... args_t>
   using dict_t = std::map<args_t...>;
