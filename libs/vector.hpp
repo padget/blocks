@@ -258,8 +258,7 @@ void libs::push(
 {
   if (v.size < v.capacity)
   {
-    v.data[v.size] =
-        static_cast<type_t &&>(t);
+    v.data[v.size] = t;
     v.size += 1;
   }
 }

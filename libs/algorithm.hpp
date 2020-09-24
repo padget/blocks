@@ -59,6 +59,15 @@ namespace libs
         iterator_t e,
         predicate_t pred);
 
+    template <
+        typename iterator_t,
+        typename target_t>
+    target_t &
+    initialize(
+        iterator_t b,
+        iterator_t e,
+        target_t &target);
+
 } // namespace libs
 
 template <
@@ -69,9 +78,9 @@ iterator_t libs::find(
     iterator_t e,
     predicate_t p)
 {
-    while (not libs::equals(b, e))
-        if (not p(libs::get(b)))
-            b = libs::next(b);
+    while (not equals(b, e))
+        if (not p(get(b)))
+            b = next(b);
         else
             break;
     return b;
@@ -85,9 +94,9 @@ iterator_t libs::find_not(
     iterator_t e,
     predicate_t p)
 {
-    while (not libs::equals(b, e))
-        if (p(libs::get(b)))
-            b = libs::next(b);
+    while (not equals(b, e))
+        if (p(get(b)))
+            b = next(b);
         else
             break;
     return b;
@@ -104,7 +113,7 @@ count(
 {
     size_t count = 0;
 
-    while (not libs::equals(
+    while (not equals(
         b = libs::find(b, e), e))
         count += 1;
 
@@ -119,7 +128,7 @@ bool libs::all(
     iterator_t e,
     predicate_t p)
 {
-    return libs::equals(
+    return equals(
         libs::find_not(b, e, p), e);
 
     return true;
@@ -133,7 +142,7 @@ bool libs::any(
     iterator_t e,
     predicate_t p)
 {
-    return not libs::equals(
+    return not equals(
         libs::find(b, e, p), e);
 }
 
@@ -145,8 +154,26 @@ bool libs::none(
     iterator_t e,
     predicate_t p)
 {
-    return libs::equals(
+    return equals(
         libs::find(b, e, p), e);
+}
+
+template <
+    typename iterator_t,
+    typename target_t>
+target_t &
+libs::initialize(
+    iterator_t b,
+    iterator_t e,
+    target_t &target)
+{
+    while (not equals(b, e))
+    {
+        push(target, get(b));
+        b = next(b);
+    }
+
+    return target;
 }
 
 #endif

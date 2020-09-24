@@ -1,9 +1,10 @@
 #include <iostream>
 
+#include "../libs/algorithm.hpp"
 #include "../libs/vector.hpp"
 #include "../libs/string.hpp"
 #include "../libs/list.hpp"
-#include "../libs/algorithm.hpp"
+
 
 using namespace libs;
 
@@ -50,7 +51,7 @@ int main(int argc, char **argv)
   }
 
   list<int> ints4;
-  
+
   push(ints4, 2);
   push(ints4, 2);
   push(ints4, 4);
@@ -61,5 +62,15 @@ int main(int argc, char **argv)
     return i == 3;
   }) << std::endl;
 
+  list<int> ints5;
+
+  initialize(begin(ints4), end(ints4), ints5);
+
+  std::cout << size(ints5) << std::endl;
+
+  vector<int> ints6 = vector<int>(size(ints5));
+  std::cout << size(ints6) << std::endl;
+  initialize(begin(ints5), end(ints5), ints6);
+  std::cout << size(ints6) << std::endl;
   return EXIT_SUCCESS;
 }

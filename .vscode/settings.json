@@ -76,6 +76,7 @@
     "unordered_set": "cpp",
     "ranges": "cpp",
     "shared_mutex": "cpp",
-    "stop_token": "cpp"
+    "stop_token": "cpp",
+    "*.inc": "cpp"
   }
 }
