@@ -2,6 +2,7 @@
 #define __libs_list_hpp__
 
 #include "types.hpp"
+#include "algorithm.hpp"
 
 namespace libs
 {
@@ -33,7 +34,7 @@ namespace libs
     list(list &&);
     ~list();
 
-    list &operator=(const list &);
+    list &operator=(const list &) = delete;
     list &operator=(list &&);
   };
 
@@ -147,14 +148,10 @@ template <typename type_t>
 libs::list<type_t>::list(
     const list<type_t> &o)
 {
-  auto ob = libs::begin(o);
-  auto oe = libs::end(o);
-
-  while (not libs::equals(ob, oe))
-  {
-    push(*this, libs::get(ob));
-    ob = libs::next(ob);
-  }
+  libs::initialize(
+      libs::begin(o),
+      libs::end(o),
+      *this);
 }
 
 template <typename type_t>
@@ -185,26 +182,6 @@ libs::list<type_t>::~list()
   first = nullptr;
   last = nullptr;
   size = 0;
-}
-
-template <typename type_t>
-libs::list<type_t> &
-libs::list<type_t>::operator=(
-    const libs::list<type_t> &o)
-{
-  if (this != &o)
-  {
-    auto ob = libs::begin(o);
-    auto oe = libs::end(o);
-
-    while (not libs::equals(ob, oe))
-    {
-      push(*this, libs::get(ob));
-      ob = libs::next(ob);
-    }
-  }
-
-  return *this;
 }
 
 template <typename type_t>

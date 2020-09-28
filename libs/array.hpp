@@ -29,7 +29,7 @@ namespace libs
 
     ~array();
 
-    array &operator=(const array &o);
+    array &operator=(const array &o) = delete;
     array &operator=(array &&);
   };
 
@@ -191,24 +191,7 @@ libs::array<type_t>::~array()
   delete this->data;
 }
 
-template <typename type_t>
-libs::array<type_t> &
-libs::array<type_t>::operator=(
-    const array<type_t> &o)
-{
-  if (this != &o)
-  {
-    delete this->data;
-    libs::size_t ocap = o.capacity;
-    this->data = new type_t[ocap];
-    this->capacity = ocap;
 
-    for (index_t i = 0; i < ocap; ++i)
-      push(*this, o.data[i]);
-  }
-
-  return *this;
-}
 
 template <typename type_t>
 libs::array<type_t> &
