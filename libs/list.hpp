@@ -148,7 +148,7 @@ template <typename type_t>
 libs::list<type_t>::list(
     const list<type_t> &o)
 {
-  libs::initialize(
+  libs::pushall(
       libs::begin(o),
       libs::end(o),
       *this);

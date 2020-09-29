@@ -66,13 +66,13 @@ int main(int argc, char **argv)
 
   list<int> ints5;
 
-  initialize(begin(ints4), end(ints4), ints5);
+  pushall(begin(ints4), end(ints4), ints5);
 
   std::cout << size(ints5) << std::endl;
 
   array<int> ints6 = array<int>(size(ints5));
   std::cout << size(ints6) << std::endl;
-  initialize(begin(ints5), end(ints5), ints6);
+  pushall(begin(ints5), end(ints5), ints6);
   std::cout << size(ints6) << std::endl;
 
   debug(nullterm("coucou"));

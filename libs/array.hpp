@@ -129,7 +129,6 @@ libs::array<type_t>::array(
     type_t *data, size_t cap)
     : libs::array<type_t>::array(cap)
 {
-
   for (libs::index_t i = 0; i < cap; ++i)
     push(*this, data[i]);
 }
