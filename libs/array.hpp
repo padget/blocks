@@ -2,6 +2,7 @@
 #define __libs_array_hpp__
 
 #include "types.hpp"
+#include "algorithm.hpp"
 
 namespace libs
 {
@@ -26,6 +27,9 @@ namespace libs
 
     template <size_t size_v>
     array(const type_t (&data)[size_v]);
+
+    template <typename iterator_t>
+    array(iterator_t b, iterator_t e);
 
     ~array();
 
@@ -130,7 +134,7 @@ libs::array<type_t>::array(
     : libs::array<type_t>::array(cap)
 {
   for (libs::index_t i = 0; i < cap; ++i)
-    push(*this, data[i]);
+    libs::push(*this, data[i]);
 }
 
 template <typename type_t>
@@ -139,7 +143,7 @@ libs::array<type_t>::array(
     : libs::array<type_t>::array(cap)
 {
   for (libs::index_t i = 0; i < cap; ++i)
-    push(*this, data[i]);
+    libs::push(*this, data[i]);
 }
 
 template <typename type_t>
@@ -149,7 +153,7 @@ libs::array<type_t>::array(
     : libs::array<type_t>::array(size_v)
 {
   for (libs::index_t i = 0; i < size_v; ++i)
-    push(*this, static_cast<type_t &&>(data[i]));
+    libs::push(*this, static_cast<type_t &&>(data[i]));
 }
 
 template <typename type_t>
@@ -168,7 +172,7 @@ libs::array<type_t>::array(
     : libs::array<type_t>::array(o.capacity)
 {
   for (index_t i = 0; i < o.size; ++i)
-    push(*this, o.data[i]);
+    libs::push(*this, o.data[i]);
 }
 
 template <typename type_t>
@@ -185,12 +189,19 @@ libs::array<type_t>::array(
 }
 
 template <typename type_t>
+template <typename iterator_t>
+libs::array<type_t>::array(
+    iterator_t b, iterator_t e)
+    : libs::array<type_t>::array(distance(b, e))
+{
+  libs::pushall(b, e, *this);
+}
+
+template <typename type_t>
 libs::array<type_t>::~array()
 {
   delete this->data;
 }
-
-
 
 template <typename type_t>
 libs::array<type_t> &

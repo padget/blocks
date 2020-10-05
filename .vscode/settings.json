@@ -20,7 +20,6 @@
     "map": "cpp",
     "set": "cpp",
     "unordered_map": "cpp",
-    "array": "cpp",
     "exception": "cpp",
     "algorithm": "cpp",
     "functional": "cpp",
@@ -77,6 +76,7 @@
     "ranges": "cpp",
     "shared_mutex": "cpp",
     "stop_token": "cpp",
-    "*.inc": "cpp"
+    "*.inc": "cpp",
+    "vector": "cpp"
   }
 }

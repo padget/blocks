@@ -35,6 +35,15 @@ namespace libs
   template <
       typename iterator_t,
       typename predicate_t>
+  size_t
+  offset(
+      iterator_t b,
+      iterator_t e,
+      predicate_t p);
+
+  template <
+      typename iterator_t,
+      typename predicate_t>
   bool
   all(
       iterator_t b,
@@ -152,19 +161,44 @@ iterator_t libs::find_not(
 template <
     typename iterator_t,
     typename predicate_t>
-size_t
+libs::size_t
 libs::count(
     iterator_t b,
     iterator_t e,
     predicate_t p)
 {
-  size_t count = 0;
+  libs::size_t count = 0;
 
   while (not equals(
-      b = libs::find(b, e), e))
+      b = libs::find(b, e, p), e))
     count += 1;
 
   return count;
+}
+
+template <
+    typename iterator_t,
+    typename predicate_t>
+libs::size_t
+libs::offset(
+    iterator_t b,
+    iterator_t e,
+    predicate_t p)
+{
+  libs::size_t offs = 0;
+
+  while (not equals(b, e))
+  {
+    if (p(get(b)))
+    {
+      offs += 1;
+      b = next(b);
+    }
+    else
+      break;
+  }
+
+  return offs;
 }
 
 template <
@@ -239,7 +273,7 @@ bool libs::none(
     predicate_t p)
 {
   return libs::times(
-      b, e, pred, 0);
+      b, e, p, 0);
 }
 
 template <
@@ -265,7 +299,7 @@ bool libs::more(
 {
   return between(
       b, e, pred, 2,
-      libs::limitmax<type_t>);
+      libs::limitmax<libs::size_t>);
 }
 
 template <

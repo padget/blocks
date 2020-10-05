@@ -30,6 +30,18 @@ proto.o: apps/proto.cpp
 	${CXX} ${CXX_FLAGS} -o proto.o -c apps/proto.cpp
 
 
+seur: seur.exe
+	./seur.exe password jemappellebenjamin
+
+seur.o: apps/seur.cpp
+	${CXX} ${CXX_FLAGS} -o seur.o -c apps/seur.cpp
+
+base64.o: libs/base64.cpp
+	${CXX} ${CXX_FLAGS} -o base64.o -c libs/base64.cpp
+
+seur.exe: seur.o base64.o
+	${CXX} ${CXX_FLAGS} -o seur.exe seur.o base64.o
+
 
 
 clean: 
