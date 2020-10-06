@@ -3,12 +3,9 @@
         {
             "name": "Linux",
             "includePath": [
-                "${workspaceFolder}/**",
-                "/usr/include/c++/9",
-                "/usr/include/x86_64-linux-gnu/c++/9"
+                "${workspaceFolder}/**"
             ],
             "defines": [],
-            "compilerPath": "/usr/bin/clang-9",
             "cStandard": "c18",
             "cppStandard": "c++17",
             "intelliSenseMode": "clang-x64",

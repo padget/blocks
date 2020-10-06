@@ -1,7 +1,7 @@
 #include <iostream>
 #include <string>
+
 #include "../libs/base64.h"
-#include <string_view>
 
 std::string
 crypt(
@@ -36,13 +36,17 @@ int main(int argc, char **argv)
     std::string pwd = argv[1];
     std::string txt = argv[2];
 
-    std::string trs = crypt(txt, pwd);
+    std::cout << txt << std::endl;
+    std::cout << libs::base64::encode(txt) << std::endl;
+    std::cout << "'" << libs::base64::decode(libs::base64::encode(txt)) << "'\n";
 
-    std::cout << trs << '\n';
-    std::cout << base64_encode(trs, true) << '\n';
-    std::cout << base64_decode(base64_encode(trs, true)) << '\n';
+    // std::string trs = crypt(txt, pwd);
 
-    std::cout << decrypt(trs, pwd);
+    // std::cout << trs << '\n';
+    // std::cout << libs::base64::encode(trs) << '\n';
+    // std::cout << libs::base64::decode(libs::base64::encode(trs)) << '\n';
+
+    // std::cout << decrypt(trs, pwd);
 
     return EXIT_SUCCESS;
   }
