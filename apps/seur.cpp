@@ -1,7 +1,7 @@
 #include <iostream>
 #include <string>
 
-#include "../libs/base64.h"
+#include "../libs/base64.hpp"
 
 std::string
 crypt(
@@ -30,6 +30,7 @@ std::string decrypt(
 }
 
 int main(int argc, char **argv)
+try
 {
   if (argc == 3)
   {
@@ -38,7 +39,7 @@ int main(int argc, char **argv)
 
     std::cout << txt << std::endl;
     std::cout << libs::base64::encode(txt) << std::endl;
-    std::cout << "'" << libs::base64::decode(libs::base64::encode(txt)) << "'\n";
+    std::cout << libs::base64::decode(libs::base64::encode(txt)) << "\n";
 
     // std::string trs = crypt(txt, pwd);
 
@@ -51,5 +52,10 @@ int main(int argc, char **argv)
     return EXIT_SUCCESS;
   }
 
+  return EXIT_FAILURE;
+}
+catch (...)
+{
+  std::cout << "oops" << std::endl;
   return EXIT_FAILURE;
 }

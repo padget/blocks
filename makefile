@@ -31,7 +31,7 @@ proto.o: apps/proto.cpp
 
 
 seur: seur.exe
-	./seur.exe password jdd
+	./seur.exe password jddjqklsdjlqskjdqldjlqskjdlqsjdlqsjdlqsjdsljld
 
 seur.o: apps/seur.cpp
 	${CXX} ${CXX_FLAGS} -o seur.o -c apps/seur.cpp
