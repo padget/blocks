@@ -2,7 +2,6 @@
 #define __libs_cmdl_cmdl_hpp__
 
 #include <string>
-#include <exception>
 #include <vector>
 #include <optional>
 
@@ -22,7 +21,7 @@ namespace libs::cmdl
 
   std::vector<argument>
   toarguments(
-      std::vector<std::string> &raws);
+      const std::vector<std::string> &raws);
 
   struct option
   {
@@ -79,6 +78,7 @@ namespace libs::cmdl
   void add_option(
       action &act,
       const option &opt);
+
   void add_option(
       action &act,
       option &&opt);
@@ -100,7 +100,8 @@ libs::cmdl::specify(
   (libs::cmdl::add_option(
        act,
        libs::cmdl::to_option(
-           static_cast<opts_t &&>(opt))),
+           static_cast<opts_t &&>(opt))
+           .value()),
    ...);
 
   return act;
