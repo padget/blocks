@@ -107,4 +107,59 @@ libs::cmdl::specify(
   return act;
 }
 
+namespace libs::cmdl
+{
+  using strings_t = std::vector<std::string>;
+
+  struct param
+  {
+    std::string name;
+    std::string value;
+  };
+
+  using params_t = std::vector<param>;
+
+  struct report
+  {
+    bool bad_action = false;
+    strings_t not_present;
+    strings_t bad_value;
+    strings_t unknown;
+
+    params_t params;
+  };
+
+  report
+  parse(
+      const action &act,
+      int argc,
+      char **argv);
+
+  // template <typename type_t>
+  // type_t
+  // get(
+  //     const report &rep,
+  //     const std::string &name);
+
+  template <typename type_t>
+  type_t
+  get_all(const report &rep);
+} // namespace libs::cmdl
+
+// libs::cmdl::report
+// libs::cmdl::parse(
+//     const libs::cmdl::action &act,
+//     int argc, char **argv)
+// {
+//   return {};
+// }
+
+// template <>
+// int libs::cmdl::get<int>(
+//     const libs::cmdl::report &rep,
+//     const std::string &name)
+// {
+//   return {};
+// }
+
 #endif

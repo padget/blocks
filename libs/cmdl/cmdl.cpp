@@ -1,4 +1,5 @@
 #include "cmdl.hpp"
+#include "intrange.hpp"
 #include <algorithm>
 
 std::vector<std::string>
@@ -6,8 +7,10 @@ libs::cmdl::torawarguments(
     int argc, char **argv)
 {
   std::vector<std::string> args;
-  for (int i = 0; i < argc; ++i)
+
+  for (int i : range(0, argc))
     args.push_back(argv[i]);
+
   return args;
 }
 
@@ -30,28 +33,28 @@ namespace
     return res;
   }
 
-  // std::vector<std::string>
-  // split(
-  //     const std::string &s,
-  //     const char delim)
-  // {
-  //   std::vector<std::string> res;
+  std::vector<std::string>
+  split(
+      const std::string &s,
+      const char delim)
+  {
+    std::vector<std::string> res;
 
-  //   auto b = s.begin();
-  //   auto e = s.end();
+    auto b = s.begin();
+    auto e = s.end();
 
-  //   while (b not_eq e)
-  //   {
-  //     auto it = find(b, e, delim);
+    while (b not_eq e)
+    {
+      auto it = find(b, e, delim);
 
-  //     if (it != e)
-  //       res.push_back(std::string(b, it));
+      if (it != e)
+        res.push_back(std::string(b, it));
 
-  //     b = it + 1;
-  //   }
+      b = it + 1;
+    }
 
-  //   return res;
-  // }
+    return res;
+  }
 } // namespace
 
 std::vector<libs::cmdl::argument>
@@ -179,6 +182,8 @@ namespace
 
     if (simple and not second.empty())
       return std::nullopt;
+    else if (simple and second.empty())
+      return o;
 
     switch (isopcl(second, '<', '>'))
     {
@@ -234,4 +239,81 @@ void libs::cmdl::add_option(
     libs::cmdl::option &&opt)
 {
   act.options.push_back(opt);
+}
+
+namespace
+{
+  auto same_name(
+      const std::string &name)
+  {
+    return [&name](const libs::cmdl::option &opt) {
+      return opt.name == name;
+    };
+  }
+
+  std::vector<std::string>
+  possible_values(
+      const libs::cmdl::option &opt)
+  {
+    return split(opt.possible_values, '|');
+  }
+
+  bool is_present(
+      const libs::cmdl::option &opt,
+      const std::string &args)
+  {
+    auto &&[name, value] = split2(args, '=');
+
+    if (option.name == name)
+    {
+    }
+  }
+
+} // namespace
+
+libs::cmdl::report
+libs::cmdl::parse(
+    const libs::cmdl::action &act,
+    int argc, char **argv)
+{
+  report rep;
+
+  std::vector<std::string> args =
+      torawarguments(argc, argv);
+
+  if (act.name != argv[0])
+  {
+    rep.bad_action = true;
+    return rep;
+  }
+
+  for (const std::string &arg : args)
+  {
+    auto &&[name, value] = split2(arg, '=');
+    auto b = act.options.begin();
+    auto e = act.options.end();
+
+    auto &&found = std::find_if(
+        b, e, same_name(name));
+
+    if (found == e)
+    {
+      rep.unknown.push_back(name);
+      continue;
+    }
+
+    const option &opt = *found;
+  }
+
+  for (const option &opt : act.options)
+  {
+    if (opt.mandatory)
+    {
+      auto b = args.begin();
+      auto e = args.end();
+      std::find_if(b, e, );
+    }
+  }
+
+  return {};
 }
